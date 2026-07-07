@@ -182,19 +182,49 @@ def _parse_feed(content, source):
 
 def _feed_topic_ok(item, source):
     """Source-level topic gate for one feed item: `categories` must match an
-    entry tag, `keywords` must match title/summary, `exclude_keywords` must
-    not. Applied only when relevance filtering is on, so it never affects the
-    structural raw count. Page items (no `_tags`, no keyword config) pass."""
+    entry tag, `exclude_keywords` must not match, and the item must pass
+    the source's own topic test -- either its named `keywords` list, or (see
+    `role_keywords`/`action_keywords` below) BOTH a generic institution-role
+    term and a digital-asset-specific action term. Applied only when
+    relevance filtering is on, so it never affects the structural raw count.
+    Page items (no `_tags`, no keyword config) pass.
+
+    `role_keywords` + `action_keywords`: a named-entity list can only ever
+    catch institutions someone thought to enumerate in advance -- the next
+    bank to open a tokenisation desk is never on it. This pairs a GENERIC
+    institution-type term (bank, asset manager, custodian, exchange
+    operator...) with a digital-asset-specific activity term (tokeniz,
+    stablecoin, crypto custody...) so a peer's move is caught by WHAT it is
+    and WHAT it did, not by WHO it is. Both lists must have at least one hit;
+    an item can also still pass via the plain `keywords` list (kept for the
+    handful of institutions -- payment/card networks -- whose own name
+    doesn't self-describe as a "bank" or "asset manager").
+    """
     categories = [c.lower() for c in source.get("categories", [])]
     keywords = [k.lower() for k in source.get("keywords", [])]
     exclude_keywords = [k.lower() for k in source.get("exclude_keywords", [])]
+    role_keywords = [k.lower() for k in source.get("role_keywords", [])]
+    action_keywords = [k.lower() for k in source.get("action_keywords", [])]
     text = f"{item['title']} {item.get('summary', '')}"
     if categories:
         tags = item.get("_tags", [])
         if not any(cat in tag for cat in categories for tag in tags):
             return False
-    if keywords and not _matches_any(text, keywords):
-        return False
+    has_topic_gate = bool(keywords) or bool(role_keywords and action_keywords)
+    if has_topic_gate:
+        named_hit = bool(keywords) and _matches_any(text, keywords)
+        # role_keywords is word-boundary matched (short generic words like
+        # "bank" must not fire inside "bankruptcy"/"embankment"). action_
+        # keywords is plain substring matched -- deliberately, so a prefix
+        # like "tokeniz" also catches "tokenized"/"tokenizing"/"tokenization"
+        # (same reasoning as RELEVANCE_KEYWORDS above); these are compound
+        # enough phrases that substring matching carries little false-hit risk.
+        haystack = text.lower()
+        role_hit = (bool(role_keywords and action_keywords)
+                    and _matches_any(text, role_keywords)
+                    and any(kw in haystack for kw in action_keywords))
+        if not (named_hit or role_hit):
+            return False
     if exclude_keywords and _matches_any(text, exclude_keywords):
         return False
     return True
@@ -379,7 +409,9 @@ def fetch_source(source, require_relevant=True):
         # wins dismissal" or "Saylor's Strategy sells bitcoin" matches the
         # source definition but contains no generic crypto term, and the
         # global gate must not veto what the source was built to admit.
-        own_keywords = bool(source.get("keywords"))
+        own_keywords = bool(source.get("keywords")) or bool(
+            source.get("role_keywords") and source.get("action_keywords")
+        )
         items = [
             it for it in items
             if _feed_topic_ok(it, source)

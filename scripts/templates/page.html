@@ -29,7 +29,7 @@ try {
   :root {
     --bg:        #FAF9F5;   /* warm ivory */
     --bg-2:      #F5F0E8;   /* deeper cream for panels */
-    --bg-inset:  #F0EADF;   /* inset / archive */
+    --bg-inset:  #F0EADF;   /* inset panels */
     --ink:       #1F1E1D;   /* primary text */
     --ink-2:     #3D3929;   /* secondary text */
     --ink-3:     #6B6558;   /* muted / meta */
@@ -246,16 +246,69 @@ try {
   .disclaimer-line .bolt { color: var(--accent); }
 
   /* ============================================================
-     TABS
+     TABS + TOOLBAR (font size, search) -- one sticky block so both
+     stay reachable at any scroll depth, each on its own row so the
+     tab labels and the toolbar icons never compete for width.
      ============================================================ */
+  .sticky-bar {
+    position: sticky; top: 0; z-index: 30;
+    background: var(--bg);
+  }
+  html[data-theme="matrix"] .sticky-bar { background: rgba(2,9,4,.97); }
   .tabs {
     display: flex; gap: 2px;
     padding-top: 14px;
     border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 30;
-    background: var(--bg);
   }
-  html[data-theme="matrix"] .tabs { background: rgba(2,9,4,.97); }
+  .toolbar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .font-ctrl {
+    display: inline-flex; align-items: center; gap: 2px;
+    border: 1px solid var(--border-2); border-radius: 999px;
+    padding: 2px;
+  }
+  .font-ctrl button {
+    appearance: none; border: none; background: none; cursor: pointer;
+    min-width: 36px; min-height: 36px;
+    border-radius: 999px;
+    font-family: var(--sans); font-size: 13px; font-weight: 700;
+    color: var(--ink-2);
+  }
+  .font-ctrl button:hover:not(:disabled) { color: var(--accent); background: var(--bg-2); }
+  .font-ctrl button:disabled { color: var(--ink-3); opacity: .4; cursor: default; }
+  .font-ctrl #fontReset { font-size: 11px; font-weight: 600; min-width: 48px; }
+  .search-wrap { display: inline-flex; align-items: center; gap: 6px; }
+  .search-toggle {
+    appearance: none; cursor: pointer;
+    min-height: 36px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 13px;
+    border: 1px solid var(--border-2); border-radius: 999px;
+    background: var(--card); color: var(--ink-2);
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+  }
+  .search-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  #searchInput {
+    flex: 1 1 200px; min-width: 140px; max-width: 320px;
+    min-height: 36px;
+    border: 1px solid var(--border-2); border-radius: 999px;
+    padding: 0 14px;
+    font-family: var(--sans); font-size: 14px;
+    color: var(--ink); background: var(--card);
+  }
+  #searchInput:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #searchClear {
+    appearance: none; cursor: pointer; border: none; background: none;
+    min-width: 32px; min-height: 32px; border-radius: 999px;
+    color: var(--ink-3); font-size: 15px;
+  }
+  #searchClear:hover { color: var(--accent); }
+  @media (max-width: 480px) {
+    .toolbar.search-open .font-ctrl { display: none; }
+  }
   .tab {
     appearance: none; background: none; border: none;
     border-bottom: 2px solid transparent;
@@ -678,25 +731,6 @@ try {
   .empty p { color: var(--ink-3); font-size: 14.5px; margin: 0; }
 
   /* ============================================================
-     ARCHIVE
-     ============================================================ */
-  .archive { margin-top: 40px; }
-  .archive summary {
-    list-style: none; cursor: pointer;
-    display: flex; align-items: center; gap: 10px;
-    padding: 15px 16px; min-height: 44px;
-    border: 1px solid var(--border); border-radius: 12px;
-    background: var(--bg-2);
-    font-family: var(--serif); font-weight: 700; font-size: 16px; color: var(--ink);
-    user-select: none;
-  }
-  .archive summary::-webkit-details-marker { display: none; }
-  .archive summary .caret { color: var(--accent); transition: transform .2s; font-size: 13px; }
-  .archive[open] summary .caret { transform: rotate(90deg); }
-  .archive summary .a-count { margin-left: auto; font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--ink-3); }
-  .archive-body { padding-top: 14px; }
-
-  /* ============================================================
      FOOTER
      ============================================================ */
   footer {
@@ -719,7 +753,19 @@ try {
     font-family: var(--serif); font-weight: 700; font-size: 13px; color: var(--ink);
     padding-top: 16px; border-bottom: 2px solid var(--border-2);
   }
+  /* "Last checked" (3rd column) must never wrap to two lines, whatever the
+     container width -- the Note column is the one that can afford to wrap. */
+  .health-table th:nth-child(3), .health-table td:nth-child(3) { white-space: nowrap; }
   #tab-health { overflow-x: auto; }
+  /* Source health reads better as a wide table than the normal prose column
+     width -- toggled via JS when that tab is selected (see TAB_PANELS), not a
+     plain @media rule, since only this one tab's content should get it. */
+  @media (min-width: 1100px) {
+    .wrap.wrap-wide-health { max-width: 1400px; }
+  }
+  @media (min-width: 1560px) {
+    .wrap.wrap-wide-health { max-width: 1600px; }
+  }
   .hstatus { font-weight: 700; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
   .hstatus.ok { color: var(--ok); }
   .hstatus.replaced { color: var(--warn); }
@@ -746,12 +792,11 @@ try {
     html[data-theme="matrix"] header.masthead { background: #fff !important; }
     .wordmark, .section-head h2 { text-shadow: none !important; }
     header.masthead { position: static; border-bottom: 2px solid #000; }
-    .theme-menu, .theme-toggle, .filters, .banner, .tabs, .archive summary .caret,
+    .theme-menu, .theme-toggle, .filters, .banner, .tabs, .toolbar,
     .copycite, .copy-briefing, .jumpnav, .fresh-dot, .foot-links,
     details.brief > summary .b-caret { display: none !important; }
     /* Print everything: a hidden tab's content still belongs in the PDF. */
     #tab-digest[hidden], #tab-health[hidden], #tab-audit[hidden], #tab-about[hidden] { display: block !important; }
-    .archive[open] .archive-body, .archive .archive-body { display: block !important; }
     /* Week-in-review mode: the footer button prints ONLY the 7-day view,
        grouped by day, with source URLs on paper. */
     body[data-print="week"] #tab-digest, body[data-print="week"] #tab-health,
@@ -759,7 +804,6 @@ try {
     body[data-print="week"] #weekview[hidden] { display: block !important; }
     #weekview h3.wk-day { font-family: var(--serif); font-size: 17px; margin: 18px 0 8px; border-bottom: 1px solid #ccc; }
     #weekview .card h4 a[href]::after { content: " — " attr(href); font-size: 10px; color: #555; word-break: break-all; }
-    .archive summary { border: none; background: none; padding-left: 0; }
     .card, .priority { box-shadow: none; break-inside: avoid; page-break-inside: avoid; }
     .juris-group, .priority-item { break-inside: avoid; }
     a { color: #111; text-decoration: none; }
@@ -781,18 +825,29 @@ try {
      ============================================================ */
   @media (min-width: 1100px) {
     .wrap, .mast-inner, .disclaimer-line { max-width: 1200px; }
-    .filters { display: flex; align-items: flex-start; gap: 56px; }
-    .filters .bucket-row { margin-top: 0; }
-    .juris-group, .archive-body {
+    .filters { display: flex; align-items: flex-start; gap: 40px; flex-wrap: wrap; }
+    .filters .bucket-row, .filters .range-row { margin-top: 0; }
+    .juris-group {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       column-gap: 14px;
     }
-    .juris-title, .juris-sep, .archive-body .empty, .brief-block { grid-column: 1 / -1; }
+    .juris-title, .juris-sep, .brief-block { grid-column: 1 / -1; }
   }
   @media (min-width: 1560px) {
     .wrap, .mast-inner, .disclaimer-line { max-width: 1540px; }
-    .juris-group, .archive-body { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .juris-group { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* About & method reads as prose, not cards -- it should use more of a wide
+     screen than the 720px mobile-width column, but not stretch to the full
+     1200-1540px content width either (that would make lines too long to read
+     comfortably). A moderate bump keeps line length in the readable range. */
+  @media (min-width: 1100px) {
+    .about-body { max-width: 880px; }
+  }
+  @media (min-width: 1560px) {
+    .about-body { max-width: 960px; }
   }
 </style>
 </head>
@@ -830,15 +885,35 @@ try {
 </header>
 
 <main class="wrap">
-  <nav class="tabs" aria-label="Sections">
-    <button class="tab" type="button" data-tab="digest" aria-selected="true">Digest</button>
-    <button class="tab" type="button" data-tab="health" aria-selected="false">Source health</button>
-    <button class="tab" type="button" data-tab="audit" aria-selected="false">Audit log</button>
-    <button class="tab" type="button" data-tab="about" aria-selected="false">About &amp; method</button>
-  </nav>
+  <div class="sticky-bar">
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab" type="button" data-tab="digest" aria-selected="true">Digest</button>
+      <button class="tab" type="button" data-tab="health" aria-selected="false">Source health</button>
+      <button class="tab" type="button" data-tab="audit" aria-selected="false">Audit log</button>
+      <button class="tab" type="button" data-tab="about" aria-selected="false">About &amp; method</button>
+    </nav>
+    <div class="toolbar" id="toolbar">
+      <div class="font-ctrl" role="group" aria-label="Text size">
+        <button type="button" id="fontDec" aria-label="Decrease text size">A−</button>
+        <button type="button" id="fontReset" aria-label="Reset text size to default">Reset</button>
+        <button type="button" id="fontInc" aria-label="Increase text size">A+</button>
+      </div>
+      <div class="search-wrap">
+        <button type="button" class="search-toggle" id="searchBtn" aria-expanded="false" aria-controls="searchInput" aria-label="Search past digest items">
+          <span aria-hidden="true">🔍</span> Search
+        </button>
+        <input type="search" id="searchInput" placeholder="Search past items…" aria-label="Search past digest items" hidden>
+        <button type="button" id="searchClear" aria-label="Close search" hidden>✕</button>
+      </div>
+    </div>
+  </div>
 
   <div id="tab-digest">
     <section class="filters" aria-label="Filters">
+      <div class="filter-group range-row">
+        <p class="filter-label">Range</p>
+        <div class="chips" id="rangeChips"></div>
+      </div>
       <div class="filter-group">
         <p class="filter-label">Jurisdiction <button type="button" class="clear-filter" data-clear="juris" hidden>✕ Clear</button></p>
         <div class="chips" id="jurisChips"></div>
@@ -856,7 +931,6 @@ try {
     <div id="radar-slot"></div>
     <div id="catchup-slot"></div>
     <div id="feed"></div>
-    <div id="archive-slot"></div>
   </div>
 
   <div id="tab-health" hidden>
@@ -911,9 +985,11 @@ try {
 
       <h3>Schedule &amp; retention</h3>
       <p>The pipeline runs each weekday around 07:00 Hong Kong time; AI enrichment follows
-      within the hour. The page shows today's items plus a seven-day archive; the Audit log
-      tab records the last 30 data updates. Items older than seven days at ingest are not
-      admitted — this is a daily wire, not an archive.</p>
+      within the hour. The Range selector on the Digest tab defaults to Today, with Last 7
+      days and Last 30 days showing everything this page currently retains within that
+      window (not a promise of a full 30 days of history — see below); the Audit log tab
+      records the last 30 data updates. Items older than seven days at ingest are not
+      admitted — this is a daily wire, not a permanent archive.</p>
 
       <h3>Known limitations</h3>
       <p>Some official sites block automated fetching (they appear on the Source health tab
@@ -967,27 +1043,32 @@ const BUCKETS = {
   news:       { label: "Market news", types: ["news"] },
   other:      { label: "Other", types: ["speech"] }
 };
+// Merged time-range selector (replaces the old separate "Today" feed + a
+// collapsed "Last 7 days" disclosure with one feed, scoped by this). "7"/"30"
+// are upper bounds, not promises -- the pipeline only retains a handful of
+// days (see run.DIGEST_ITEMS_MAX_AGE_DAYS), so "Last 30 days" today shows the
+// same items as "Last 7 days" until more history accumulates; that's honest
+// behaviour, not a bug, the same way a 30-day search filter over a week-old
+// dataset naturally returns a week's worth of results.
+const RANGE_ORDER = ["today", "7", "30"];
+const RANGE_LABEL = { today: "Today", "7": "Last 7 days", "30": "Last 30 days" };
 
 /* ---------- date helpers (all in Asia/Hong_Kong) ---------- */
 function hkDayKey(iso) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
 }
+// Every displayed DATE is YYYY-MM-DD (en-CA formats that way by convention) --
+// one canonical format throughout, so a reader never has to reconcile "29 Jun"
+// against "2026-06-29" against "Monday, 29 June 2026" on the same page. Time
+// portions (when shown) stay HH:MM HKT, untouched by this.
 function fmtHeaderDate(iso) {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
+  return hkDayKey(iso);
 }
 function fmtTime(iso) {
   return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso)) + "\u00A0HKT";
 }
-function hkYear(iso) {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric" }).format(new Date(iso));
-}
 function fmtDay(iso) {
-  const day = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "short" }).format(new Date(iso));
-  // Early January, a card published late December would read "28 Dec" under
-  // a masthead saying January -- ambiguous without a year. Append it only
-  // when it differs from the digest's own year, so normal days stay clean.
-  const y = hkYear(iso);
-  return y === hkYear(DIGEST.generated_at) ? day : `${day} ${y}`;
+  return hkDayKey(iso);
 }
 function fmtCardDate(iso) {
   const day = fmtDay(iso);
@@ -1005,7 +1086,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<":
 /* ============================================================
    STATE
    ============================================================ */
-const state = { juris: "ALL", bucket: "ALL" };
+const state = { juris: "ALL", bucket: "ALL", range: "today", search: "" };
 let pendingFocus = null;  // [attr, value] of a chip to refocus after re-render
 const GEN_DAY = hkDayKey(DIGEST.generated_at);
 
@@ -1040,9 +1121,11 @@ function markRead(id) {
 }
 
 /* Remembered filters: the Hong-Kong-only reader lands on their lens every
-   morning. Restored only when still valid AND non-empty for today. */
+   morning. Restored only when still valid AND non-empty for today. `search`
+   is deliberately NEVER persisted -- a search is a momentary lookup, not a
+   standing preference like juris/bucket/range. */
 function saveFilters() {
-  try { localStorage.setItem("regradar-filters", JSON.stringify(state)); } catch (e) {}
+  try { localStorage.setItem("regradar-filters", JSON.stringify({ juris: state.juris, bucket: state.bucket, range: state.range })); } catch (e) {}
 }
 function restoreFilters() {
   try {
@@ -1050,9 +1133,9 @@ function restoreFilters() {
     if (!saved) return;
     if (JURIS_ORDER.includes(saved.juris) || saved.juris === "ALL") state.juris = saved.juris;
     if (BUCKETS[saved.bucket]) state.bucket = saved.bucket;
-    if (!todayItems().filter(matchesFilters).length &&
-        !archiveItems().filter(matchesFilters).length) {
-      state.juris = "ALL"; state.bucket = "ALL";  // stale lens: show everything
+    if (RANGE_ORDER.includes(saved.range)) state.range = saved.range;
+    if (!rangeItems(state.range).filter(matchesFilters).length) {
+      state.juris = "ALL"; state.bucket = "ALL";  // stale lens: show everything (keep the remembered range)
     }
   } catch (e) {}
 }
@@ -1075,31 +1158,56 @@ function matchesFilters(it) {
    the card date; first_seen only decides which section an item lands in. */
 const todayItems   = () => DIGEST.items.filter(it => hkDayKey(it.first_seen || it.published) === GEN_DAY);
 const archiveItems = () => DIGEST.items.filter(it => hkDayKey(it.first_seen || it.published) !== GEN_DAY);
+/* Calendar-day distance (HKT) between an item and the digest's own
+   generated_at day -- 0 = today, 1 = yesterday, etc. Used by the merged
+   range selector (todayItems/archiveItems above stay as-is; catch-up and the
+   stale-filter check still use them directly). */
+function dayDiff(iso) {
+  const d1 = Date.parse(hkDayKey(iso) + "T00:00:00Z");
+  const d2 = Date.parse(GEN_DAY + "T00:00:00Z");
+  return Math.round((d2 - d1) / 86400000);
+}
+/* "7"/"30" are inclusive of today (so "Last 7 days" = today + 6 prior days =
+   the same span the old archive's "Last 7 days" label already covered, given
+   the pipeline's own ~8-day retention window -- see RANGE_ORDER above). */
+function rangeItems(range) {
+  if (range === "today") return todayItems();
+  const maxDiff = range === "7" ? 7 : 29;
+  return DIGEST.items.filter(it => dayDiff(it.first_seen || it.published) <= maxDiff);
+}
 
 /* ============================================================
    RENDER — filters
    ============================================================ */
 function renderChips() {
-  const today = todayItems();
+  const scoped = rangeItems(state.range);
   // Counts are computed against the OTHER dimension's active filter, so a
   // chip's number always equals the result count of clicking it -- a chip
   // showing "1" must never produce an empty page.
   const inBucket = it => state.bucket === "ALL" || BUCKETS[state.bucket].types.includes(it.type);
   const inJuris = it => state.juris === "ALL" || it.jurisdiction === state.juris;
+
+  const rc = document.getElementById("rangeChips");
+  rc.innerHTML = RANGE_ORDER.map(val => {
+    const n = rangeItems(val).filter(inJuris).filter(inBucket).length;
+    return `<button class="chip" type="button" aria-pressed="${state.range === val}" data-range="${val}">${esc(RANGE_LABEL[val])}<span class="count">${n}</span></button>`;
+  }).join("");
+
   const jc = document.getElementById("jurisChips");
   const jurisPresent = JURIS_ORDER.filter(j => DIGEST.items.some(it => it.jurisdiction === j));
   const jList = [["ALL", "All"], ...jurisPresent.map(j => [j, JURIS_FULL[j]])];
   jc.innerHTML = jList.map(([val, lbl]) => {
-    const n = today.filter(inBucket).filter(it => val === "ALL" ? true : it.jurisdiction === val).length;
+    const n = scoped.filter(inBucket).filter(it => val === "ALL" ? true : it.jurisdiction === val).length;
     return `<button class="chip" type="button" aria-pressed="${state.juris === val}" data-juris="${val}">${esc(lbl)}<span class="count">${n}</span></button>`;
   }).join("");
 
   const bc = document.getElementById("bucketChips");
   bc.innerHTML = Object.entries(BUCKETS).map(([val, def]) => {
-    const n = today.filter(inJuris).filter(it => val === "ALL" ? true : def.types.includes(it.type)).length;
+    const n = scoped.filter(inJuris).filter(it => val === "ALL" ? true : def.types.includes(it.type)).length;
     return `<button class="chip" type="button" aria-pressed="${state.bucket === val}" data-bucket="${val}">${esc(def.label)}<span class="count">${n}</span></button>`;
   }).join("");
 
+  rc.querySelectorAll("[data-range]").forEach(b => b.onclick = () => { state.range = b.dataset.range; saveFilters(); pendingFocus = ["data-range", b.dataset.range]; render(); });
   jc.querySelectorAll("[data-juris]").forEach(b => b.onclick = () => { state.juris = b.dataset.juris; saveFilters(); pendingFocus = ["data-juris", b.dataset.juris]; render(); });
   bc.querySelectorAll("[data-bucket]").forEach(b => b.onclick = () => { state.bucket = b.dataset.bucket; saveFilters(); pendingFocus = ["data-bucket", b.dataset.bucket]; render(); });
 
@@ -1263,23 +1371,29 @@ function renderPriority(items) {
 }
 
 /* ---------- feed grouped by jurisdiction ---------- */
+// "Today" and the old collapsed "Last 7 days" disclosure are ONE feed now,
+// scoped by the range chips (see RANGE_ORDER/rangeItems) -- no separate
+// expand-to-see-older-items step.
+const RANGE_WIRE = { today: "today's", "7": "the last 7 days'", "30": "the last 30 days'" };
 function renderFeed(items) {
   const feed = document.getElementById("feed");
+  const rangeScope = rangeItems(state.range);
   if (!items.length) {
-    // With filters active the day is not necessarily quiet -- there may be 28
-    // items, just none matching this slice. Only claim a quiet day when the
-    // reader is looking at everything.
+    // With filters active the range is not necessarily quiet -- there may be
+    // 28 items, just none matching this slice. Only claim quiet when the
+    // reader is looking at everything in the selected range.
     const unfiltered = state.juris === "ALL" && state.bucket === "ALL";
+    const quietLabel = state.range === "today" ? "Quiet day — no new items" : `No items in ${RANGE_LABEL[state.range].toLowerCase()}`;
     feed.innerHTML = `<div class="empty">
       <div class="e-mark" aria-hidden="true">${unfiltered ? "☕" : "🔍"}</div>
-      <h3>${unfiltered ? "Quiet day — no new items" : "No items match these filters"}</h3>
-      <p>${unfiltered ? "Nothing crossed the wires for today's digest." : "Today has " + todayItems().length + " items outside this selection."}</p>
+      <h3>${unfiltered ? quietLabel : "No items match these filters"}</h3>
+      <p>${unfiltered ? (state.range === "today" ? "Nothing crossed the wires for today's digest." : "Nothing crossed the wires in this window.") : RANGE_LABEL[state.range] + " has " + rangeScope.length + " items outside this selection."}</p>
       ${unfiltered ? "" : `<button type="button" class="clear-all" data-clear="all">✕ Clear filters</button>`}
     </div>`;
     return;
   }
-  let html = `<div class="section-head"><h2>Today · by jurisdiction</h2><span class="rule"></span>
-    <button class="copy-briefing" type="button" id="copyBriefingBtn" aria-label="Copy today's briefing as text">⧉ Copy briefing</button></div>`;
+  let html = `<div class="section-head"><h2>${esc(RANGE_LABEL[state.range])} · by jurisdiction</h2><span class="rule"></span>
+    <button class="copy-briefing" type="button" id="copyBriefingBtn" aria-label="Copy this briefing as text">⧉ Copy briefing</button></div>`;
   JURIS_ORDER.forEach(j => {
     const group = items.filter(it => it.jurisdiction === j)
       .sort((a, b) => (b.priority === "high") - (a.priority === "high") || new Date(b.published) - new Date(a.published));
@@ -1300,31 +1414,36 @@ function renderFeed(items) {
   const filtered = state.juris !== "ALL" || state.bucket !== "ALL";
   const nSources = DIGEST.source_health.filter(s => s.name !== "Claude summarisation").length;
   html += `<p class="signoff">${filtered
-    ? `— End of matching items · ${items.length} shown · <button type="button" class="linklike" data-clear="all">clear filters</button> to see all ${todayItems().length} —`
-    : `— End of today's wire · ${items.length} new item${items.length > 1 ? "s" : ""} from ${nSources} monitored sources · updated each weekday morning, Hong Kong time —`}</p>`;
+    ? `— End of matching items · ${items.length} shown · <button type="button" class="linklike" data-clear="all">clear filters</button> to see all ${rangeScope.length} —`
+    : `— End of ${RANGE_WIRE[state.range]} wire · ${items.length} item${items.length > 1 ? "s" : ""} from ${nSources} monitored sources · updated each weekday morning, Hong Kong time —`}</p>`;
   feed.innerHTML = html;
 }
 
-/* ---------- archive ---------- */
-function renderArchive() {
-  const slot = document.getElementById("archive-slot");
-  // Re-rendering (e.g. a filter-chip click) must not collapse an archive the
-  // reader has opened -- carry the open state across the rebuild.
-  const existing = slot.querySelector("details.archive");
-  const wasOpen = existing ? existing.open : false;
-  const arch = archiveItems().filter(matchesFilters)
+/* ---------- search: client-side lookup over the items THIS digest has
+   retained (not a live web search) -- see the search toggle in the toolbar */
+function renderSearchResults() {
+  document.getElementById("jumpnav-slot").innerHTML = "";
+  document.getElementById("priority-slot").innerHTML = "";
+  document.getElementById("radar-slot").innerHTML = "";
+  document.getElementById("catchup-slot").innerHTML = "";
+  const feed = document.getElementById("feed");
+  const q = state.search.trim().toLowerCase();
+  const matches = DIGEST.items
+    .filter(it => `${it.title} ${it.summary} ${it.so_what} ${it.source}`.toLowerCase().includes(q))
     .sort((a, b) => new Date(b.published) - new Date(a.published));
-  const cards = arch.filter(it => !isBrief(it));
-  const briefs = arch.filter(isBrief);
-  const newCount = arch.filter(isNewSinceVisit).length;
-  slot.innerHTML = `<details class="archive"${wasOpen ? " open" : ""}>
-    <summary><span class="caret" aria-hidden="true">▶</span> Last 7 days<span class="a-count">${newCount ? `${newCount} new · ` : ""}${arch.length} item${arch.length === 1 ? "" : "s"}</span></summary>
-    <div class="archive-body">
-      ${arch.length ? `${cards.map(cardHTML).join("")}
-        ${briefs.length ? `<div class="brief-block"><p class="brief-head">In brief — ${briefs.length} market headline${briefs.length > 1 ? "s" : ""}</p><div class="brief-list">${briefs.map(briefHTML).join("")}</div></div>` : ""}`
-        : `<div class="empty"><p>${state.juris === "ALL" && state.bucket === "ALL" ? "No earlier items yet — the archive fills as days pass." : "No earlier items match the current filters."}</p></div>`}
-    </div>
-  </details>`;
+  if (!matches.length) {
+    feed.innerHTML = `<div class="empty">
+      <div class="e-mark" aria-hidden="true">🔍</div>
+      <h3>No matches for "${esc(state.search)}"</h3>
+      <p>Search covers the items currently retained in this digest, not the live web.</p>
+    </div>`;
+    return;
+  }
+  const cards = matches.filter(it => !isBrief(it));
+  const briefs = matches.filter(isBrief);
+  feed.innerHTML = `<div class="section-head"><h2>${matches.length} result${matches.length > 1 ? "s" : ""} for "${esc(state.search)}"</h2><span class="rule"></span></div>
+    ${cards.map(cardHTML).join("")}
+    ${briefs.length ? `<div class="brief-block"><p class="brief-head">In brief — ${briefs.length} market headline${briefs.length > 1 ? "s" : ""}</p><div class="brief-list">${briefs.map(briefHTML).join("")}</div></div>` : ""}`;
 }
 
 /* ---------- source-health table (Source health tab) ---------- */
@@ -1350,10 +1469,7 @@ function renderHealth() {
 
 /* ---------- audit log (Audit log tab) ---------- */
 function fmtAudit(iso) {
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: TZ, day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit", hour12: false,
-  }).format(new Date(iso)) + " HKT";
+  return `${hkDayKey(iso)}, ${fmtTime(iso)}`;
 }
 function renderAudit() {
   const ol = document.getElementById("auditLog");
@@ -1368,13 +1484,19 @@ function renderAudit() {
 
 /* ---------- tabs ---------- */
 const TAB_PANELS = { digest: "tab-digest", health: "tab-health", audit: "tab-audit", about: "tab-about" };
-document.querySelectorAll(".tabs .tab").forEach(btn => btn.onclick = () => {
+function selectTab(tabName) {
+  const btn = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  if (!btn) return;
   document.querySelectorAll(".tabs .tab").forEach(t =>
     t.setAttribute("aria-selected", String(t === btn)));
   for (const [tab, panelId] of Object.entries(TAB_PANELS)) {
-    document.getElementById(panelId).hidden = tab !== btn.dataset.tab;
+    document.getElementById(panelId).hidden = tab !== tabName;
   }
-});
+  // Source health reads better as a wide table -- widen the shared content
+  // column only while that tab is showing (see the .wrap-wide-health rule).
+  document.querySelector("main.wrap").classList.toggle("wrap-wide-health", tabName === "health");
+}
+document.querySelectorAll(".tabs .tab").forEach(btn => btn.onclick = () => selectTab(btn.dataset.tab));
 
 /* ---------- jump-nav: "take me there" on a long column ---------- */
 function renderJumpnav(items) {
@@ -1418,7 +1540,7 @@ function renderCatchup() {
     <div class="catchup">${missed.map(it => `
       <div class="catchup-item">
         <span class="pj">${esc(JURIS_FULL[it.jurisdiction])}</span>
-        <span><a href="#${esc(it.id)}" data-open-archive="1">${esc(it.title)}</a>
+        <span><a href="#${esc(it.id)}" data-ensure-visible="1">${esc(it.title)}</a>
           <span class="cdate">· ${fmtDay(it.published)}</span></span>
       </div>`).join("")}</div>`;
 }
@@ -1513,8 +1635,10 @@ function citeText(it) {
   ].join("\n");
 }
 function briefingStrings() {
-  const items = todayItems().filter(matchesFilters);
-  const dateLine = fmtHeaderDate(DIGEST.generated_at);
+  // Copies whatever's currently on screen -- the selected range and filters,
+  // not always literally "today".
+  const items = rangeItems(state.range).filter(matchesFilters);
+  const dateLine = fmtHeaderDate(DIGEST.generated_at) + (state.range === "today" ? "" : ` — ${RANGE_LABEL[state.range]}`);
   const lines = [`DIGITAL ASSETS MORNING WIRE — ${dateLine}`];
   const hparts = [`<h3>Digital Assets Morning Wire — ${esc(dateLine)}</h3>`];
   if (DIGEST.top_of_mind) { lines.push("", `TOP OF MIND: ${DIGEST.top_of_mind}`); hparts.push(`<p><strong>Top of mind:</strong> ${esc(DIGEST.top_of_mind)}</p>`); }
@@ -1561,13 +1685,16 @@ function render() {
   renderFreshness();
   renderScope();
   renderTopOfMind();
-  const today = todayItems().filter(matchesFilters);
-  renderJumpnav(today);
-  renderPriority(today);
+  if (state.search) {
+    renderSearchResults();
+    return;
+  }
+  const scoped = rangeItems(state.range).filter(matchesFilters);
+  renderJumpnav(scoped);
+  renderPriority(scoped);
   renderRadar();
   renderCatchup();
-  renderFeed(today);
-  renderArchive();
+  renderFeed(scoped);
 }
 
 /* ---------- header meta ---------- */
@@ -1702,11 +1829,75 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") setThemeMenuOpen(false);
 });
 
+/* ============================================================
+   FONT SIZE -- the whole page is sized in px, not rem, so there is no
+   root-font-size trick to lean on; CSS zoom scales everything (text,
+   spacing, images) together without needing to touch any of that CSS,
+   and -- unlike transform:scale -- doesn't break position:fixed (the
+   Matrix rain canvas) or force manual width compensation.
+   ============================================================ */
+const FONT_STEPS = [85, 92, 100, 108, 116, 125, 135];
+let fontStepIdx = FONT_STEPS.indexOf(100);
+const fontDecBtn = document.getElementById("fontDec");
+const fontIncBtn = document.getElementById("fontInc");
+function applyFontScale() {
+  const pct = FONT_STEPS[fontStepIdx];
+  document.documentElement.style.zoom = pct + "%";
+  fontDecBtn.disabled = fontStepIdx === 0;
+  fontIncBtn.disabled = fontStepIdx === FONT_STEPS.length - 1;
+  try { localStorage.setItem("regradar-fontscale", String(pct)); } catch (e) {}
+}
+(function initFontScale() {
+  try {
+    const saved = parseInt(localStorage.getItem("regradar-fontscale"), 10);
+    const idx = FONT_STEPS.indexOf(saved);
+    if (idx !== -1) fontStepIdx = idx;
+  } catch (e) {}
+  applyFontScale();
+})();
+fontDecBtn.onclick = () => { fontStepIdx = Math.max(0, fontStepIdx - 1); applyFontScale(); };
+fontIncBtn.onclick = () => { fontStepIdx = Math.min(FONT_STEPS.length - 1, fontStepIdx + 1); applyFontScale(); };
+document.getElementById("fontReset").onclick = () => { fontStepIdx = FONT_STEPS.indexOf(100); applyFontScale(); };
+
+/* ============================================================
+   SEARCH -- client-side lookup over the items THIS digest currently
+   retains (title/summary/so_what/source), never a live/external search.
+   ============================================================ */
+const searchBtn = document.getElementById("searchBtn");
+const searchInput = document.getElementById("searchInput");
+const searchClearBtn = document.getElementById("searchClear");
+function openSearch() {
+  searchBtn.hidden = true;
+  searchInput.hidden = false;
+  searchClearBtn.hidden = false;
+  document.getElementById("toolbar").classList.add("search-open");
+  searchBtn.setAttribute("aria-expanded", "true");
+  searchInput.focus();
+}
+function closeSearch() {
+  searchBtn.hidden = false;
+  searchInput.hidden = true;
+  searchClearBtn.hidden = true;
+  searchInput.value = "";
+  document.getElementById("toolbar").classList.remove("search-open");
+  searchBtn.setAttribute("aria-expanded", "false");
+  if (state.search) { state.search = ""; render(); }
+}
+searchBtn.onclick = openSearch;
+searchClearBtn.onclick = closeSearch;
+searchInput.addEventListener("input", () => { state.search = searchInput.value; render(); });
+searchInput.addEventListener("keydown", e => { if (e.key === "Escape") closeSearch(); });
+// Clicking away from an EMPTY open search box collapses it back to the
+// button -- an active query (something to click into) is left open.
+document.addEventListener("click", e => {
+  if (!searchInput.hidden && !e.target.closest(".search-wrap") && !searchInput.value.trim()) closeSearch();
+});
+
 /* ---------- print: a closed <details> won't expand via CSS alone ---------- */
 let printOpened = [];
 window.addEventListener("beforeprint", () => {
   printOpened = [];
-  document.querySelectorAll("details.archive, details.brief").forEach(d => {
+  document.querySelectorAll("details.brief").forEach(d => {
     if (!d.open) { printOpened.push(d); d.open = true; }
   });
 });
@@ -1750,9 +1941,12 @@ document.addEventListener("click", e => {
   // About tab's inline "Source health" link
   const goto = e.target.closest("[data-goto]");
   if (goto) { document.querySelector(`.tab[data-tab="${goto.dataset.goto}"]`)?.click(); return; }
-  // Catch-up rows: open the archive before jumping to the card
-  const opener = e.target.closest("[data-open-archive]");
-  if (opener) { const a = document.querySelector("details.archive"); if (a) a.open = true; }
+  // Catch-up rows: widen the range (if needed) before jumping to the card --
+  // done here, synchronously on click, so it's already visible by the time
+  // the browser's native hash-jump and/or the hashchange-driven gotoHash()
+  // (below) try to find and scroll to it.
+  const opener = e.target.closest("[data-ensure-visible]");
+  if (opener) { ensureItemVisible(opener.getAttribute("href").slice(1)); render(); }
   // Read-marking: any headline/source link inside an item
   const link = e.target.closest("a[href]");
   if (link) { const host = link.closest("[data-id]"); if (host) markRead(host.dataset.id); }
@@ -1764,16 +1958,25 @@ document.addEventListener("toggle", e => {
 }, true);
 
 /* ---------- deep links: /#<item-id> scrolls to and highlights the card ---------- */
+// Widen the range (and clear juris/bucket/search) just enough for `id` to be
+// present in the merged feed -- e.g. a catch-up row or a shared link to an
+// item outside "Today" needs "Last 7/30 days" selected first.
+function ensureItemVisible(id) {
+  const it = DIGEST.items.find(x => x.id === id);
+  if (!it) return;
+  state.juris = "ALL"; state.bucket = "ALL"; state.search = "";
+  const diff = dayDiff(it.first_seen || it.published);
+  if (diff > 0) state.range = diff <= 7 ? "7" : "30";
+  saveFilters();
+}
 function gotoHash() {
   const id = decodeURIComponent(location.hash.slice(1));
   if (!id) return;
   const it = DIGEST.items.find(x => x.id === id);
   if (!it) return;
   document.querySelector('.tab[data-tab="digest"]')?.click();
-  state.juris = "ALL"; state.bucket = "ALL"; render();
-  if (hkDayKey(it.first_seen || it.published) !== GEN_DAY) {
-    const a = document.querySelector("details.archive"); if (a) a.open = true;
-  }
+  ensureItemVisible(id);
+  render();
   const el = document.getElementById(id);
   if (el) {
     if (el.tagName === "DETAILS") el.open = true;

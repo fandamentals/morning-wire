@@ -141,6 +141,51 @@ exists and passes; a lesson without a firing check is not yet learned.
 Never auto-append to `lessons.md` outside a reviewed PR — that file is this
 project's memory of what went wrong and must stay trustworthy.
 
+## Phase 7 — log this run to the public Audit log tab
+
+Every run of this routine must leave a visible trace on the page's Audit log
+tab (`data/digest.json`'s `run_log`) -- readers should be able to see that the
+weekly integrity audit happened and what it found, the same way they can see
+every daily pipeline/enrichment update. This is UNCONDITIONAL: it happens
+whether the run found nothing, found something and opened a PR, or found and
+fixed a new failure class -- a "no findings this week" run is itself useful
+information, not a no-op to hide.
+
+This is different from Phase 3's fixes, which must always go through a PR: a
+`run_log` entry is a journal entry about the audit having happened (exactly
+analogous to the daily pipeline's own `run_log` appends, or the "enrich
+today's digest" recipe's step 9 in CLAUDE.md), not a change to data or
+pipeline behavior. It is safe to commit directly to `main`.
+
+1. Write one line summarising the run, matching whichever of these fits:
+   - Clean run, nothing to report: `{"at": "<now UTC ISO>", "note": "Weekly
+     integrity audit: 11/11 checks ran, no findings — nothing changed."}`
+     (use the actual checks-ran count from this run's `scripts/audit.py`
+     output, not a hardcoded 11 — a future check being added or removed
+     should show up here too).
+   - Findings triaged, a fix PR opened: `{"at": "<now>", "note": "Weekly
+     integrity audit: found <N> finding(s) (<one-line what>); opened PR #<NN>
+     proposing <what>. No other changes."}`
+   - A HARD/critical finding needing urgent human attention: `{"at": "<now>",
+     "note": "Weekly integrity audit: CRITICAL — <check id> flagged <what>;
+     opened PR #<NN> with <the fix>. Needs prompt review."}`
+   - A new lesson absorbed: `{"at": "<now>", "note": "Weekly integrity audit:
+     identified a new failure class (<what>); added audit/lessons.md entry
+     <Lx> and a red-fixture-backed check; opened PR #<NN>."}`
+   - `could_not_run` on a protected check due to `BOOTSTRAP_CUTOFF` (expected
+     during the project's early weeks): `{"at": "<now>", "note": "Weekly
+     integrity audit: <check id> could not run yet (not enough post-cutoff
+     history) — expected, not a fault. No other findings."}`
+2. Append the entry to `data/digest.json`'s top-level `run_log` (the pipeline
+   caps it at 30; do not otherwise touch `run_log`, `source_health`, or
+   `top_of_mind`).
+3. Re-render: `python3 scripts/render.py`.
+4. Commit `data/digest.json`, `docs/index.html` and `docs/feed.xml` directly
+   to `main` (plain message, e.g. "chore: log weekly integrity audit run" —
+   no `[skip ci]`) and push. This is independent of, and does not wait for,
+   any fix PR opened in Phase 3 above (that PR lives on its own branch and
+   awaits human review regardless of this log entry landing).
+
 ## Never-list (hard constraints, no exceptions)
 
 - Never hand-edit or delete anything under `data/registers/` or
