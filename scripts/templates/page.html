@@ -779,6 +779,14 @@ try {
     border-bottom: 1px solid var(--border);
   }
   .health-table th { color: var(--ink-3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 10.5px; }
+  .health-table th[data-sort] {
+    cursor: pointer; user-select: none; display: table-cell;
+  }
+  .health-table th[data-sort]:hover, .health-table th[data-sort]:focus-visible { color: var(--accent); }
+  .health-table th[data-sort]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .health-table th .sort-caret { display: inline-block; width: 10px; margin-left: 2px; opacity: .6; }
+  .health-table th[aria-sort="ascending"] .sort-caret::after { content: "▲"; }
+  .health-table th[aria-sort="descending"] .sort-caret::after { content: "▼"; }
   .health-table td { color: var(--ink-2); }
   .health-table tr.h-group td {
     font-family: var(--serif); font-weight: 700; font-size: 13px; color: var(--ink);
@@ -915,18 +923,28 @@ try {
     .juris-group { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
-  /* About & method reads as prose, not cards -- it should use more of a wide
-     screen than the 720px mobile-width column, but not stretch to the full
-     1200-1540px content width either (that would run past 110+ characters a
-     line at the base 14.5px size, well past the ~90-char comfortable-reading
-     ceiling). Pairing a moderate width bump with a slightly larger type size
-     keeps the measure in roughly the same ~90-100 characters/line range as
-     the original 720px column, just with more breathing room. */
+  /* About & method reads as prose, not cards -- a single centered ~800px
+     column left most of a wide monitor's .wrap (1200-1540px) empty on both
+     sides, which reads as "not using the screen" no matter how many times
+     the column's own max-width creeps up. Flowing the same prose into two
+     CSS columns instead makes the section span the same width as the rest
+     of the page (matching the Digest tab's own multi-column jurisdiction
+     grid), while each individual column stays a comfortable ~85-95
+     characters per line -- unlike a manual two-<div> split, `columns` keeps
+     one HTML flow and simply breaks it visually, so content order for
+     screen readers/print/copy-paste is unaffected. break-after/break-inside
+     stop a heading from stranding at a column's bottom or a legend entry
+     from splitting across the gap. */
   @media (min-width: 1100px) {
-    .about-body { max-width: 800px; font-size: 15.5px; }
+    .about-body {
+      max-width: 1200px; margin: 0; font-size: 15px;
+      column-count: 2; column-gap: 56px;
+    }
+    .about-body h3 { break-after: avoid; margin-top: 0; }
+    .about-body p, .about-body .legend { break-inside: avoid; }
   }
   @media (min-width: 1560px) {
-    .about-body { max-width: 860px; }
+    .about-body { max-width: 1400px; column-gap: 72px; }
   }
 </style>
 </head>
@@ -1030,7 +1048,12 @@ try {
     <div class="section-head"><h2>Source health</h2><span class="rule"></span></div>
     <p class="tab-intro">Per-source status from the latest pipeline run. A source is never silently dropped — failures surface here and self-heal retries each run.</p>
     <table class="health-table" id="healthTable">
-      <thead><tr><th>Source</th><th>Status</th><th>Last checked</th><th>Note</th></tr></thead>
+      <thead><tr>
+        <th data-sort="name" tabindex="0" role="button" aria-label="Sort by source">Source<span class="sort-caret"></span></th>
+        <th data-sort="status" tabindex="0" role="button" aria-label="Sort by status">Status<span class="sort-caret"></span></th>
+        <th data-sort="checked_at" tabindex="0" role="button" aria-label="Sort by last checked">Last checked<span class="sort-caret"></span></th>
+        <th data-sort="note" tabindex="0" role="button" aria-label="Sort by note">Note<span class="sort-caret"></span></th>
+      </tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -1130,6 +1153,13 @@ const TYPE_HUE = {
   enforcement: 27, designation: 15, final_rule: 255, guidance: 232, consultation: 205,
   licensing: 150, peer_move: 172, speech: 300, news: 95
 };
+// Reader-lens order: CLAUDE.md defines this page for an HK/China-focused
+// compliance reader, so HK and mainland China sit first in ties. This is a
+// single tunable list, not a hardcoded "if jurisdiction === HK" branch --
+// swapping the reader's home market means reordering this array, nothing
+// else. It only breaks ties: renderPriority()'s round-robin still gives
+// every jurisdiction a fair shot per round, so a jurisdiction with several
+// genuinely high-priority items isn't crowded out once HK/CN run dry.
 const JURIS_ORDER = ["HK", "CN", "US", "EU", "SG", "GLOBAL"];
 const JURIS_FULL  = { HK: "Hong Kong", CN: "Mainland China", US: "United States", EU: "European Union", SG: "Singapore", GLOBAL: "Global" };
 const BUCKETS = {
@@ -1186,6 +1216,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<":
    ============================================================ */
 const state = { juris: "ALL", bucket: "ALL", range: "today", search: "" };
 let pendingFocus = null;  // [attr, value] of a chip to refocus after re-render
+let healthSort = { key: null, dir: 1 };  // null key -> default tier-grouped view
 const GEN_DAY = hkDayKey(DIGEST.generated_at);
 
 /* ---------- returning-reader state (all client-side, all optional) ---------- */
@@ -1575,7 +1606,11 @@ function renderSearchResults() {
     ${briefs.length ? `<div class="brief-block"><p class="brief-head">In brief — ${briefs.length} market headline${briefs.length > 1 ? "s" : ""}</p><div class="brief-list">${briefs.map(briefHTML).join("")}</div></div>` : ""}`;
 }
 
-/* ---------- source-health table (Source health tab) ---------- */
+/* ---------- source-health table (Source health tab) ----------
+   Default view groups by tier (official/industry/pipeline) with no sort
+   applied. Clicking a column header flattens the groups and sorts every
+   row by that column instead -- grouping and explicit sorting both convey
+   "order", so mixing them would be confusing. */
 function renderHealth() {
   const tb = document.querySelector("#healthTable tbody");
   const row = s => `<tr>
@@ -1584,16 +1619,33 @@ function renderHealth() {
        <td>${s.checked_at ? esc(fmtAudit(s.checked_at)) : "—"}</td>
        <td>${esc(s.note)}</td>
      </tr>`;
-  const groups = [
-    ["Official sources", s => s.tier === "official"],
-    ["Industry sources", s => s.tier === "industry"],
-    ["Pipeline", s => s.tier !== "official" && s.tier !== "industry"],
-  ];
-  tb.innerHTML = groups.map(([label, match]) => {
-    const rows = DIGEST.source_health.filter(match);
-    if (!rows.length) return "";
-    return `<tr class="h-group"><td colspan="4">${label}</td></tr>` + rows.map(row).join("");
-  }).join("");
+
+  document.querySelectorAll("#healthTable th[data-sort]").forEach(th => {
+    th.removeAttribute("aria-sort");
+    if (th.dataset.sort === healthSort.key) th.setAttribute("aria-sort", healthSort.dir === 1 ? "ascending" : "descending");
+  });
+
+  if (!healthSort.key) {
+    const groups = [
+      ["Official sources", s => s.tier === "official"],
+      ["Industry sources", s => s.tier === "industry"],
+      ["Pipeline", s => s.tier !== "official" && s.tier !== "industry"],
+    ];
+    tb.innerHTML = groups.map(([label, match]) => {
+      const rows = DIGEST.source_health.filter(match);
+      if (!rows.length) return "";
+      return `<tr class="h-group"><td colspan="4">${label}</td></tr>` + rows.map(row).join("");
+    }).join("");
+    return;
+  }
+
+  const { key, dir } = healthSort;
+  const val = s => key === "checked_at" ? new Date(s.checked_at || 0).getTime() : String(s[key] || "").toLowerCase();
+  const sorted = DIGEST.source_health.slice().sort((a, b) => {
+    const av = val(a), bv = val(b);
+    return (av < bv ? -1 : av > bv ? 1 : 0) * dir;
+  });
+  tb.innerHTML = sorted.map(row).join("");
 }
 
 /* ---------- audit log (Audit log tab) ---------- */
@@ -2136,7 +2188,23 @@ document.addEventListener("click", e => {
   // Read-marking: any headline/source link inside an item
   const link = e.target.closest("a[href]");
   if (link) { const host = link.closest("[data-id]"); if (host) markRead(host.dataset.id); }
+  // Source health: click a column header to sort by it (click again to
+  // reverse direction); clicking the same header a third time returns to
+  // the default tier-grouped view.
+  const sortTh = e.target.closest("#healthTable th[data-sort]");
+  if (sortTh) { toggleHealthSort(sortTh.dataset.sort); return; }
 });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const sortTh = e.target.closest && e.target.closest("#healthTable th[data-sort]");
+  if (sortTh) { e.preventDefault(); toggleHealthSort(sortTh.dataset.sort); }
+});
+function toggleHealthSort(key) {
+  if (healthSort.key !== key) healthSort = { key, dir: 1 };
+  else if (healthSort.dir === 1) healthSort = { key, dir: -1 };
+  else healthSort = { key: null, dir: 1 };
+  renderHealth();
+}
 // Brief rows count as read once expanded.
 document.addEventListener("toggle", e => {
   const d = e.target;

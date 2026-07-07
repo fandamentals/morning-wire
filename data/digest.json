@@ -28,7 +28,7 @@
     },
     {
       "id": "global-trm-labs-insights-4fa35664b1",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "TRM Labs — Insights",
       "title": "OFAC Sanctions 134 ISKP Cryptocurrency Addresses Tied to USD 2 Million in Terrorist Financing",
       "url": "https://www.trmlabs.com/resources/blog/ofac-sanctions-134-iskp-cryptocurrency-addresses-tied-to-usd-2-million-in-terrorist-financing",
@@ -66,7 +66,7 @@
       "source": "ACAMS Today",
       "title": "Crypto Threats, Vulnerabilities and What to Do Next",
       "url": "https://www.acams.org/en/opinion/crypto-threats-vulnerabilities-and-what-do-next",
-      "published": "2026-07-07T07:50:39.198729+00:00",
+      "published": "2026-04-13T16:00:00+00:00",
       "type": "news",
       "priority": "normal",
       "status": "new",
@@ -82,15 +82,15 @@
       "summary": "An ACAMS Today article surveys current criminal threats and control weaknesses in cryptocurrency and suggests practical next steps for compliance teams.",
       "so_what": "A quick horizon-scanning read, useful when refreshing cryptocurrency risk assessments or training material for financial-crime teams.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "fetch_time"
+      "date_source": "verified"
     },
     {
       "id": "global-acams-today-2e465a9794",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "ACAMS Today",
       "title": "What OFAC’s crypto mixer sanctions mean for financial crime compliance",
       "url": "https://www.acams.org/en/opinion/what-ofacs-crypto-mixer-sanctions-mean-financial-crime-compliance",
-      "published": "2026-07-07T07:50:39.197034+00:00",
+      "published": "2026-03-08T16:00:00+00:00",
       "type": "news",
       "priority": "normal",
       "status": "new",
@@ -106,7 +106,7 @@
       "summary": "An ACAMS Today article explains how the United States Office of Foreign Assets Control's sanctions on cryptocurrency mixing services affect financial-crime compliance programmes.",
       "so_what": "Helpful framing for tightening controls on mixer exposure, including how indirect exposure several transaction hops away should be treated in monitoring and investigations.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "fetch_time"
+      "date_source": "verified"
     },
     {
       "id": "global-acams-today-2bea5a2bff",
@@ -114,7 +114,7 @@
       "source": "ACAMS Today",
       "title": "Operation Prince: Inside a $15 billion crypto fraud takedown",
       "url": "https://www.acams.org/en/opinion/operation-prince-inside-15-billion-crypto-fraud-takedown",
-      "published": "2026-07-07T07:50:39.196937+00:00",
+      "published": "2026-03-23T16:00:00+00:00",
       "type": "news",
       "priority": "normal",
       "status": "new",
@@ -130,7 +130,7 @@
       "summary": "An ACAMS Today feature goes inside \"Operation Prince\", a law-enforcement takedown of a cryptocurrency fraud network measuring about fifteen billion United States dollars.",
       "so_what": "Case studies at this scale surface red-flag typologies — romance-investment fraud patterns and mule account networks — worth folding into monitoring scenarios and investigator training.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "fetch_time"
+      "date_source": "verified"
     },
     {
       "id": "global-coindesk-market-news-7146026493",
@@ -201,30 +201,6 @@
       },
       "summary": "United States federal agencies are still working through legal and operational questions before the planned national bitcoin reserve becomes operational, CoinDesk reports.",
       "so_what": "A sovereign bitcoin reserve would further legitimise state-level holdings, and the unresolved custody and jurisdiction questions mirror those banks face when holding digital assets.",
-      "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "page"
-    },
-    {
-      "id": "global-chainalysis-blog-e10d024105",
-      "jurisdiction": "GLOBAL",
-      "source": "Chainalysis — Blog",
-      "title": "Breadth, Depth, And Quality: Why Comparing Blockchain Analytics Vendors by Cluster Count Is Only Part of the Calculation",
-      "url": "https://www.chainalysis.com/blog/comparing-blockchain-analytics-vendors/",
-      "published": "2026-07-06T21:03:39+00:00",
-      "type": "news",
-      "priority": "normal",
-      "status": "new",
-      "verification": {
-        "level": "single_source",
-        "sources": [
-          {
-            "name": "Chainalysis — Blog",
-            "url": "https://www.chainalysis.com/blog/comparing-blockchain-analytics-vendors/"
-          }
-        ]
-      },
-      "summary": "Chainalysis argues that comparing blockchain-analytics vendors on the number of labelled address clusters tells only part of the story, with breadth, depth and attribution quality all mattering.",
-      "so_what": "Relevant when benchmarking or renewing blockchain-analytics contracts: procurement criteria should test attribution quality and coverage rather than headline cluster counts alone.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
       "date_source": "page"
     },
@@ -446,7 +422,7 @@
     },
     {
       "id": "global-the-block-policy-a3f39bf606",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "EU",
       "source": "The Block — Policy",
       "title": "Ripple secures full MiCA CASP authorization for crypto services across 30 EEA countries",
       "url": "https://www.theblock.co/post/407207/ripple-secures-full-mica-casp-authorization-for-crypto-services-across-30-eea-countries?utm_source=rss&utm_medium=rss",
@@ -545,32 +521,8 @@
       "date_source": "page"
     },
     {
-      "id": "global-elliptic-blog-9f279187a9",
-      "jurisdiction": "GLOBAL",
-      "source": "Elliptic — Blog",
-      "title": "Introducing Continuous Monitoring: stay aware of changing crypto risk",
-      "url": "https://www.elliptic.co/blog/introducing-continuous-monitoring",
-      "published": "2026-07-02T13:00:01+00:00",
-      "type": "news",
-      "priority": "normal",
-      "status": "new",
-      "verification": {
-        "level": "single_source",
-        "sources": [
-          {
-            "name": "Elliptic — Blog",
-            "url": "https://www.elliptic.co/blog/introducing-continuous-monitoring"
-          }
-        ]
-      },
-      "summary": "Elliptic launched a continuous-monitoring capability that re-screens cryptocurrency wallets and transactions as risk information changes after the initial check.",
-      "so_what": "Point-in-time wallet screening ages quickly; continuous re-screening options are worth weighing when reviewing blockchain-analytics tooling against ongoing monitoring obligations.",
-      "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "page"
-    },
-    {
       "id": "global-chainalysis-blog-987207320d",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "Chainalysis — Blog",
       "title": "OFAC Updates ISIS-Khorasan Sanctions with Over 100 Cryptocurrency Wallets",
       "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/",
@@ -745,32 +697,8 @@
       "date_source": "feed"
     },
     {
-      "id": "global-chainalysis-blog-8b7d6ac67d",
-      "jurisdiction": "GLOBAL",
-      "source": "Chainalysis — Blog",
-      "title": "Chainalysis Supports Robinhood Chain with Automatic Token Support",
-      "url": "https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/",
-      "published": "2026-07-01T19:30:58+00:00",
-      "type": "news",
-      "priority": "normal",
-      "status": "new",
-      "verification": {
-        "level": "single_source",
-        "sources": [
-          {
-            "name": "Chainalysis — Blog",
-            "url": "https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/"
-          }
-        ]
-      },
-      "summary": "Chainalysis announced automatic token support for Robinhood's new blockchain, meaning assets on that chain can be traced in its analytics tools from launch.",
-      "so_what": "Day-one analytics coverage of new chains matters for monitoring completeness — a gap between chain launch and tracing support is a window where flows go unseen.",
-      "first_seen": "2026-07-07T12:05:14.831025+00:00",
-      "date_source": "feed"
-    },
-    {
       "id": "global-elliptic-blog-34fcbfc9a2",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "EU",
       "source": "Elliptic — Blog",
       "title": "What the end of MiCA's transitional period means for crypto businesses",
       "url": "https://www.elliptic.co/blog/the-end-of-micas-transitional-period",
@@ -1120,7 +1048,7 @@
     {
       "name": "Claude summarisation",
       "status": "ok",
-      "note": "Summaries written via Claude Code session on 2026-07-07"
+      "note": "Sonnet — Claude Code session on 2026-07-07"
     }
   ],
   "run_log": [
@@ -1163,6 +1091,10 @@
     {
       "at": "2026-07-07T13:16:41.448454+00:00",
       "note": "Corrected a residual data issue affecting 2 items."
+    },
+    {
+      "at": "2026-07-07T20:55:12.313700+00:00",
+      "note": "Corrected 3 article dates, removed 3 vendor-promotional posts, and refined jurisdiction tagging on 5 items. Today's summaries were written with Sonnet."
     }
   ]
 }
