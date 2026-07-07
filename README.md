@@ -122,8 +122,8 @@ Each scheduled run (`scripts/run.py`):
   header and footer of the page.
 - **`first_seen` vs `published`.** Each item carries both the source's own publish
   timestamp (`published`, shown on the card) and the HKT date this pipeline first
-  ingested it (`first_seen`, used to decide whether it lands in "Today" or the "Last 7
-  days" archive). Splitting on `published` alone would misfile most overnight US/EU
+  ingested it (`first_seen`, used to decide which Range-selector bucket — Today, Last 7
+  days, Last 30 days — an item falls into). Splitting on `published` alone would misfile most overnight US/EU
   news — items a US regulator posts in the evening ET land in the small hours HKT and
   are `published` on the *previous* HKT calendar day even on the run that surfaces them
   for the first time.
@@ -134,8 +134,9 @@ Each scheduled run (`scripts/run.py`):
   securities-at-large) are keyword-filtered to digital-asset-relevant items before
   anything else runs, so a CFTC or Federal Reserve press feed doesn't flood the digest
   with unrelated releases.
-- **Backlog cap.** Items published more than 10 days ago are ignored at ingest
-  (`MAX_ITEM_AGE_DAYS` in `scripts/fetch.py`) — feeds return their most recent N
+- **Backlog cap.** Items published more than 7 days ago are ignored at ingest
+  (`MAX_ITEM_AGE_DAYS` in `scripts/fetch.py`, aligned with the priority strip's
+  own 7-day window) — feeds return their most recent N
   entries regardless of age, so a source's first-ever run (or a newly added source)
   would otherwise flood a *daily* digest with months-old items presented as new. The
   page's priority strip is stricter still: it only admits items published within the
