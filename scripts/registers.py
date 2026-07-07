@@ -32,7 +32,13 @@ def _extract_entities(html, selector=None, column=None):
     for node in nodes:
         if node.name == "tr" and column is not None:
             cells = node.find_all(["td", "th"])
-            cell = cells[column] if len(cells) > column else None
+            if len(cells) <= column:
+                # A row without the expected column (header/spacer row, or a
+                # table redesign) must be skipped, not fall back to whole-row
+                # text -- that would fabricate a phantom "entity" and fire a
+                # bogus licensing diff.
+                continue
+            cell = cells[column]
         elif node.name == "tr":
             cell = node.find(["td", "th"])
         else:
@@ -77,6 +83,11 @@ def diff_register(source):
     added = [] if first_run else sorted(set(current) - set(previous))
     removed = [] if first_run else sorted(set(previous) - set(current))
 
+    # Known tradeoff: the snapshot is updated NOW, before run.py's item cap
+    # runs, so a register event that later falls past the 25-item cap would
+    # not refire. In practice register items sort official-tier + newest and
+    # land at the top of the cap; accepted for simplicity.
+
     snapshot_path.write_text(
         json.dumps(
             {"entities": current, "updated_at": datetime.now(timezone.utc).isoformat()},
@@ -90,12 +101,20 @@ def diff_register(source):
 
 
 def register_items(source, added, removed):
-    """Build pipeline-shaped raw items for register additions/removals."""
+    """Build pipeline-shaped raw items for register additions/removals.
+
+    Ids carry the event date: an entity removed and later RE-added (e.g. a
+    licence suspension then reinstatement) must surface as a fresh event, not
+    be swallowed by the dedupe memory of the original addition. Same-day
+    duplicates are impossible -- the snapshot updates in the same run, so a
+    given diff only ever fires once.
+    """
     now = datetime.now(timezone.utc).isoformat()
+    day = now[:10]
     items = []
     for name in added:
         items.append({
-            "id": f"register-{_slug(source['name'])}-{_slug(name)}-add",
+            "id": f"register-{_slug(source['name'])}-{_slug(name)}-add-{day}",
             "jurisdiction": source["jurisdiction"],
             "source": source["name"],
             "title": f"{name} added to {source['name']}",
@@ -107,7 +126,7 @@ def register_items(source, added, removed):
         })
     for name in removed:
         items.append({
-            "id": f"register-{_slug(source['name'])}-{_slug(name)}-remove",
+            "id": f"register-{_slug(source['name'])}-{_slug(name)}-remove-{day}",
             "jurisdiction": source["jurisdiction"],
             "source": source["name"],
             "title": f"{name} removed from {source['name']}",
