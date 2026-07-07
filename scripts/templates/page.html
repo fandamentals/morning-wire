@@ -128,6 +128,10 @@ try {
      ============================================================ */
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
   body {
     margin: 0;
     background: var(--bg);
@@ -779,11 +783,17 @@ try {
     border-bottom: 1px solid var(--border);
   }
   .health-table th { color: var(--ink-3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 10.5px; }
-  .health-table th[data-sort] {
-    cursor: pointer; user-select: none; display: table-cell;
+  /* A real <button> inside the <th> keeps native columnheader semantics on
+     the <th> itself (aria-sort belongs there, per the ARIA spec, not on the
+     interactive control) while still giving keyboard/AT users a proper
+     button rather than a role="button" <th> that isn't one. */
+  .health-table .sort-btn {
+    appearance: none; background: none; border: none; padding: 0; margin: 0;
+    font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit;
+    cursor: pointer; user-select: none; display: inline-flex; align-items: center;
   }
-  .health-table th[data-sort]:hover, .health-table th[data-sort]:focus-visible { color: var(--accent); }
-  .health-table th[data-sort]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .health-table .sort-btn:hover, .health-table .sort-btn:focus-visible { color: var(--accent); }
+  .health-table .sort-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .health-table th .sort-caret { display: inline-block; width: 10px; margin-left: 2px; opacity: .6; }
   .health-table th[aria-sort="ascending"] .sort-caret::after { content: "▲"; }
   .health-table th[aria-sort="descending"] .sort-caret::after { content: "▼"; }
@@ -806,7 +816,12 @@ try {
      [hidden] already keeps this inert whenever the tab isn't selected. */
   @media (min-width: 1100px) {
     #tab-health {
-      width: 100vw; max-width: 1400px;
+      /* `100vw` measures the real device viewport, not the zoomed-in content
+         box CSS `zoom` (see FONT SIZE below) renders into -- at any zoom
+         above 100% this overflows the page sideways. --zoom-vw is kept in
+         sync with the current zoom level by JS and used when set; 100vw is
+         only the pre-JS/no-JS fallback. */
+      width: var(--zoom-vw, 100vw); max-width: 1400px;
       position: relative; left: 50%; transform: translateX(-50%);
       padding: 0 20px;
     }
@@ -949,6 +964,7 @@ try {
 </style>
 </head>
 <body>
+<div id="liveRegion" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 <canvas id="matrixCanvas" aria-hidden="true"></canvas>
 
 <noscript>
@@ -990,11 +1006,11 @@ try {
 
 <main class="wrap">
   <div class="sticky-bar">
-    <nav class="tabs" aria-label="Sections">
-      <button class="tab" type="button" data-tab="digest" aria-selected="true">Digest</button>
-      <button class="tab" type="button" data-tab="health" aria-selected="false">Source health</button>
-      <button class="tab" type="button" data-tab="audit" aria-selected="false">Audit log</button>
-      <button class="tab" type="button" data-tab="about" aria-selected="false">About &amp; method</button>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" type="button" role="tab" id="tabbtn-digest" data-tab="digest" aria-selected="true" aria-controls="tab-digest">Digest</button>
+      <button class="tab" type="button" role="tab" id="tabbtn-health" data-tab="health" aria-selected="false" aria-controls="tab-health">Source health</button>
+      <button class="tab" type="button" role="tab" id="tabbtn-audit" data-tab="audit" aria-selected="false" aria-controls="tab-audit">Audit log</button>
+      <button class="tab" type="button" role="tab" id="tabbtn-about" data-tab="about" aria-selected="false" aria-controls="tab-about">About &amp; method</button>
     </nav>
     <div class="toolbar" id="toolbar">
       <div class="search-wrap">
@@ -1007,7 +1023,7 @@ try {
     </div>
   </div>
 
-  <div id="tab-digest">
+  <div id="tab-digest" role="tabpanel" aria-labelledby="tabbtn-digest">
     <div class="digest-layout">
       <aside class="filters-sidebar" id="filtersSidebar">
         <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-expanded="true" aria-controls="filtersBody">
@@ -1044,27 +1060,27 @@ try {
     </div>
   </div>
 
-  <div id="tab-health" hidden>
+  <div id="tab-health" role="tabpanel" aria-labelledby="tabbtn-health" hidden>
     <div class="section-head"><h2>Source health</h2><span class="rule"></span></div>
     <p class="tab-intro">Per-source status from the latest pipeline run. A source is never silently dropped — failures surface here and self-heal retries each run.</p>
     <table class="health-table" id="healthTable">
       <thead><tr>
-        <th data-sort="name" tabindex="0" role="button" aria-label="Sort by source">Source<span class="sort-caret"></span></th>
-        <th data-sort="status" tabindex="0" role="button" aria-label="Sort by status">Status<span class="sort-caret"></span></th>
-        <th data-sort="checked_at" tabindex="0" role="button" aria-label="Sort by last checked">Last checked<span class="sort-caret"></span></th>
-        <th data-sort="note" tabindex="0" role="button" aria-label="Sort by note">Note<span class="sort-caret"></span></th>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="name">Source<span class="sort-caret"></span></button></th>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="status">Status<span class="sort-caret"></span></button></th>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="checked_at">Last checked<span class="sort-caret"></span></button></th>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="note">Note<span class="sort-caret"></span></button></th>
       </tr></thead>
       <tbody></tbody>
     </table>
   </div>
 
-  <div id="tab-audit" hidden>
+  <div id="tab-audit" role="tabpanel" aria-labelledby="tabbtn-audit" hidden>
     <div class="section-head"><h2>Audit log</h2><span class="rule"></span></div>
     <p class="tab-intro">Every data update to this page, newest first (all times Hong Kong).</p>
     <ol class="audit-list" id="auditLog"></ol>
   </div>
 
-  <div id="tab-about" hidden>
+  <div id="tab-about" role="tabpanel" aria-labelledby="tabbtn-about" hidden>
     <div class="section-head"><h2>About &amp; method</h2><span class="rule"></span></div>
     <div class="about-body">
       <h3>What this is</h3>
@@ -1105,7 +1121,7 @@ try {
       days and Last 30 days showing everything this page currently retains within that
       window, and All showing everything retained with no cutoff at all (none of these are
       a promise of a full 30 days of history — see below); the Audit log tab
-      records the last 30 data updates. Items older than seven days at ingest are not
+      records the last 10 data updates. Items older than seven days at ingest are not
       admitted — this is a daily wire, not a permanent archive. Your Range, Jurisdiction and
       Category choices are remembered on this device across visits — if the page ever looks
       unexpectedly empty or dated, check that a wider range or "All" isn't still selected
@@ -1597,6 +1613,7 @@ function renderSearchResults() {
       <h3>No matches for "${esc(state.search.trim())}"${scopeNote}</h3>
       <p>Search covers the items currently retained in this digest (within the selected range/filters above), not the live web.</p>
     </div>`;
+    announce(`No matches for ${state.search.trim()}`);
     return;
   }
   const cards = matches.filter(it => !isBrief(it));
@@ -1604,6 +1621,7 @@ function renderSearchResults() {
   feed.innerHTML = `<div class="section-head"><h2>${matches.length} result${matches.length > 1 ? "s" : ""} for "${esc(state.search.trim())}"${scopeNote}</h2><span class="rule"></span></div>
     ${cards.map(cardHTML).join("")}
     ${briefs.length ? `<div class="brief-block"><p class="brief-head">In brief — ${briefs.length} market headline${briefs.length > 1 ? "s" : ""}</p><div class="brief-list">${briefs.map(briefHTML).join("")}</div></div>` : ""}`;
+  announce(`${matches.length} result${matches.length > 1 ? "s" : ""} for ${state.search.trim()}`);
 }
 
 /* ---------- source-health table (Source health tab) ----------
@@ -1620,9 +1638,10 @@ function renderHealth() {
        <td>${esc(s.note)}</td>
      </tr>`;
 
-  document.querySelectorAll("#healthTable th[data-sort]").forEach(th => {
+  document.querySelectorAll("#healthTable .sort-btn").forEach(btn => {
+    const th = btn.closest("th");
     th.removeAttribute("aria-sort");
-    if (th.dataset.sort === healthSort.key) th.setAttribute("aria-sort", healthSort.dir === 1 ? "ascending" : "descending");
+    if (btn.dataset.sort === healthSort.key) th.setAttribute("aria-sort", healthSort.dir === 1 ? "ascending" : "descending");
   });
 
   if (!healthSort.key) {
@@ -1799,7 +1818,19 @@ function toClipboard(text, html) {
 function flashButton(btn, label) {
   const prev = btn.textContent;
   btn.textContent = label;
+  announce(label);
   setTimeout(() => { btn.textContent = prev; }, 1500);
+}
+/* ---------- screen-reader announcements for state changes that are only
+   otherwise visible (search result counts, sort order, copy confirmations)
+   -- an aria-live region that visibly-sighted users never see. Clearing
+   first, then setting on the next frame, forces a re-announcement even
+   when the new text is identical to what's already there (a live region
+   only fires on an actual DOM mutation). ---------- */
+const liveRegion = document.getElementById("liveRegion");
+function announce(text) {
+  liveRegion.textContent = "";
+  requestAnimationFrame(() => { liveRegion.textContent = text; });
 }
 function citeText(it) {
   const c = it.verification.checked;
@@ -2027,9 +2058,20 @@ let fontStepIdx = FONT_STEPS.indexOf(100);
 const fontDecBtn = document.getElementById("fontDec");
 const fontIncBtn = document.getElementById("fontInc");
 const fontResetBtn = document.getElementById("fontReset");
+function updateZoomSafeViewportWidth() {
+  // window.innerWidth reports the real, unzoomed device viewport regardless
+  // of document.documentElement.style.zoom -- dividing by the zoom fraction
+  // converts it into the zoomed context's own local CSS-px viewport width,
+  // which is what a breakout element measured from inside that context
+  // actually needs (see #tab-health's `100vw` overflow-at-zoom comment).
+  const pct = FONT_STEPS[fontStepIdx];
+  document.documentElement.style.setProperty("--zoom-vw", (window.innerWidth / (pct / 100)) + "px");
+}
+window.addEventListener("resize", updateZoomSafeViewportWidth, { passive: true });
 function applyFontScale() {
   const pct = FONT_STEPS[fontStepIdx];
   document.documentElement.style.zoom = pct + "%";
+  updateZoomSafeViewportWidth();
   const atMin = fontStepIdx === 0, atMax = fontStepIdx === FONT_STEPS.length - 1;
   // Disabling a focused button silently drops focus to <body> with no
   // visible indication of where it went -- move it to Reset first (always
@@ -2116,6 +2158,14 @@ const sidebarToggle = document.getElementById("sidebarToggle");
 const SIDEBAR_COLLAPSE_SCROLL_Y = 120;
 let sidebarOverride = null; // null = auto (scroll/search-driven); true/false = forced open/closed
 function updateSidebarCollapse() {
+  // Collapsing sets .filters to display:none, which yanks focus out from
+  // under a keyboard user mid-Tab if it's currently on a chip inside the
+  // sidebar (the browser drops it to <body> with no way back in) -- a
+  // scroll caused by the browser's own focus-follow auto-scroll must never
+  // trigger the auto-collapse it would otherwise apply. This only guards
+  // the automatic scroll-driven path; an explicit sidebarToggle click
+  // still collapses on request even with focus inside.
+  if (document.activeElement && filtersSidebar.contains(document.activeElement)) return;
   const autoCollapse = window.scrollY > SIDEBAR_COLLAPSE_SCROLL_Y || !!state.search.trim();
   const collapsed = sidebarOverride !== null ? !sidebarOverride : autoCollapse;
   filtersSidebar.classList.toggle("collapsed", collapsed);
@@ -2125,6 +2175,10 @@ window.addEventListener("scroll", () => {
   if (window.scrollY < 40) sidebarOverride = null;
   requestAnimationFrame(updateSidebarCollapse);
 }, { passive: true });
+// Once focus leaves the sidebar (Tab/Shift+Tab out, or a click elsewhere),
+// re-evaluate immediately so a since-passed scroll threshold still collapses
+// it -- the guard above only defers the decision, it doesn't cancel it.
+filtersSidebar.addEventListener("focusout", () => requestAnimationFrame(updateSidebarCollapse));
 sidebarToggle.onclick = () => {
   sidebarOverride = filtersSidebar.classList.contains("collapsed");
   updateSidebarCollapse();
@@ -2190,20 +2244,20 @@ document.addEventListener("click", e => {
   if (link) { const host = link.closest("[data-id]"); if (host) markRead(host.dataset.id); }
   // Source health: click a column header to sort by it (click again to
   // reverse direction); clicking the same header a third time returns to
-  // the default tier-grouped view.
-  const sortTh = e.target.closest("#healthTable th[data-sort]");
-  if (sortTh) { toggleHealthSort(sortTh.dataset.sort); return; }
+  // the default tier-grouped view. A real <button> means Enter/Space already
+  // fire this same click event natively -- no separate keydown handler needed.
+  const sortBtn = e.target.closest("#healthTable .sort-btn");
+  if (sortBtn) { toggleHealthSort(sortBtn.dataset.sort); return; }
 });
-document.addEventListener("keydown", e => {
-  if (e.key !== "Enter" && e.key !== " ") return;
-  const sortTh = e.target.closest && e.target.closest("#healthTable th[data-sort]");
-  if (sortTh) { e.preventDefault(); toggleHealthSort(sortTh.dataset.sort); }
-});
+const HEALTH_SORT_LABEL = { name: "Source", status: "Status", checked_at: "Last checked", note: "Note" };
 function toggleHealthSort(key) {
   if (healthSort.key !== key) healthSort = { key, dir: 1 };
   else if (healthSort.dir === 1) healthSort = { key, dir: -1 };
   else healthSort = { key: null, dir: 1 };
   renderHealth();
+  announce(healthSort.key
+    ? `Sorted by ${HEALTH_SORT_LABEL[healthSort.key]}, ${healthSort.dir === 1 ? "ascending" : "descending"}`
+    : "Sort cleared, showing default grouping");
 }
 // Brief rows count as read once expanded.
 document.addEventListener("toggle", e => {

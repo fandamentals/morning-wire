@@ -13,6 +13,7 @@ intentional improvement or an accidental rename, so it always treats drift
 as needing a human decision, never auto-updates its own snapshot.
 """
 import json
+import re
 
 from base import finding, could_not_run
 
@@ -20,6 +21,32 @@ CHECK_ID = "enum_constant_freeze"
 MODE = "hard"
 
 SNAPSHOT_PATH = "audit/enum-snapshot.json"
+
+
+def _page_html_type_keys(repo_root):
+    """render.py's VALID_TYPES is not the only copy of this enum: summarise.py
+    keeps an independent VALID_TYPES to validate the model's own output
+    (drifting from render.py's would let it coerce a real type to "news", or
+    accept a value render.py would then silently drop at render time), and
+    scripts/templates/page.html's TYPE_LABEL/BUCKETS maps every type to a
+    display label/category client-side (a type present in data but missing
+    from either map renders with no label / lands in no category, silently,
+    since page.html has no equivalent of render.py's schema gate). page.html
+    is JS-in-HTML, not an importable module, so these are extracted with a
+    narrow, human-reviewable regex rather than a real JS parser -- good
+    enough to freeze a snapshot against, not a general JS-object reader."""
+    text = (repo_root / "scripts" / "templates" / "page.html").read_text(encoding="utf-8")
+
+    label_block = re.search(r"const TYPE_LABEL\s*=\s*\{(.*?)\};", text, re.DOTALL)
+    label_keys = sorted(re.findall(r"(\w+):\s*[\"']", label_block.group(1))) if label_block else []
+
+    buckets_block = re.search(r"const BUCKETS\s*=\s*\{(.*?)\n\};", text, re.DOTALL)
+    bucket_types = set()
+    if buckets_block:
+        for arr in re.findall(r"types:\s*\[(.*?)\]", buckets_block.group(1)):
+            bucket_types.update(re.findall(r"[\"'](\w+)[\"']", arr))
+
+    return sorted(label_keys), sorted(bucket_types)
 
 
 def _current_values(repo_root):
@@ -30,6 +57,9 @@ def _current_values(repo_root):
     import run as run_mod
     import heal as heal_mod
     import registers as registers_mod
+    import summarise as summarise_mod
+
+    page_labels, page_bucket_types = _page_html_type_keys(repo_root)
 
     return {
         "VALID_TYPES": sorted(render_mod.VALID_TYPES),
@@ -44,6 +74,11 @@ def _current_values(repo_root):
         "MAX_CHURN_FRACTION": registers_mod.MAX_CHURN_FRACTION,
         "MAX_CHURN_FLOOR": registers_mod.MAX_CHURN_FLOOR,
         "FAILURE_THRESHOLD": heal_mod.FAILURE_THRESHOLD,
+        # Independent copies of the same VALID_TYPES contract -- see the
+        # docstring above for why each one matters.
+        "SUMMARISE_VALID_TYPES": sorted(summarise_mod.VALID_TYPES),
+        "PAGE_HTML_TYPE_LABEL_KEYS": page_labels,
+        "PAGE_HTML_BUCKET_TYPES": page_bucket_types,
     }
 
 

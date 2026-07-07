@@ -30,8 +30,15 @@ SECRET_PATTERNS = [
     r"gho_[A-Za-z0-9]{30,}",
     r"AKIA[0-9A-Z]{16}",
     r"xox[bpars]-[A-Za-z0-9-]{10,}",
+    r"xapp-[A-Za-z0-9-]{10,}",  # Slack app-level token
+    r"ya29\.[A-Za-z0-9_-]{20,}",  # Google OAuth access token
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
     r"AIza[0-9A-Za-z_-]{35}",
+    r"eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}",  # JWT (3 dot-separated segments)
+    # Generic "credential-named variable assigned a long quoted string" --
+    # deliberately requires both a suggestive name AND real payload length,
+    # so it doesn't fire on every url `?token=` query-string example in docs.
+    r"(?i:\b(api[_-]?key|secret|password|access[_-]?token|auth[_-]?token)\b\s*[:=]\s*[\"'][A-Za-z0-9_\-/+=]{16,}[\"'])",
 ]
 
 NEUTRALITY_PATTERNS = [

@@ -202,9 +202,9 @@ pipeline behavior. It is safe to commit directly to `main`.
    `main` again. Committing here mid-pipeline-run risks the exact same
    guaranteed `docs/index.html` push conflict the "enrich today's digest"
    recipe's own Phase-0-equivalent step exists to avoid.
-3. Append the entry to `data/digest.json`'s top-level `run_log` (the pipeline
-   caps it at 30; do not otherwise touch `run_log`, `source_health`, or
-   `top_of_mind`).
+3. Append the entry to `data/digest.json`'s top-level `run_log` (`scripts/render.py`
+   keeps only the most recent `RUN_LOG_MAX_ENTRIES` (10) on the rendered page;
+   do not otherwise touch `run_log`, `source_health`, or `top_of_mind`).
 4. Re-render: `python3 scripts/render.py`.
 5. Commit `data/digest.json`, `docs/index.html` and `docs/feed.xml` directly
    to `main` (plain message, e.g. "chore: log weekly integrity audit run" —

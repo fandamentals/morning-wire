@@ -27,7 +27,7 @@ Each scheduled run (`scripts/run.py`):
    the web-search tool) to find and validate a replacement URL, updates
    `data/sources.json` in place, and logs the change to `CHANGELOG-sources.md`. A source
    is never silently dropped — if nothing validates, it's marked `dead` and surfaced in
-   the page footer (`scripts/heal.py`).
+   the Source health tab (`scripts/heal.py`).
 4. **Dedupe** — matches items by canonical URL against `data/seen-items.json`. A repeat
    with an unchanged title is skipped. A repeat with a *changed* title is only
    resurfaced (as `status: "update"`) if Claude judges the change materially significant
@@ -119,7 +119,7 @@ Each scheduled run (`scripts/run.py`):
 /data/registers/                 last-known snapshots of official registers
 /data/source-health.json         per-source consecutive-failure tracking
 /data/seen-items.json            dedupe memory (pruned after 90 days)
-/data/digest.json                rolling window of published items
+/data/digest.json                rolling ~8-day window of published items
 /docs/index.html                 published page (GitHub Pages serves this)
 /audit/PLAYBOOK.md              runbook for the weekly integrity-audit routine
 /audit/lessons.md               LESSON/INVARIANT/CHECK log of past incidents

@@ -37,12 +37,16 @@ do this:
    judgment rather than mechanically applying a keyword list. Removing an
    item this way is a legitimate, intended use of this recipe, but
    `scripts/audit_checks/check_deletion_diff.py` cannot tell "deliberate
-   editorial removal" from "accidental data loss" — expect it to raise a
-   `critical` finding on the next `python3 scripts/audit.py` run, and resolve
-   that (don't just leave it paging) by adding a scoped entry to
-   `audit/exceptions.json` referencing the exact finding (check id + item
-   key/id), with an `expires` date and a one-line reason, exactly as
-   `audit/PLAYBOOK.md`'s exceptions mechanism intends.
+   editorial removal" from "accidental data loss" by design, and `deletion_diff`
+   is a PROTECTED check — `audit/exceptions.json` can NEVER suppress one of its
+   `critical` findings (scripts/audit.py enforces this in code, not just as a
+   documented rule), so do not try. Expect a real `critical` finding on the
+   next `python3 scripts/audit.py` run and on the daily tripwire
+   (`.github/workflows/integrity.yml`) for up to `RETENTION_SLACK_DAYS` (~10)
+   days, until the removal commit ages out of the diffed window — this is the
+   correct, honest signal working as designed, not a bug to silence. Note it
+   plainly in this run's commit message and `run_log` entry so a human
+   reviewing the eventual tripwire issue has the context, and move on.
 3. For each remaining item needing enrichment, write the two lines yourself
    (you are the model — no API call is needed):
    - **summary**: one plain-English sentence describing what happened, readable by any

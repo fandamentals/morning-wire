@@ -272,6 +272,14 @@ def main():
         "items": [finalize_item(it) for it in merged_items],
         "source_health": source_health,
         "run_log": run_log[-RUN_LOG_MAX_ENTRIES:],
+        # Carry forward radar rows: this dict is rebuilt from scratch every
+        # run, and radar is only ever populated by the keyless "enrich
+        # today's digest" recipe (CLAUDE.md step 5), never by this pipeline
+        # itself -- without this, the next daily run would silently discard
+        # every deadline/effective-date row the last enrichment session
+        # wrote. render.py's own sanitize step still drops past-dated rows
+        # and caps the count at render time, same as before.
+        "radar": previous_digest.get("radar") or [],
     }
 
     # Render before persisting -- a bad render must not corrupt seen-items.json

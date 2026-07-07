@@ -4,8 +4,8 @@ A source is considered dead if it errors or returns zero items for 5
 consecutive runs. On death, Claude (with web_search) is asked to find the
 current official equivalent URL; the candidate is validated by actually
 fetching it before sources.json is updated. A source is never silently
-dropped -- if no replacement validates, it is marked "dead" and surfaces in
-the page footer.
+dropped -- if no replacement validates, it is marked "dead" and surfaces on
+the Source health tab.
 """
 import json
 import logging
@@ -105,9 +105,9 @@ def _find_replacement(source):
 
 
 def _dead_note(failures, last_error):
-    """Honest, specific footer text for a source past the failure threshold,
-    so a reader can tell a site that blocks automated fetch (needs a manual
-    check) apart from one that has genuinely moved or gone empty."""
+    """Honest, specific Source health tab text for a source past the failure
+    threshold, so a reader can tell a site that blocks automated fetch (needs
+    a manual check) apart from one that has genuinely moved or gone empty."""
     err = (last_error or "").lower()
     runs = f"{failures} consecutive runs"
     if "403" in err or "429" in err or "forbidden" in err:
