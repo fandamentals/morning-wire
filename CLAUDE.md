@@ -59,16 +59,36 @@ do this:
    If found, set `verification.level` to `corroborated` and make
    `verification.sources` exactly two entries: the original plus the confirming
    `{name, url}` (http/https URLs only). If nothing confirms it, leave it alone.
-7. In `source_health`, if there is a row named `Claude summarisation`, replace it with:
+7. Date & fact-check pass (HONESTY RULES apply — never record a check that was
+   not actually performed):
+   - For every item whose `date_source` is `"fetch_time"` (its listing page had
+     no date, so the pipeline stamped ingestion time): open the article URL and
+     read the real publication date — prefer structured data (JSON-LD
+     `datePublished`, `article:published_time`, `<time datetime>`) over loose
+     text, which often belongs to event promos rather than the article. If a
+     trustworthy date is found, set `published` to it (date-only values →
+     midnight `+08:00`) and set `date_source` to `"verified"`. If not found,
+     leave both fields alone — never guess a date.
+   - For high-priority items: fetch the named official source (the regulator's
+     own notice, register or press release) and check the central claim —
+     numbers, entities, dates. Only if it actually matches, record:
+     `verification.checked = {"at": "<now UTC ISO>", "against": "<official body
+     — which document>", "url": "<official url>", "note": "<one line: what was
+     matched>"}`. The page renders this as "✓ Checked against …". Where the
+     existing corroboration rule fits, also upgrade `verification.level` to
+     `corroborated` with the official source as the second entry. If the
+     official source CONTRADICTS the item, fix the summary or lower the
+     priority — do not record a check.
+8. In `source_health`, if there is a row named `Claude summarisation`, replace it with:
    `{"name": "Claude summarisation", "status": "ok", "note": "Summaries written via
    Claude Code session on <YYYY-MM-DD>"}`.
-8. Append an entry to the top-level `run_log` list (the page's Audit log tab):
+9. Append an entry to the top-level `run_log` list (the page's Audit log tab):
    `{"at": "<now, UTC ISO-8601>", "note": "Enrichment: <N> items summarised and
    classified via Claude Code session"}` — one short sentence; mention corroborations
    if any were made. Keep the list as-is otherwise; the pipeline caps it at 30.
-9. Re-render: `python3 scripts/render.py` (stdlib only — no pip install needed). This
+10. Re-render: `python3 scripts/render.py` (stdlib only — no pip install needed). This
    also refreshes `docs/feed.xml` (the RSS feed) and the page's Open Graph tags.
-10. Commit `data/digest.json`, `docs/index.html` and `docs/feed.xml` (plain message,
+11. Commit `data/digest.json`, `docs/index.html` and `docs/feed.xml` (plain message,
    e.g. "chore: enrich digest" — do NOT add `[skip ci]`, the push must trigger the
    Pages deploy workflow) and push to `main` (if pushing to `main` is blocked, push a
    branch, open a PR and merge it). The push triggers `.github/workflows/pages.yml`,

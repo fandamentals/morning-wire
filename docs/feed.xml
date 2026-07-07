@@ -4,49 +4,13 @@
 <title>Digital Assets Morning Wire</title>
 <link>https://fandamentals.github.io/morning-wire/</link>
 <description>Daily digital-asset regulatory and market digest. AI-sourced and AI-generated — verify against official sources before acting.</description>
-<lastBuildDate>Tue, 07 Jul 2026 07:50:49 +0000</lastBuildDate>
+<lastBuildDate>Tue, 07 Jul 2026 12:06:13 +0000</lastBuildDate>
 <atom:link href="https://fandamentals.github.io/morning-wire/feed.xml" rel="self" type="application/rss+xml"/>
-<item>
-<title>FSTB and HKMA to further unlock potential of distributed ledger technology in Hong Kong's fixed income market</title>
-<link>https://www.info.gov.hk/gia/general/202606/29/P2026062900677.htm</link>
-<guid isPermaLink="false">hk-fstb-press-releases-cf3d3aabb6</guid>
-<pubDate>Mon, 29 Jun 2026 00:00:00 +0000</pubDate>
-<description>The Financial Services and the Treasury Bureau and the Hong Kong Monetary Authority announced further measures to expand the use of distributed ledger technology in Hong Kong's fixed-income market. So what: Signals a continuing official push to make tokenised debt mainstream in Hong Kong — expect follow-on guidance touching settlement, custody and record-keeping controls. [official]</description>
-<category>HK</category>
-<category>news</category>
-</item>
-<item>
-<title>The European Banking Authority consults on a draft methodology for setting fines under the Markets in Crypto-Assets Regulation (MiCA)</title>
-<link>https://www.eba.europa.eu/publications-and-media/press-releases/european-banking-authority-consults-draft-methodology-setting-fines-under-markets-crypto-assets</link>
-<guid isPermaLink="false">eu-eba-news-23fee21bfb</guid>
-<pubDate>Fri, 26 Jun 2026 13:27:24 +0000</pubDate>
-<description>The European Banking Authority is consulting on a draft methodology for setting fines on issuers it supervises under the EU's Markets in Crypto-Assets Regulation. So what: A concrete preview of how penalties under the EU Markets in Crypto-Assets Regulation will be sized — a useful benchmark when gauging the EU enforcement exposure of stablecoin and token issuers. [official]</description>
-<category>EU</category>
-<category>consultation</category>
-</item>
-<item>
-<title>The EBA updates validation rules for supervisory reporting</title>
-<link>https://www.eba.europa.eu/publications-and-media/press-releases/eba-updates-validation-rules-supervisory-reporting</link>
-<guid isPermaLink="false">eu-eba-news-e444efca6b</guid>
-<pubDate>Fri, 26 Jun 2026 11:17:02 +0000</pubDate>
-<description>The European Banking Authority published updated validation rules for supervisory reporting, flagging corrections reporting institutions should apply. So what: Routine, but worth passing to regulatory-reporting teams handling EU entities, including MiCA-related returns. [official]</description>
-<category>EU</category>
-<category>guidance</category>
-</item>
-<item>
-<title>Wallet Screening Best Practices for Compliance Teams</title>
-<link>https://www.trmlabs.com/resources/blog/wallet-screening-best-practices-for-compliance-teams</link>
-<guid isPermaLink="false">global-trm-labs-insights-f5039e43fc</guid>
-<pubDate>Tue, 07 Jul 2026 07:50:47 +0000</pubDate>
-<description>TRM Labs published a guide on how compliance teams should screen cryptocurrency wallets for sanctions and financial-crime risk. So what: A useful benchmark for reviewing whether existing wallet-screening controls cover sanctions exposure, indirect risk and re-screening frequency in line with current industry practice. [single source]</description>
-<category>GLOBAL</category>
-<category>news</category>
-</item>
 <item>
 <title>H1 2026 Crypto Hacks Reach Record High as Losses Fall Below USD 1 Billion</title>
 <link>https://www.trmlabs.com/resources/blog/h1-2026-crypto-hacks-reach-record-high-as-losses-fall-below-usd-1-billion</link>
 <guid isPermaLink="false">global-trm-labs-insights-b35f07fd2d</guid>
-<pubDate>Tue, 07 Jul 2026 07:50:47 +0000</pubDate>
+<pubDate>Wed, 01 Jul 2026 12:57:00 +0000</pubDate>
 <description>TRM Labs reported that the number of cryptocurrency hacks hit a record high in the first half of 2026, even though total losses fell below one billion United States dollars. So what: More frequent hacks raise the odds that client funds or counterparty exchanges are affected, so stolen-fund tracing alerts and exchange due-diligence reviews deserve continued attention. [single source]</description>
 <category>GLOBAL</category>
 <category>news</category>
@@ -55,7 +19,7 @@
 <title>OFAC Sanctions 134 ISKP Cryptocurrency Addresses Tied to USD 2 Million in Terrorist Financing</title>
 <link>https://www.trmlabs.com/resources/blog/ofac-sanctions-134-iskp-cryptocurrency-addresses-tied-to-usd-2-million-in-terrorist-financing</link>
 <guid isPermaLink="false">global-trm-labs-insights-4fa35664b1</guid>
-<pubDate>Tue, 07 Jul 2026 07:50:47 +0000</pubDate>
+<pubDate>Wed, 01 Jul 2026 16:15:00 +0000</pubDate>
 <description>The United States Office of Foreign Assets Control (OFAC) added 134 cryptocurrency addresses linked to Islamic State Khorasan Province to its sanctions list, tied to roughly two million United States dollars in terrorist financing. So what: The newly listed addresses need to reach wallet-screening data promptly, and a retrospective exposure check against them can confirm no historical flows touched client accounts. [corroborated]</description>
 <category>GLOBAL</category>
 <category>designation</category>
@@ -257,6 +221,78 @@
 <description>Chainalysis analysed the United States Office of Foreign Assets Control's update adding more than one hundred cryptocurrency wallet addresses linked to Islamic State Khorasan to its sanctions designations. So what: The attribution detail on the newly designated addresses supports retrospective exposure checks and tuning of sanctions-screening rules for indirect exposure. [single source]</description>
 <category>GLOBAL</category>
 <category>designation</category>
+</item>
+<item>
+<title>Coinbase secures UK investment services license to add derivatives and equities trading</title>
+<link>https://www.theblock.co/post/407410/coinbase-secures-uk-investment-services-license-to-add-derivatives-and-equities-trading?utm_source=rss&amp;utm_medium=rss</link>
+<guid isPermaLink="false">global-the-block-policy-5f6cc0f352</guid>
+<pubDate>Tue, 07 Jul 2026 11:41:33 +0000</pubDate>
+<description>Coinbase obtained a United Kingdom investment services licence allowing it to offer derivatives and equities trading alongside its existing crypto services. So what: A major crypto exchange holding a mainstream United Kingdom investment licence blurs the line between crypto and traditional brokerage — relevant when classifying counterparties and comparing licensing scope across jurisdictions. [corroborated]</description>
+<category>GLOBAL</category>
+<category>licensing</category>
+</item>
+<item>
+<title>Coinbase secures UK authorization to offer traditional investments alongside crypto</title>
+<link>https://www.coindesk.com/business/2026/07/07/coinbase-secures-uk-authorization-to-offer-traditional-investments-alongside-crypto</link>
+<guid isPermaLink="false">global-coindesk-market-news-e571837956</guid>
+<pubDate>Tue, 07 Jul 2026 11:37:01 +0000</pubDate>
+<description>CoinDesk reports Coinbase received United Kingdom authorisation to offer traditional investment products alongside cryptocurrency trading. So what: Confirms the same United Kingdom authorisation reported by The Block; the combined crypto-plus-securities permission set is the detail worth noting for counterparty assessments. [corroborated]</description>
+<category>GLOBAL</category>
+<category>licensing</category>
+</item>
+<item>
+<title>Tether’s former CIO seeks buyers for part of his stake in the firm: Bloomberg</title>
+<link>https://www.theblock.co/post/407394/tethers-former-cio-seeks-buyers-for-part-of-his-stake-in-the-firm-bloomberg?utm_source=rss&amp;utm_medium=rss</link>
+<guid isPermaLink="false">global-the-block-market-news-229e85f2ee</guid>
+<pubDate>Tue, 07 Jul 2026 09:22:26 +0000</pubDate>
+<description>Bloomberg reports that Tether's former chief investment officer is seeking buyers for part of his personal stake in the stablecoin issuer. So what: Secondary sales of stakes in the largest stablecoin issuer can reveal valuation and governance information relevant to stablecoin counterparty risk assessments. [single source]</description>
+<category>GLOBAL</category>
+<category>news</category>
+</item>
+<item>
+<title>Upbit, Naver stock-swap deal faces second delay amid proposed crypto law debate</title>
+<link>https://www.theblock.co/post/407389/upbit-naver-stock-swap-deal-delay?utm_source=rss&amp;utm_medium=rss</link>
+<guid isPermaLink="false">global-the-block-policy-59ba436ed5</guid>
+<pubDate>Tue, 07 Jul 2026 09:10:51 +0000</pubDate>
+<description>The stock-swap deal between South Korean exchange Upbit's operator and internet group Naver faces a second delay while lawmakers debate a proposed cryptocurrency law. So what: South Korea's pending crypto legislation is now directly shaping major corporate transactions — a signal of how quickly the regional regulatory landscape is moving. [single source]</description>
+<category>GLOBAL</category>
+<category>news</category>
+</item>
+<item>
+<title>Two traders sue Polymarket over disputed resolution of Strategy bitcoin sale market</title>
+<link>https://www.theblock.co/post/407368/two-traders-sue-polymarket-strategy-bitcoin-sale?utm_source=rss&amp;utm_medium=rss</link>
+<guid isPermaLink="false">global-the-block-policy-011556d892</guid>
+<pubDate>Tue, 07 Jul 2026 08:34:34 +0000</pubDate>
+<description>Two traders sued prediction-market platform Polymarket over how it resolved a market on Strategy's bitcoin sales. So what: Disputes over prediction-market resolutions illustrate the consumer-protection and manipulation questions regulators are beginning to examine in event-contract markets. [single source]</description>
+<category>GLOBAL</category>
+<category>news</category>
+</item>
+<item>
+<title>Binance taps into Bitcoin holders’ hunger for yield with new covered call yield play</title>
+<link>https://www.coindesk.com/markets/2026/07/07/binance-taps-into-bitcoin-holders-hunger-for-yield-with-new-covered-call-yield-play</link>
+<guid isPermaLink="false">global-coindesk-market-news-60ab2faf26</guid>
+<pubDate>Tue, 07 Jul 2026 08:20:00 +0000</pubDate>
+<description>Binance launched a covered-call product that lets bitcoin holders earn yield on their holdings. So what: Yield products on client crypto holdings raise custody, rehypothecation and suitability questions — useful context when assessing exchange counterparties' business models. [single source]</description>
+<category>GLOBAL</category>
+<category>news</category>
+</item>
+<item>
+<title>Chainalysis Supports Robinhood Chain with Automatic Token Support</title>
+<link>https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/</link>
+<guid isPermaLink="false">global-chainalysis-blog-8b7d6ac67d</guid>
+<pubDate>Wed, 01 Jul 2026 19:30:58 +0000</pubDate>
+<description>Chainalysis announced automatic token support for Robinhood's new blockchain, meaning assets on that chain can be traced in its analytics tools from launch. So what: Day-one analytics coverage of new chains matters for monitoring completeness — a gap between chain launch and tracing support is a window where flows go unseen. [single source]</description>
+<category>GLOBAL</category>
+<category>news</category>
+</item>
+<item>
+<title>What the end of MiCA's transitional period means for crypto businesses</title>
+<link>https://www.elliptic.co/blog/the-end-of-micas-transitional-period</link>
+<guid isPermaLink="false">global-elliptic-blog-34fcbfc9a2</guid>
+<pubDate>Tue, 30 Jun 2026 13:27:12 +0000</pubDate>
+<description>Elliptic explains that the transitional window under the European Union's Markets in Crypto-Assets Regulation (MiCA) closed on 1 July 2026, after which only firms with full authorisation may serve European Union clients. So what: European counterparties still operating on lapsed national registrations are now unauthorised — worth reflecting in counterparty screening and periodic-review triggers. [single source]</description>
+<category>GLOBAL</category>
+<category>news</category>
 </item>
 </channel>
 </rss>

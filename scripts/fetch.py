@@ -166,12 +166,17 @@ def _parse_feed(content, source):
             if struct:
                 published = datetime(*struct[:6], tzinfo=timezone.utc)
                 break
+        # date_source is provenance for the DATE itself: "fetch_time" marks a
+        # fallback stamp so the enrichment session knows to fact-check the real
+        # publication date from the article and set it to "verified".
+        date_source = "feed"
         if published is None:
             published = datetime.now(timezone.utc)
+            date_source = "fetch_time"
 
         tags = [t.get("term", "").lower() for t in entry.get("tags", [])]
         items.append({"title": title, "url": url, "published": published.isoformat(),
-                      "summary": summary, "_tags": tags})
+                      "date_source": date_source, "summary": summary, "_tags": tags})
     return items
 
 
@@ -302,13 +307,16 @@ def _extract_page_items(html, base_url, selector=None, href_pattern=None):
             )
             if match:
                 published = _guess_date(match.group(0))
+        date_source = "page"
         if published is None:
             published = datetime.now(timezone.utc)
+            date_source = "fetch_time"
 
         items.append({
             "title": title,
             "url": href,
             "published": published.isoformat(),
+            "date_source": date_source,
             "summary": node.get_text(" ", strip=True) if node.name != "a" else "",
         })
         if len(items) >= 40:

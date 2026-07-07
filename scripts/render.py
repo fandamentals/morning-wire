@@ -116,6 +116,22 @@ def _valid_item(item):
         # The badge text asserts "N sources" and the client dereferences the
         # list -- a corroborated claim without its evidence is invalid.
         return False
+    # Optional fact-check record written by the enrichment session. Honesty
+    # is structural: a record missing its timestamp or the named authority it
+    # was checked against is stripped, never displayed half-formed.
+    checked = verification.get("checked")
+    if checked is not None:
+        checked_at = _normalize_iso(checked.get("at")) if isinstance(checked, dict) else None
+        if (not isinstance(checked, dict) or not checked_at
+                or not isinstance(checked.get("against"), str) or not checked["against"].strip()
+                or (checked.get("url") is not None and not _is_http_url(checked["url"]))):
+            verification.pop("checked", None)
+        else:
+            checked["at"] = checked_at
+            checked["note"] = str(checked.get("note") or "")[:300]
+    # Optional date provenance: whitelist or drop.
+    if item.get("date_source") not in ("feed", "page", "fetch_time", "verified"):
+        item.pop("date_source", None)
     # Degrade gracefully on missing/non-string prose rather than dropping:
     # keyless-mode convention is summary == title.
     if not isinstance(item["summary"], str) or not item["summary"].strip():
