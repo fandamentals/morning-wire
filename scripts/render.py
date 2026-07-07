@@ -57,10 +57,19 @@ def _valid_item(item):
     if not _is_http_url(item["url"]):
         return False
     verification = item.get("verification") or {}
+    # Defensive: a hand-edited enrichment session can produce a malformed
+    # verification shape (a bare string, a list, sources as a dict, or a
+    # source that isn't an object). This gate must DROP such an item, never
+    # raise -- one bad item must not crash the render for the whole page.
+    if not isinstance(verification, dict):
+        return False
     if verification.get("level") not in VALID_VERIFY_LEVELS:
         return False
-    for src in verification.get("sources", []):
-        if not _is_http_url(src.get("url", "")):
+    sources = verification.get("sources", [])
+    if not isinstance(sources, list):
+        return False
+    for src in sources:
+        if not isinstance(src, dict) or not _is_http_url(src.get("url", "")):
             return False
     if item["jurisdiction"] not in VALID_JURISDICTIONS:
         item["jurisdiction"] = "GLOBAL"  # unknown jurisdiction -> fold into Global rather than drop

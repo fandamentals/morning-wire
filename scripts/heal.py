@@ -96,6 +96,23 @@ def _find_replacement(source):
         return None
 
 
+def _dead_note(failures, last_error):
+    """Honest, specific footer text for a source past the failure threshold,
+    so a reader can tell a site that blocks automated fetch (needs a manual
+    check) apart from one that has genuinely moved or gone empty."""
+    err = (last_error or "").lower()
+    runs = f"{failures} consecutive runs"
+    if "403" in err or "429" in err or "forbidden" in err:
+        return (f"Blocked by the site's bot protection for {runs} "
+                "(content is unavailable to an automated fetch) — check the source manually.")
+    if "no parseable items" in err or "zero" in err:
+        return (f"Reachable but returned no parseable items for {runs} "
+                "(the listing may be client-rendered or restructured) — check the source manually.")
+    if last_error:
+        return f"Failing for {runs} ({last_error}) — verify manually."
+    return f"No response for {runs}; verify manually."
+
+
 def health_check_and_heal(sources, fetch_results, register_health_notes):
     """Update failure counters, attempt self-heal for dead sources, and
     return the final source_health list for digest.json.
@@ -111,10 +128,12 @@ def health_check_and_heal(sources, fetch_results, register_health_notes):
         name = source["name"]
         state = health.get(name, {"consecutive_failures": 0})
 
+        last_error = None
         if source.get("kind") == "register":
             note = register_notes_by_name.get(name)
             if note and note["status"] == "dead":
                 state["consecutive_failures"] = state.get("consecutive_failures", 0) + 1
+                last_error = note.get("note")
             else:
                 state["consecutive_failures"] = 0
         else:
@@ -126,8 +145,10 @@ def health_check_and_heal(sources, fetch_results, register_health_notes):
             # even before topical filtering), counts as a failure.
             if result["error"] or result.get("raw_count", 0) == 0:
                 state["consecutive_failures"] = state.get("consecutive_failures", 0) + 1
+                last_error = result["error"] or "no parseable items"
             else:
                 state["consecutive_failures"] = 0
+        state["last_error"] = last_error
 
         if state["consecutive_failures"] < FAILURE_THRESHOLD:
             status = "ok"
@@ -137,7 +158,13 @@ def health_check_and_heal(sources, fetch_results, register_health_notes):
             else:
                 note_text = "Feed responding normally"
         else:
-            candidate = _find_replacement(source)
+            err = (last_error or "").lower()
+            blocked = "403" in err or "429" in err or "forbidden" in err
+            # A bot-blocked source has the CORRECT url -- it is simply
+            # unfetchable from a datacenter IP. Never let heal swap in a
+            # Claude-proposed alternative (which could be a wrong or unofficial
+            # site that happens to fetch): that would corrupt a good source.
+            candidate = None if blocked else _find_replacement(source)
             if candidate and _validate_candidate(source, candidate):
                 old_url = source["url"]
                 source["url"] = candidate["url"]
@@ -151,7 +178,7 @@ def health_check_and_heal(sources, fetch_results, register_health_notes):
                 note_text = f"Auto-healed from {old_url}"
             else:
                 status = "dead"
-                note_text = f"No response for {state['consecutive_failures']} consecutive runs; verify manually"
+                note_text = _dead_note(state["consecutive_failures"], last_error)
 
         state["last_checked"] = datetime.now(timezone.utc).isoformat()
         state["last_status"] = status

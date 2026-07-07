@@ -50,6 +50,11 @@ RELEVANCE_KEYWORDS = [
     "crypto mixer", "crypto-asset", "cryptoasset",
     "e-hkd", "digital yuan", "digital renminbi", "digital currency",
     "project ensemble", "mbridge", "m-bridge", "wallet", "self-custody",
+    # Named assets/tickers that appear in headlines without a generic term
+    # ("Ether ETF", "Ripple/XRP", "Solana"), and OFAC's standard title for
+    # mixer/ransomware/exchange sanctions ("Cyber-related Designations") --
+    # exactly the actions this sanctions-focused digest most needs.
+    "ether", "xrp", "ripple", "solana", "cyber-related",
 ]
 
 
@@ -115,26 +120,22 @@ def _matches_any(haystack, keywords):
 
 
 def _parse_feed(content, source):
+    """Structurally parse a feed into items (url + title present). Topic
+    filtering (source-level categories/keywords/exclude_keywords) is applied
+    LATER, in fetch_source behind require_relevant -- so the count this returns
+    reflects structural health, not how much on-topic news the feed carried
+    today. A working feed with no China-keyword items this week must NOT look
+    dead to heal.py (which would eventually mark it dead or auto-rewrite it).
+    Entry tags ride along as a private `_tags` field for the deferred category
+    gate and are stripped before the item leaves fetch_source.
+    """
     parsed = feedparser.parse(content)
     items = []
-    categories = [c.lower() for c in source.get("categories", [])]
-    keywords = [k.lower() for k in source.get("keywords", [])]
-    exclude_keywords = [k.lower() for k in source.get("exclude_keywords", [])]
-
     for entry in parsed.entries:
         url = (entry.get("link") or "").strip()
         title = _clean_title(entry.get("title") or "")
         summary = (entry.get("summary") or entry.get("description") or "").strip()
         if not url or not title:
-            continue
-
-        if categories:
-            tags = [t.get("term", "").lower() for t in entry.get("tags", [])]
-            if not any(cat in tag for cat in categories for tag in tags):
-                continue
-        if keywords and not _matches_any(f"{title} {summary}", keywords):
-            continue
-        if exclude_keywords and _matches_any(f"{title} {summary}", exclude_keywords):
             continue
 
         published = None
@@ -146,8 +147,30 @@ def _parse_feed(content, source):
         if published is None:
             published = datetime.now(timezone.utc)
 
-        items.append({"title": title, "url": url, "published": published.isoformat(), "summary": summary})
+        tags = [t.get("term", "").lower() for t in entry.get("tags", [])]
+        items.append({"title": title, "url": url, "published": published.isoformat(),
+                      "summary": summary, "_tags": tags})
     return items
+
+
+def _feed_topic_ok(item, source):
+    """Source-level topic gate for one feed item: `categories` must match an
+    entry tag, `keywords` must match title/summary, `exclude_keywords` must
+    not. Applied only when relevance filtering is on, so it never affects the
+    structural raw count. Page items (no `_tags`, no keyword config) pass."""
+    categories = [c.lower() for c in source.get("categories", [])]
+    keywords = [k.lower() for k in source.get("keywords", [])]
+    exclude_keywords = [k.lower() for k in source.get("exclude_keywords", [])]
+    text = f"{item['title']} {item.get('summary', '')}"
+    if categories:
+        tags = item.get("_tags", [])
+        if not any(cat in tag for cat in categories for tag in tags):
+            return False
+    if keywords and not _matches_any(text, keywords):
+        return False
+    if exclude_keywords and _matches_any(text, exclude_keywords):
+        return False
+    return True
 
 
 _ZERO_WIDTH_RE = re.compile(r"[​‌‍﻿]")
@@ -288,26 +311,36 @@ def fetch_source(source, require_relevant=True):
         if source["kind"] == "feed":
             items = _parse_feed(resp.content, source)
         else:
-            # base_url must be the RESOLVED url -- joining relative hrefs
-            # against a literal "{year}" path would publish broken links.
+            # base_url and href_pattern must both be RESOLVED: joining relative
+            # hrefs against a literal "{year}" path would publish broken links,
+            # and a {year}-scoped href_pattern (e.g. MAS media-releases) must
+            # match the current year, not the literal token.
+            href_pattern = source.get("href_pattern")
+            if href_pattern:
+                href_pattern = resolve_url(href_pattern)
             items = _extract_page_items(
-                resp.text, resolve_url(source["url"]), source.get("selector"), source.get("href_pattern")
+                resp.text, resolve_url(source["url"]), source.get("selector"), href_pattern
             )
     except Exception as exc:  # a parsing bug in one source must not kill the run
         return [], f"parse failed: {exc}", 0
 
-    raw_count = len(items)  # pre-relevance-filter -- a healthy source with no
-    # crypto news today must not look like a dead one to heal.py.
+    raw_count = len(items)  # structural (url+title present), BEFORE any topic
+    # filtering -- a healthy source with no crypto news today, or a filtered
+    # feed with no keyword hits this week, must not look dead to heal.py.
     if require_relevant:
-        # The age gate lives behind the same flag: heal.py validates candidate
-        # replacement URLs structurally, and a working source whose latest
-        # items happen to be old must still validate.
+        # Topic gate (source keyword/category), global relevance gate, and the
+        # age gate all live behind the same flag: heal.py validates candidate
+        # replacement URLs structurally with require_relevant=False, so a
+        # working source whose latest items are off-topic or old must validate.
         items = [
             it for it in items
-            if is_relevant(it["title"], it.get("summary", "")) and _is_recent(it)
+            if _feed_topic_ok(it, source)
+            and is_relevant(it["title"], it.get("summary", ""))
+            and _is_recent(it)
         ]
 
     for item in items:
+        item.pop("_tags", None)  # private parse-time field, never surfaced
         item["source"] = source["name"]
         item["jurisdiction"] = source["jurisdiction"]
         item["tier"] = source["tier"]

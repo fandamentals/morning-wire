@@ -113,8 +113,18 @@ def dedupe(raw_items, seen):
         # keyword heuristic before spending a Claude call on it.
         material = False
         if summarise.looks_material(prior.get("title", ""), item["title"]):
-            material = summarise.judge_material_update(prior.get("title", ""), item, materiality_calls)
-            materiality_calls += 1
+            if os.environ.get("ANTHROPIC_API_KEY"):
+                material = summarise.judge_material_update(prior.get("title", ""), item, materiality_calls)
+                materiality_calls += 1
+            else:
+                # Keyless: the AI judge can't run, and returning False would
+                # permanently commit the new title_hash -- silently swallowing
+                # a change the keyword heuristic already flagged as possibly
+                # material (a decided enforcement, adopted rule, set penalty,
+                # granted licence). Surface it as an update; the enrichment
+                # session reclassifies it. Over-surfacing a cosmetic edit is
+                # a far cheaper error than hiding a material regulatory change.
+                material = True
 
         if material:
             item["status"] = "update"
