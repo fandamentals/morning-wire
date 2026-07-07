@@ -182,6 +182,12 @@ try {
   .mast-meta { font-size: 13.5px; color: var(--ink-3); margin: 5px 0 0; }
   .mast-meta strong { color: var(--ink-2); font-weight: 600; }
 
+  .mast-controls {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
   .theme-toggle {
     flex: 0 0 auto;
     min-width: 44px; min-height: 44px;
@@ -291,27 +297,42 @@ try {
     font-family: var(--sans); font-size: 13px; font-weight: 600;
   }
   .search-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  /* Search grows open rather than snapping in -- width/opacity transition on
+     a permanently-present (never `hidden`) input, gated instead by
+     tabindex/aria-hidden while closed so a keyboard user can't land on an
+     invisible zero-width field. .open is added a frame after the element
+     becomes interactive so the transition actually has a "from" state to
+     animate out of. */
   #searchInput {
-    flex: 1 1 200px; min-width: 140px; max-width: 320px;
+    flex: 0 1 0; width: 0; min-width: 0; max-width: 0;
     min-height: 36px;
     border: 1px solid var(--border-2); border-radius: 999px;
-    padding: 0 14px;
+    padding: 0; opacity: 0;
     font-family: var(--sans); font-size: 14px;
     color: var(--ink); background: var(--card);
+    transition: max-width .34s cubic-bezier(.2,.8,.2,1), opacity .22s ease, padding .34s ease;
+  }
+  .search-wrap.open #searchInput {
+    flex: 1 1 200px; width: auto; min-width: 160px; max-width: 340px;
+    padding: 0 14px; opacity: 1;
+    animation: searchGlow .5s ease-out;
+  }
+  @keyframes searchGlow {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); border-color: var(--accent); }
+    100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent); }
   }
   #searchInput:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   #searchClear {
     appearance: none; cursor: pointer; border: none; background: none;
-    min-width: 32px; min-height: 32px; border-radius: 999px;
+    width: 0; min-width: 0; max-width: 0; min-height: 32px;
+    border-radius: 999px; overflow: hidden;
     color: var(--ink-3); font-size: 15px;
+    opacity: 0; transition: max-width .34s cubic-bezier(.2,.8,.2,1), opacity .2s ease .1s;
   }
+  .search-wrap.open #searchClear { width: auto; min-width: 32px; max-width: 32px; opacity: 1; }
   #searchClear:hover { color: var(--accent); }
-  /* 640px, not 480px: CSS zoom scales layout but not the viewport width media
-     queries evaluate against, so a reader using the font-size control at a
-     high step on a ~500px-wide screen needs this rule to still fire before
-     the toolbar runs out of room and wraps to a third sticky row. */
-  @media (max-width: 640px) {
-    .toolbar.search-open .font-ctrl { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    #searchInput, #searchClear { transition: none; animation: none; }
   }
   .tab {
     appearance: none; background: none; border: none;
@@ -364,7 +385,10 @@ try {
   /* ============================================================
      ABOUT TAB + LEGEND + FOOTER LINKS
      ============================================================ */
-  .about-body { max-width: 720px; font-size: 14.5px; color: var(--ink-2); }
+  /* margin: 0 auto matters once max-width is narrower than the wide-desktop
+     .wrap -- without it, the column pins to the left edge with a large
+     empty gutter on the right instead of centering in the available width. */
+  .about-body { max-width: 720px; margin: 0 auto; font-size: 14.5px; color: var(--ink-2); }
   .about-body h3 {
     font-family: var(--serif); font-size: 16px; color: var(--ink);
     margin: 22px 0 6px;
@@ -679,6 +703,7 @@ try {
     color: oklch(0.82 0.06 var(--h));
   }
   .card-date { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .discovery-note { font-style: italic; }
   .pill {
     font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
     border-radius: 999px; padding: 2px 8px; text-transform: uppercase;
@@ -722,11 +747,6 @@ try {
   .corro-sources { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-3); }
   .corro-sources .cs-lbl { font-weight: 600; }
   .corro-sources a { margin-right: 4px; }
-  .factline {
-    margin-top: 8px;
-    font-size: 12.5px; font-weight: 600;
-    color: var(--ok);
-  }
 
   /* ============================================================
      EMPTY STATE
@@ -811,7 +831,7 @@ try {
     html[data-theme="matrix"] header.masthead { background: #fff !important; }
     .wordmark, .section-head h2 { text-shadow: none !important; }
     header.masthead { position: static; border-bottom: 2px solid #000; }
-    .theme-menu, .theme-toggle, .filters, .banner, .tabs, .toolbar,
+    .theme-menu, .theme-toggle, .font-ctrl, .filters, .banner, .tabs, .toolbar,
     .copycite, .copy-briefing, .jumpnav, .fresh-dot, .foot-links,
     details.brief > summary .b-caret { display: none !important; }
     /* Print everything: a hidden tab's content still belongs in the PDF. */
@@ -890,15 +910,22 @@ try {
       <p class="mast-meta"><strong id="mast-date">—</strong> · generated <span id="mast-time">—</span><span id="mast-fresh"></span></p>
       <p class="mast-meta" id="mast-scope"></p>
     </div>
-    <div class="theme-menu" id="themeMenu">
-      <button class="theme-toggle" id="themeBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Choose theme">
-        <span class="ico" id="themeIco">☀</span><span id="themeLbl">Light</span><span class="caret" aria-hidden="true">▾</span>
-      </button>
-      <div class="theme-options">
-        <div class="theme-options-list" role="menu" aria-label="Theme">
-          <button type="button" role="menuitemradio" aria-checked="true" data-theme-opt="light"><span class="ico">☀</span>Light</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="dark"><span class="ico">☾</span>Dark</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="matrix"><span class="ico">ﾏ</span>Matrix</button>
+    <div class="mast-controls">
+      <div class="font-ctrl" role="group" aria-label="Text size">
+        <button type="button" id="fontDec" aria-label="Decrease text size">A−</button>
+        <button type="button" id="fontReset" aria-label="Reset text size to default">Reset</button>
+        <button type="button" id="fontInc" aria-label="Increase text size">A+</button>
+      </div>
+      <div class="theme-menu" id="themeMenu">
+        <button class="theme-toggle" id="themeBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Choose theme">
+          <span class="ico" id="themeIco">☀</span><span id="themeLbl">Light</span><span class="caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="theme-options">
+          <div class="theme-options-list" role="menu" aria-label="Theme">
+            <button type="button" role="menuitemradio" aria-checked="true" data-theme-opt="light"><span class="ico">☀</span>Light</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="dark"><span class="ico">☾</span>Dark</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="matrix"><span class="ico">ﾏ</span>Matrix</button>
+          </div>
         </div>
       </div>
     </div>
@@ -915,17 +942,12 @@ try {
       <button class="tab" type="button" data-tab="about" aria-selected="false">About &amp; method</button>
     </nav>
     <div class="toolbar" id="toolbar">
-      <div class="font-ctrl" role="group" aria-label="Text size">
-        <button type="button" id="fontDec" aria-label="Decrease text size">A−</button>
-        <button type="button" id="fontReset" aria-label="Reset text size to default">Reset</button>
-        <button type="button" id="fontInc" aria-label="Increase text size">A+</button>
-      </div>
       <div class="search-wrap">
         <button type="button" class="search-toggle" id="searchBtn" aria-expanded="false" aria-controls="searchInput" aria-label="Search past digest items">
           <span aria-hidden="true">🔍</span> Search
         </button>
-        <input type="search" id="searchInput" placeholder="Search past items…" aria-label="Search past digest items" hidden>
-        <button type="button" id="searchClear" aria-label="Close search" hidden>✕</button>
+        <input type="search" id="searchInput" placeholder="Search past items…" aria-label="Search past digest items" tabindex="-1">
+        <button type="button" id="searchClear" aria-label="Close search" tabindex="-1">✕</button>
       </div>
     </div>
   </div>
@@ -1198,6 +1220,20 @@ function dayDiff(iso) {
   const d2 = Date.parse(GEN_DAY + "T00:00:00Z");
   return Math.round((d2 - d1) / 86400000);
 }
+/* Some sources (Hong Kong's FSTB, the European Banking Authority) list an
+   item days after they actually published it -- first_seen (when THIS
+   pipeline discovered it) is what buckets an item into Today/Last 7/Last 30
+   days, deliberately never published (see README's first_seen-vs-published
+   invariant; conflating them is the exact class of bug this page has
+   suffered a real incident over). That's correct, but a card showing a
+   9-day-old published date sitting in "Today" looks like a mistake unless
+   the reader can SEE why -- previously that was hover-tooltip-only. Surface
+   it visibly whenever the gap is large enough to be confusing. */
+function discoveryNote(it) {
+  const gap = dayDiff(it.published) - dayDiff(it.first_seen || it.published);
+  if (gap < 2) return "";
+  return ` <span class="discovery-note">· discovered ${esc(fmtDay(it.first_seen))}</span>`;
+}
 /* "7"/"30" are inclusive of today (so "Last 7 days" = today + 6 prior days =
    7 calendar days total, matching the chip's own label; "Last 30 days" =
    today + 29 prior days). Both are upper bounds, not promises -- the
@@ -1261,17 +1297,12 @@ function renderChips() {
   }
 }
 
-/* ---------- warning banner ---------- */
-function renderBanner() {
-  const bad = DIGEST.source_health.filter(s => s.status !== "ok");
-  const slot = document.getElementById("banner-slot");
-  if (!bad.length) { slot.innerHTML = ""; return; }
-  const names = bad.map(s => `${esc(s.name)} (${s.status})`).join(", ");
-  slot.innerHTML = `<div class="banner" role="status">
-    <span class="b-ico" aria-hidden="true">⚠</span>
-    <div><strong>${bad.length} source${bad.length > 1 ? "s" : ""} ${bad.length > 1 ? "need" : "needs"} attention.</strong> ${names}. Affected items may rely on cached data — verify manually. Details on the <button type="button" class="linklike" data-goto="health">Source health</button> tab.</div>
-  </div>`;
-}
+/* Source-health degradation is NOT surfaced as a Digest-tab warning banner --
+   a per-source status message here read as an alarming, vague "something is
+   wrong" signal to a reader with no way to act on it. The Source health tab
+   is the dedicated, always-accurate place for that detail; the freshness
+   banner below (renderFreshness) is what actually affects whether TODAY'S
+   content is trustworthy and stays as the one Digest-tab warning. */
 
 /* ---------- verification badge: an inspectable claim, not decoration ---------- */
 const VERIFY_EXPLAIN = {
@@ -1297,13 +1328,6 @@ function verifyDetails(v, it) {
     </div>
   </details>`;
 }
-/* Always-visible one-liner: the check a compliance reader can cite. Only
-   rendered when a check was actually performed and recorded. */
-function factLine(v) {
-  const c = v.checked;
-  return c ? `<div class="factline">✓ Checked against ${esc(c.against)}</div>` : "";
-}
-
 /* ---------- card ---------- */
 function cardHTML(it) {
   // "Updated" reflects pipeline status; "New" is relative to YOUR last visit
@@ -1317,7 +1341,7 @@ function cardHTML(it) {
     <div class="card-top">
       <span class="src-badge">${esc(it.source)}</span>
       <span class="type-tag" style="--h:${TYPE_HUE[it.type] || 90}">${esc(TYPE_LABEL[it.type] || it.type)}</span>
-      <span class="card-date" title="First logged ${esc(fmtAudit(it.first_seen || it.published))}">${fmtCardDate(it.published)}</span>
+      <span class="card-date" title="First logged ${esc(fmtAudit(it.first_seen || it.published))}">${fmtCardDate(it.published)}${discoveryNote(it)}</span>
       <span class="spacer"></span>
       ${pill}
     </div>
@@ -1325,7 +1349,6 @@ function cardHTML(it) {
     <p class="summary">${esc(it.summary)}</p>
     <p class="sowhat"><span class="lbl">→ So what:</span> ${esc(it.so_what)}</p>
     ${verifyDetails(it.verification, it)}
-    ${factLine(it.verification)}
   </article>`;
 }
 
@@ -1342,14 +1365,14 @@ function briefHTML(it) {
     <summary>
       <span class="b-caret" aria-hidden="true">▶</span>
       <span class="b-title">${esc(it.title)}${isNewSinceVisit(it) ? ` <span class="pill new">New</span>` : ""}</span>
-      <span class="b-meta">${esc(it.source.split("—")[0].trim())} · ${fmtCardDate(it.published)}</span>
+      <span class="b-meta">${esc(it.source.split("—")[0].trim())} · ${fmtCardDate(it.published)}${discoveryNote(it)}</span>
     </summary>
     <div class="brief-body">
       <p class="summary">${esc(it.summary)}</p>
       <p class="sowhat"><span class="lbl">→ So what:</span> ${esc(it.so_what)}</p>
       <a href="${esc(it.url)}" target="_blank" rel="noopener">Read at the source <span class="ext" aria-hidden="true">↗</span></a>
       · <button class="copycite" type="button" data-cite="${esc(it.id)}">Copy cite</button>
-      <div>${verifyDetails(it.verification, it)}${factLine(it.verification)}</div>
+      <div>${verifyDetails(it.verification, it)}</div>
     </div>
   </details>`;
 }
@@ -1723,7 +1746,6 @@ function buildWeekView() {
    ============================================================ */
 function render() {
   renderChips();
-  renderBanner();
   renderFreshness();
   renderScope();
   renderTopOfMind();
@@ -1916,21 +1938,27 @@ document.getElementById("fontReset").onclick = () => { fontStepIdx = FONT_STEPS.
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClear");
+const searchWrap = document.querySelector(".search-wrap");
+function isSearchOpen() { return searchWrap.classList.contains("open"); }
 function openSearch() {
   // Results render into #tab-digest -- switch there first, or a reader on
   // Source health/Audit log/About would type a query and see nothing happen.
   selectTab("digest");
-  searchBtn.hidden = true;
-  searchInput.hidden = false;
-  searchClearBtn.hidden = false;
+  searchInput.removeAttribute("tabindex");
+  searchClearBtn.removeAttribute("tabindex");
   document.getElementById("toolbar").classList.add("search-open");
   searchBtn.setAttribute("aria-expanded", "true");
-  searchInput.focus();
+  // A frame after tabindex is cleared (so the field is truly interactive),
+  // add .open so the width/opacity transition has a real "from" state.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    searchWrap.classList.add("open");
+    searchInput.focus();
+  }));
 }
 function closeSearch() {
-  searchBtn.hidden = false;
-  searchInput.hidden = true;
-  searchClearBtn.hidden = true;
+  searchWrap.classList.remove("open");
+  searchInput.setAttribute("tabindex", "-1");
+  searchClearBtn.setAttribute("tabindex", "-1");
   searchInput.value = "";
   document.getElementById("toolbar").classList.remove("search-open");
   searchBtn.setAttribute("aria-expanded", "false");
@@ -1948,7 +1976,7 @@ searchInput.addEventListener("keydown", e => { if (e.key === "Escape") closeSear
 // Clicking away from an EMPTY open search box collapses it back to the
 // button -- an active query (something to click into) is left open.
 document.addEventListener("click", e => {
-  if (!searchInput.hidden && !e.target.closest(".search-wrap") && !searchInput.value.trim()) closeSearch();
+  if (isSearchOpen() && !e.target.closest(".search-wrap") && !searchInput.value.trim()) closeSearch();
 });
 
 /* ---------- print: a closed <details> won't expand via CSS alone ---------- */
@@ -2027,7 +2055,7 @@ function ensureItemVisible(id) {
   const it = DIGEST.items.find(x => x.id === id);
   if (!it) return;
   state.juris = "ALL"; state.bucket = "ALL";
-  if (!searchInput.hidden) closeSearch(); else state.search = "";
+  if (isSearchOpen()) closeSearch(); else state.search = "";
   const diff = dayDiff(it.first_seen || it.published);
   if (diff > 0) state.range = diff <= 6 ? "7" : "30";
 }

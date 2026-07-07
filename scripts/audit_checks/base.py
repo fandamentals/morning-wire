@@ -39,8 +39,19 @@ def finding(check_id, severity, title, detail, evidence=None):
     }
 
 
-def could_not_run(check_id, reason):
-    return finding(check_id, "could_not_run", f"{check_id} could not run", reason)
+def could_not_run(check_id, reason, bootstrap_expected=False):
+    """bootstrap_expected=True marks a could_not_run that is caused SOLELY by
+    not having enough post-BOOTSTRAP_CUTOFF history yet -- a known, temporary,
+    self-resolving state (see BOOTSTRAP_CUTOFF above), not a genuine fault.
+    scripts/audit.py's weekly exit code still treats this as hard_failure
+    (a human running the playbook should see it and understand why), but the
+    daily unattended tripwire (integrity.yml) uses this flag to avoid paging
+    someone every day for weeks about a condition that isn't a bug and that
+    only time can fix. Never set this for a REAL could_not_run (an import
+    failure, unavailable git history, etc.) -- only for the specific
+    insufficient-history-since-cutoff case."""
+    return finding(check_id, "could_not_run", f"{check_id} could not run", reason,
+                   evidence={"bootstrap_expected": True} if bootstrap_expected else None)
 
 
 def git(args, cwd):

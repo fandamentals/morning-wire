@@ -87,8 +87,19 @@ do this:
    Claude Code session on <YYYY-MM-DD>"}`.
 9. Append an entry to the top-level `run_log` list (the page's Audit log tab):
    `{"at": "<now, UTC ISO-8601>", "note": "Enrichment: <N> items summarised and
-   classified via Claude Code session"}` — one short sentence; mention corroborations
-   if any were made. Keep the list as-is otherwise; the pipeline caps it at 30.
+   classified via Claude Code session"}`; mention corroborations if any were made.
+   Keep the list as-is otherwise. Every entry (from this recipe, the daily pipeline,
+   or the weekly audit) must follow the **Audit log style rule**:
+   - At most 2 complete sentences. Never rely on truncation to fit — write it short.
+   - No forensic detail: never name the mechanism/root cause of a bug, an internal
+     incident name, or which specific items were affected by a correction. Say WHAT
+     changed in general terms ("a data display issue", "a source URL") never HOW or
+     WHY — this is a public, unauthenticated page, not an incident postmortem. The
+     full story belongs in `audit/lessons.md` (internal), never here.
+   - Vague is fine; false is never fine.
+   `scripts/render.py` keeps only the most recent 10 entries and truncates
+   gracefully (word boundary + ellipsis) as a backstop — that is not a substitute
+   for writing a short, complete entry in the first place.
 10. Re-render: `python3 scripts/render.py` (stdlib only — no pip install needed). This
    also refreshes `docs/feed.xml` (the RSS feed) and the page's Open Graph tags.
 11. Commit `data/digest.json`, `docs/index.html` and `docs/feed.xml` (plain message,

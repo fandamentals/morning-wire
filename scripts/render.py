@@ -18,6 +18,15 @@ FEED_PATH = ROOT / "docs" / "feed.xml"
 SITE_URL = "https://fandamentals.github.io/morning-wire/"
 SITE_TITLE = "Digital Assets Morning Wire"
 RADAR_MAX_ENTRIES = 8
+# The Audit log is a public, unauthenticated page -- it should read as "the
+# pipeline is alive and self-correcting", not as an incident postmortem.
+# Entries are meant to be authored short (see the style rule in CLAUDE.md /
+# audit/PLAYBOOK.md); this cap is a mechanical backstop, not the primary
+# discipline. Only the most recent runs are kept, both to limit how much
+# operational history a stranger can reconstruct and to keep the tab
+# scannable.
+RUN_LOG_MAX_ENTRIES = 10
+RUN_LOG_NOTE_MAX_CHARS = 220
 
 VALID_JURISDICTIONS = {"HK", "CN", "US", "EU", "SG", "GLOBAL"}
 VALID_TYPES = {
@@ -65,6 +74,16 @@ def _normalize_iso(value):
 
 def _is_http_url(value):
     return isinstance(value, str) and re.match(r"^https?://", value, re.IGNORECASE) is not None
+
+
+def _truncate_gracefully(text, limit):
+    """Cut at the limit, then back up to the last word boundary and add an
+    ellipsis -- a flat [:limit] slice can (and did) sever a sentence mid-word
+    with no visual indication anything was cut."""
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0].rstrip(".,;: ")
+    return cut + "…" if cut else text[:limit]
 
 
 def _valid_item(item):
@@ -128,7 +147,7 @@ def _valid_item(item):
             verification.pop("checked", None)
         else:
             checked["at"] = checked_at
-            checked["note"] = str(checked.get("note") or "")[:300]
+            checked["note"] = _truncate_gracefully(str(checked.get("note") or ""), 300)
     # Optional date provenance: whitelist or drop.
     if item.get("date_source") not in ("feed", "page", "fetch_time", "verified"):
         item.pop("date_source", None)
@@ -191,10 +210,10 @@ def sanitize_digest(digest):
         "items": [it for it in items_in if _valid_item(it)],
         "source_health": [h for h in (digest.get("source_health") or []) if _valid_health_entry(h)],
         "run_log": [
-            {"at": _normalize_iso(e.get("at")), "note": str(e.get("note") or "")[:300]}
+            {"at": _normalize_iso(e.get("at")), "note": _truncate_gracefully(str(e.get("note") or ""), RUN_LOG_NOTE_MAX_CHARS)}
             for e in (digest.get("run_log") or [])
             if isinstance(e, dict) and _normalize_iso(e.get("at"))
-        ][-30:],
+        ][-RUN_LOG_MAX_ENTRIES:],
         "radar": sorted(
             [e for e in (digest.get("radar") or []) if _valid_radar_entry(e, generated_at)],
             key=lambda e: e["date"],

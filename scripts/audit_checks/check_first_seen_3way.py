@@ -46,7 +46,8 @@ def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
     except Exception as exc:
         return [could_not_run(CHECK_ID, f"git history unavailable: {exc}")]
     if len(commits) < 1:
-        return [could_not_run(CHECK_ID, "no git history for data/digest.json since BOOTSTRAP_CUTOFF")]
+        return [could_not_run(CHECK_ID, "no git history for data/digest.json since BOOTSTRAP_CUTOFF",
+                               bootstrap_expected=True)]
 
     # Anchor: the first_seen value as recorded at each key's EARLIEST git
     # appearance. Walk oldest to newest, keep only the first sighting.

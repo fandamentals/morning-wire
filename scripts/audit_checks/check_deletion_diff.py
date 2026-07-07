@@ -55,7 +55,8 @@ def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
     except Exception as exc:
         return [could_not_run(CHECK_ID, f"git history unavailable: {exc}")]
     if len(commits) < 2:
-        return [could_not_run(CHECK_ID, "fewer than 2 commits to data/digest.json since BOOTSTRAP_CUTOFF -- cannot diff yet")]
+        return [could_not_run(CHECK_ID, "fewer than 2 commits to data/digest.json since BOOTSTRAP_CUTOFF -- cannot diff yet",
+                               bootstrap_expected=True)]
 
     try:
         current_keys = set()

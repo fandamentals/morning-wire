@@ -33,7 +33,7 @@ DIGEST_PATH = ROOT / "data" / "digest.json"
 
 SEEN_ITEMS_MAX_AGE_DAYS = 90
 DIGEST_ITEMS_MAX_AGE_DAYS = 8  # a little slack past the "last 7 days" UI label
-RUN_LOG_MAX_ENTRIES = 30  # the page's audit-log tab shows recent runs, not history forever
+RUN_LOG_MAX_ENTRIES = 10  # keep the public Audit log tab to recent runs only (see the style rule in CLAUDE.md); render.py enforces the same cap defensively
 
 
 def _canonical_url(url):
