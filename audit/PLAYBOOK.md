@@ -110,9 +110,28 @@ this coverage map, one area per week, recorded as a `run_log`-style note in
 the ledger so the next run picks up the next one (check the last few
 `audit/ledger.jsonl` entries for which area was last deep-dived):
 
-1. Source coverage & keyword tuning (are HK/CN/US/EU/SG official sources and
-   the tracked institutions still being caught? any new digital-asset
-   regulator or bank move that should be added to `data/sources.json`?)
+1. Source coverage, keyword tuning, and reassessment. Are HK/CN/US/EU/SG
+   official sources and the tracked institutions still being caught?
+   Reassess whether `data/sources.json` still serves the reader CLAUDE.md
+   defines this page for — an HK/China-focused digital-asset
+   financial-crime-compliance officer at an international bank — and
+   propose additions on a branch + PR (never add directly; a human decides
+   what actually gets merged, same as every other change this routine
+   makes) when a source would be genuinely useful to that reader:
+   - A regulator, central bank, or standard-setter with digital-asset
+     remit that isn't covered yet (check for gaps across HK, mainland
+     China, the US, the EU, Singapore, and global bodies).
+   - A bank, exchange, or custody/tokenisation initiative that's become
+     material enough to track as a recurring "Industry intel" source,
+     not just a one-off item.
+   - A reputable industry-research publication (e.g. an annual crime/
+     compliance report series) — never a vendor's own marketing/product
+     blog; the same promotional-content judgment the enrichment recipe
+     applies per-item in CLAUDE.md applies here too, at the source level.
+   Also flag (don't silently drop) a source that's become irrelevant or
+   redundant so a human can decide whether to retire it — this routine
+   never removes a source itself outside the existing dead-source repair
+   path.
 2. UI/UX button-by-button Playwright audit (both themes' light/dark modes,
    mobile + desktop) — only if `scripts/templates/page.html` or its
    JS/CSS changed since the last deep-dive.
