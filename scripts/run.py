@@ -187,6 +187,7 @@ def merge_digest_window(previous_items, fresh_items):
 FINAL_ITEM_FIELDS = (
     "id", "jurisdiction", "source", "title", "url", "published", "type",
     "priority", "status", "verification", "summary", "so_what", "first_seen",
+    "date_source",
 )
 
 
