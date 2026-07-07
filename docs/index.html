@@ -66,6 +66,64 @@ try {
   }
 
   /* ============================================================
+     MATRIX THEME — phosphor terminal + digital rain.
+     The rain canvas sits BEHIND everything (z-index:-1); the header
+     and the content column carry near-opaque backgrounds so the
+     glyphs stream at full brilliance in the margins but never
+     obstruct a single word of content.
+     ============================================================ */
+  html[data-theme="matrix"] {
+    color-scheme: dark;
+    --bg:        #010401;
+    --bg-2:      #041208;
+    --bg-inset:  #02240E;
+    --ink:       #CDFFD8;
+    --ink-2:     #8FE8A5;
+    --ink-3:     #4FBF6C;
+    --accent:    #00FF41;
+    --accent-h:  #7CFFA1;
+    --accent-deep: #2BE05C;
+    --border:    #0B3D1E;
+    --border-2:  #14602F;
+    --card:      #031007;
+    --shadow:    0 0 1px rgba(0,255,65,.35), 0 0 14px rgba(0,255,65,.07);
+    --ok:        #00FF41;
+    --warn:      #E8E34B;
+    --danger:    #FF5C7A;
+    --serif: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+    --sans:  ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  }
+  #matrixCanvas {
+    display: none;
+    position: fixed; inset: 0;
+    z-index: -1;             /* always behind content */
+    pointer-events: none;
+    background: #010401;
+  }
+  html[data-theme="matrix"] #matrixCanvas { display: block; }
+  html[data-theme="matrix"] body { background: transparent; }
+  /* Opaque reading surfaces: rain lives in the margins, not under words. */
+  html[data-theme="matrix"] header.masthead { background: rgba(1,6,2,.96); }
+  html[data-theme="matrix"] main.wrap { background: rgba(1,6,2,.92); }
+  html[data-theme="matrix"] .card,
+  html[data-theme="matrix"] .priority,
+  html[data-theme="matrix"] .radar,
+  html[data-theme="matrix"] .catchup { background: rgba(3,16,7,.97); }
+  html[data-theme="matrix"] .wordmark,
+  html[data-theme="matrix"] .section-head h2 { text-shadow: 0 0 12px rgba(0,255,65,.35); }
+  html[data-theme="matrix"] .radar-dot {
+    background: #00FF41;
+    box-shadow: 0 0 0 4px rgba(0,255,65,.22), 0 0 16px rgba(0,255,65,.8);
+  }
+  html[data-theme="matrix"] .type-tag {
+    background: rgba(0,255,65,.10) !important;
+    color: #8FE8A5 !important;
+    border: 1px solid rgba(0,255,65,.25);
+  }
+  html[data-theme="matrix"] .topmind,
+  html[data-theme="matrix"] .sowhat { background: rgba(0,255,65,.06); }
+
+  /* ============================================================
      BASE
      ============================================================ */
   * { box-sizing: border-box; }
@@ -601,11 +659,20 @@ try {
      PRINT — clean one-column digest for PDF / forwarding
      ============================================================ */
   @media print {
-    :root {
+    /* html[data-theme] ties the themed selectors' specificity and, coming
+       later in the sheet, wins -- so printing from dark or matrix mode still
+       produces a clean white page instead of litres of toner. */
+    :root, html[data-theme] {
       --bg:#fff; --bg-2:#fff; --bg-inset:#fff; --card:#fff;
       --ink:#111; --ink-2:#333; --ink-3:#666;
       --border:#ddd; --border-2:#ccc; --shadow:none;
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
+    #matrixCanvas { display: none !important; }
+    html[data-theme="matrix"] body, html[data-theme="matrix"] main.wrap,
+    html[data-theme="matrix"] header.masthead { background: #fff !important; }
+    .wordmark, .section-head h2 { text-shadow: none !important; }
     header.masthead { position: static; border-bottom: 2px solid #000; }
     .theme-toggle, .filters, .banner, .tabs, .archive summary .caret,
     .copycite, .copy-briefing, .jumpnav, .fresh-dot, .foot-links,
@@ -659,6 +726,7 @@ try {
 </style>
 </head>
 <body>
+<canvas id="matrixCanvas" aria-hidden="true"></canvas>
 
 <noscript>
   <div style="max-width:720px;margin:40px auto;padding:0 20px;font-family:Georgia,serif;font-size:16px;line-height:1.6;">
@@ -1403,24 +1471,113 @@ document.getElementById("mast-date").textContent = fmtHeaderDate(DIGEST.generate
 document.getElementById("mast-time").textContent = fmtTime(DIGEST.generated_at);
 
 /* ============================================================
-   THEME — default follows prefers-color-scheme, light fallback
+   MATRIX DIGITAL RAIN — movie-faithful: half-width katakana falling
+   in columns, bright glyph heads, fading phosphor trails. Runs ONLY
+   in the matrix theme, pauses in hidden tabs, honours
+   prefers-reduced-motion (a static frame instead of animation), and
+   lives on a z-index:-1 canvas so it can never cover content.
    ============================================================ */
+const matrixRain = (() => {
+  const GLYPHS = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ012345789Z:・.\"=*+-<>¦｜ﾘ";
+  const FONT = 17, FPS = 24;
+  let canvas, ctx, drops = [], raf = null, lastFrame = 0, running = false;
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const glyph = () => GLYPHS[(Math.random() * GLYPHS.length) | 0];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const cols = Math.ceil(canvas.width / FONT);
+    const rows = canvas.height / FONT;
+    drops = Array.from({ length: cols }, () => ({
+      y: Math.random() * -rows,                   // stagger entry from above (row units)
+      speed: 0.5 + Math.random() * 1.1,           // columns fall at different rates
+    }));
+    ctx.fillStyle = "#010401";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  function frame(ts) {
+    raf = requestAnimationFrame(frame);
+    if (ts - lastFrame < 1000 / FPS) return;
+    lastFrame = ts;
+    // translucent wash = the fading trails of the movie effect
+    ctx.fillStyle = "rgba(1, 4, 1, 0.08)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `${FONT}px ui-monospace, "SF Mono", Menlo, Consolas, monospace`;
+    drops.forEach((d, i) => {
+      const x = i * FONT, y = d.y * FONT;
+      // bright head glyph, standard green one step behind
+      ctx.fillStyle = "#D8FFE4";
+      ctx.fillText(glyph(), x, y);
+      ctx.fillStyle = Math.random() < 0.08 ? "#7CFFA1" : "#00FF41";
+      ctx.fillText(glyph(), x, y - FONT);
+      d.y += d.speed;
+      if (y > canvas.height && Math.random() > 0.975) { d.y = 0; d.speed = 0.5 + Math.random() * 1.1; }
+    });
+  }
+  function staticFrame() { // reduced-motion: the aesthetic without movement
+    ctx.fillStyle = "#010401"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `${FONT}px ui-monospace, Menlo, Consolas, monospace`;
+    for (let i = 0; i < drops.length; i++) {
+      for (let y = Math.random() * canvas.height; y < canvas.height; y += FONT * (2 + Math.random() * 8)) {
+        ctx.fillStyle = `rgba(0, 255, 65, ${0.12 + Math.random() * 0.5})`;
+        ctx.fillText(glyph(), i * FONT, y);
+      }
+    }
+  }
+  return {
+    start() {
+      if (running) return;
+      canvas = document.getElementById("matrixCanvas");
+      ctx = canvas.getContext("2d");
+      resize();
+      running = true;
+      if (reduced) { staticFrame(); return; }
+      raf = requestAnimationFrame(frame);
+      this._onResize = () => { resize(); if (reduced) staticFrame(); };
+      this._onVis = () => {
+        if (document.hidden) { if (raf) cancelAnimationFrame(raf); raf = null; }
+        else if (running && !reduced && !raf) raf = requestAnimationFrame(frame);
+      };
+      window.addEventListener("resize", this._onResize);
+      document.addEventListener("visibilitychange", this._onVis);
+    },
+    stop() {
+      if (!running) return;
+      running = false;
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+      window.removeEventListener("resize", this._onResize || (() => {}));
+      document.removeEventListener("visibilitychange", this._onVis || (() => {}));
+    },
+    isRunning: () => running,
+  };
+})();
+
+/* ============================================================
+   THEME — light -> dark -> matrix cycle; default follows
+   prefers-color-scheme, light fallback
+   ============================================================ */
+const THEME_ORDER = ["light", "dark", "matrix"];
+const THEME_UI = { light: ["☾", "Dark"], dark: ["ﾏ", "Matrix"], matrix: ["☀", "Light"] };
 function applyTheme(theme) {
+  if (!THEME_ORDER.includes(theme)) theme = "light";
   document.documentElement.setAttribute("data-theme", theme);
-  const dark = theme === "dark";
-  document.getElementById("themeIco").textContent = dark ? "☀" : "☾";
-  document.getElementById("themeLbl").textContent = dark ? "Light" : "Dark";
+  const [ico, lbl] = THEME_UI[theme];
+  document.getElementById("themeIco").textContent = ico;
+  document.getElementById("themeLbl").textContent = lbl;
+  if (theme === "matrix") matrixRain.start(); else matrixRain.stop();
 }
 (function initTheme() {
   // The <head> pre-paint script already set data-theme (saved manual choice,
-  // else OS preference). Here we only sync the toggle's icon/label to it.
+  // else OS preference). Here we only sync the toggle + rain to it.
   // Only an explicit manual toggle is persisted (click handler below) --
   // auto-detection is never written back to storage, so an OS-preference
   // change keeps being followed until the reader deliberately overrides it.
-  applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+  applyTheme(document.documentElement.getAttribute("data-theme") || "light");
 })();
 document.getElementById("themeBtn").onclick = () => {
-  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = THEME_ORDER[(THEME_ORDER.indexOf(current) + 1) % THEME_ORDER.length];
   applyTheme(next);
   try { localStorage.setItem("regradar-theme", next); } catch (e) {}
 };
