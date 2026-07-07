@@ -519,7 +519,7 @@ function renderBanner() {
   const names = bad.map(s => `${esc(s.name)} (${s.status})`).join(", ");
   slot.innerHTML = `<div class="banner" role="status">
     <span class="b-ico" aria-hidden="true">⚠</span>
-    <div><strong>${bad.length} source${bad.length > 1 ? "s" : ""} need attention.</strong> ${names}. Affected items may rely on cached data — verify manually. See source-health table below.</div>
+    <div><strong>${bad.length} source${bad.length > 1 ? "s" : ""} ${bad.length > 1 ? "need" : "needs"} attention.</strong> ${names}. Affected items may rely on cached data — verify manually. See source-health table below.</div>
   </div>`;
 }
 

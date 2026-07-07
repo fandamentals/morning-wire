@@ -112,7 +112,12 @@ Each scheduled run (`scripts/run.py`):
   securities-at-large) are keyword-filtered to digital-asset-relevant items before
   anything else runs, so a CFTC or Federal Reserve press feed doesn't flood the digest
   with unrelated releases.
-- **Known scraping caveats.** MAS and FATF's public sites return bot-challenge pages to
-  simple HTTP clients (confirmed during source verification); expect these two to show
-  up as `dead` in the source-health footer more often than the RSS-backed sources, with
-  self-heal retrying each run.
+- **Known scraping caveats.** FATF's public site 403s a plain HTTP client outright. MAS's
+  press-release listing is fully client-rendered (no article markup in the server HTML at
+  all), so it's gated with a `href_pattern` requiring an actual `/news/media-releases/...`
+  link rather than falling back to nav-menu junk; expect both to sit at 0 relevant items
+  most runs, with self-heal retrying each run.
+- **Health tracking uses pre-filter item counts.** A source counts as failing only on an
+  actual fetch/parse error or zero *raw* items (before the topical relevance filter) --
+  a general-mandate feed (OCC, ESMA, DOJ...) having no crypto news on a given day is not
+  a failure and won't trigger self-heal.

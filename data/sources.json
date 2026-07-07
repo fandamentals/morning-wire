@@ -32,7 +32,8 @@
     "jurisdiction": "HK",
     "kind": "page",
     "url": "https://www.fstb.gov.hk/en/news/press/index.php",
-    "tier": "official"
+    "tier": "official",
+    "selector": ".record"
   },
   {
     "name": "SFC — VATP register",
@@ -132,6 +133,13 @@
     "tier": "official"
   },
   {
+    "name": "DOJ — Press releases",
+    "jurisdiction": "US",
+    "kind": "feed",
+    "url": "https://www.justice.gov/news/rss?type=press_release",
+    "tier": "official"
+  },
+  {
     "name": "ESMA — News",
     "jurisdiction": "EU",
     "kind": "page",
@@ -151,7 +159,8 @@
     "jurisdiction": "SG",
     "kind": "page",
     "url": "https://www.mas.gov.sg/news?content_type=Media+Releases",
-    "tier": "official"
+    "tier": "official",
+    "href_pattern": "/news/(media-releases|speeches|monographs)/"
   },
   {
     "name": "FATF — Publications",
@@ -172,7 +181,8 @@
     "jurisdiction": "GLOBAL",
     "kind": "page",
     "url": "https://www.fsb.org/press/press-releases/",
-    "tier": "official"
+    "tier": "official",
+    "selector": ".post-excerpt"
   },
   {
     "name": "CoinDesk — Policy",
@@ -228,10 +238,10 @@
       "jpmorgan",
       "jp morgan",
       "j.p. morgan",
-      "dbs bank",
-      "dbs group",
+      "dbs",
       "hsbc",
       "standard chartered",
+      "citi",
       "citigroup",
       "citibank",
       "goldman sachs",
@@ -252,8 +262,7 @@
       "swift",
       "franklin templeton",
       "vaneck",
-      "nomura",
-      "dbs bank"
+      "nomura"
     ]
   },
   {
@@ -266,10 +275,10 @@
       "jpmorgan",
       "jp morgan",
       "j.p. morgan",
-      "dbs bank",
-      "dbs group",
+      "dbs",
       "hsbc",
       "standard chartered",
+      "citi",
       "citigroup",
       "citibank",
       "goldman sachs",
@@ -290,8 +299,7 @@
       "swift",
       "franklin templeton",
       "vaneck",
-      "nomura",
-      "dbs bank"
+      "nomura"
     ]
   }
 ]

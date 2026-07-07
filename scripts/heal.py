@@ -61,7 +61,7 @@ def _validate_candidate(source, candidate):
         except Exception:
             return False
 
-    items, error = fetch_source(synthetic, require_relevant=False)
+    items, error, _ = fetch_source(synthetic, require_relevant=False)
     return error is None and len(items) > 0
 
 
@@ -101,7 +101,7 @@ def health_check_and_heal(sources, fetch_results, register_health_notes):
     return the final source_health list for digest.json.
 
     `sources` is mutated in place when a source is healed.
-    `fetch_results` is the dict returned by fetch.fetch_all: name -> {items, error}.
+    `fetch_results` is the dict returned by fetch.fetch_all: name -> {items, error, raw_count}.
     """
     health = _load_health()
     source_health = []
@@ -118,8 +118,13 @@ def health_check_and_heal(sources, fetch_results, register_health_notes):
             else:
                 state["consecutive_failures"] = 0
         else:
-            result = fetch_results.get(name, {"items": [], "error": "not fetched"})
-            if result["error"] or len(result["items"]) == 0:
+            result = fetch_results.get(name, {"items": [], "error": "not fetched", "raw_count": 0})
+            # Use the pre-relevance-filter count: a general-mandate source
+            # (OCC, ESMA, FATF...) routinely has zero *crypto* items on a
+            # given day without being broken. Only an actual fetch/parse
+            # failure, or a structurally broken extraction (raw_count == 0
+            # even before topical filtering), counts as a failure.
+            if result["error"] or result.get("raw_count", 0) == 0:
                 state["consecutive_failures"] = state.get("consecutive_failures", 0) + 1
             else:
                 state["consecutive_failures"] = 0

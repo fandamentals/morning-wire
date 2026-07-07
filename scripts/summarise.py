@@ -105,12 +105,18 @@ def summarise_items(items):
     """Classify items via one batched Claude call and merge results back onto
     each item dict in place. Callers should run select_top() first so this
     and verify_items() operate on the same, already-capped item list.
+
+    Returns True if the batch call succeeded, False if it fell back to
+    per-item defaults -- callers should surface a False result to the reader
+    (e.g. via source_health) rather than let degraded AI enrichment pass
+    silently as if everything summarised normally.
     """
     if not items:
-        return items
+        return True
 
     selected = items  # run.py is expected to have already called select_top()
     client = get_client()
+    ok = True
     try:
         response = client.messages.create(
             model=MODEL,
@@ -124,6 +130,7 @@ def summarise_items(items):
     except Exception as exc:
         logger.error("summarise: batch call failed, using fallbacks: %s", exc)
         by_idx = {}
+        ok = False
 
     for i, item in enumerate(selected):
         result = by_idx.get(i, _fallback_result(i))
@@ -133,7 +140,7 @@ def summarise_items(items):
         item["type"] = item_type if item_type in VALID_TYPES else "news"
         item["priority"] = "high" if result.get("priority") == "high" else "normal"
 
-    return selected
+    return ok
 
 
 MATERIAL_KEYWORDS = [

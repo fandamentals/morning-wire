@@ -67,12 +67,20 @@ def _load_json(path, default):
 
 def dedupe(raw_items, seen):
     """Split raw fetched/register items into ones worth surfacing this run
-    ("new" or material "update"), updating `seen` in place. Pure repeats and
-    non-material edits are skipped (but still bump last_seen so we don't
-    re-ask about the same cosmetic change every day).
+    ("new" or material "update"). Pure repeats and non-material edits are
+    skipped immediately (but still bump last_seen so we don't re-ask about
+    the same cosmetic change every day) since they carry no cap-interaction
+    risk either way.
+
+    Returns (surfaced_items, pending_commits). `seen` is NOT mutated for
+    "new"/"update" candidates here -- the caller must call the returned
+    commit function for each item that actually survives this run's item
+    cap. Committing eagerly would mark a cap-dropped item as "seen" and it
+    could never resurface on a quieter future run.
     """
     now = datetime.now(timezone.utc).isoformat()
     surfaced = []
+    pending_commits = []
     materiality_calls = 0
 
     # Merge multiple sources reporting the same story in one run (register
@@ -87,8 +95,12 @@ def dedupe(raw_items, seen):
 
         if prior is None:
             item["status"] = "new"
+
+            def commit(key=key, title_hash=title_hash, title=item["title"]):
+                seen[key] = {"title_hash": title_hash, "first_seen": now, "last_seen": now, "title": title}
+
             surfaced.append(item)
-            seen[key] = {"title_hash": title_hash, "first_seen": now, "last_seen": now, "title": item["title"]}
+            pending_commits.append((item, commit))
             continue
 
         if prior["title_hash"] == title_hash:
@@ -102,14 +114,21 @@ def dedupe(raw_items, seen):
             material = summarise.judge_material_update(prior.get("title", ""), item, materiality_calls)
             materiality_calls += 1
 
-        prior["title_hash"] = title_hash
-        prior["last_seen"] = now
-        prior["title"] = item["title"]
         if material:
             item["status"] = "update"
-            surfaced.append(item)
 
-    return surfaced
+            def commit(prior=prior, title_hash=title_hash, title=item["title"]):
+                prior.update({"title_hash": title_hash, "last_seen": now, "title": title})
+
+            surfaced.append(item)
+            pending_commits.append((item, commit))
+        else:
+            # Not material -- commit immediately so we don't re-ask Claude
+            # tomorrow about the same non-material change.
+            prior["title_hash"] = title_hash
+            prior["last_seen"] = now
+
+    return surfaced, pending_commits
 
 
 def prune_seen_items(seen):
@@ -176,17 +195,35 @@ def main():
     logger.info("4/6 dedupe")
     raw_items = fetched_items + register_items
     now_iso = datetime.now(timezone.utc).isoformat()
-    surfaced = dedupe(raw_items, seen)
+    surfaced, pending_commits = dedupe(raw_items, seen)
     for item in surfaced:
         item.setdefault("first_seen", now_iso)
         item.setdefault("id", _stable_id(item))
     surfaced = summarise.select_top(surfaced)
 
+    # Only now commit seen-items memory for items that actually survived the
+    # cap -- a cap-dropped item must remain eligible to resurface on a
+    # quieter future run instead of being permanently marked "seen" today.
+    surviving = {id(it) for it in surfaced}
+    for item, commit in pending_commits:
+        if id(item) in surviving:
+            commit()
+
     logger.info("5/6 verify (%d candidate items)", len(surfaced))
     verify.verify_items(surfaced)
 
     logger.info("6/6 summarise (%d candidate items)", len(surfaced))
-    summarise.summarise_items(surfaced)
+    summarise_ok = summarise.summarise_items(surfaced)
+    if not summarise_ok:
+        # Don't let a failed AI-enrichment call pass silently as if every
+        # card's summary/so-what were genuinely Claude-generated -- reuse
+        # the existing source-health banner/footer to surface it.
+        source_health.append({
+            "name": "Claude summarisation",
+            "status": "dead",
+            "note": "Batch summarisation call failed this run -- cards below show raw "
+                    "titles instead of AI summaries. Check ANTHROPIC_API_KEY and Action logs.",
+        })
 
     merged_items = merge_digest_window(previous_digest.get("items", []), surfaced)
     digest = {

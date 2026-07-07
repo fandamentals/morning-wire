@@ -42,6 +42,8 @@ RELEVANCE_KEYWORDS = [
     "ethereum", "nft", "e-cny", "ecny", "cbdc", "mica", "travel rule",
     "virtual currency", "defi", "decentralized finance", "decentralised finance",
     "crypto mixer", "crypto-asset", "cryptoasset",
+    "e-hkd", "digital yuan", "digital renminbi", "digital currency",
+    "project ensemble", "mbridge", "m-bridge",
 ]
 
 
@@ -75,8 +77,15 @@ def is_relevant(*texts):
 
 
 def _matches_any(haystack, keywords):
+    """Word-boundary match -- used for keywords/exclude_keywords/institutional
+    lists where entries are short, ambiguous tokens (e.g. "ubs", "visa",
+    "swift", "citi"). Plain substring matching would false-positive on
+    "hubs"/"clubs", "visas", "swiftly", "cities"/"citizen". Unlike
+    RELEVANCE_KEYWORDS (deliberately prefix-matched for tokeni[sz]ation
+    etc.), these are meant as whole-word/phrase matches.
+    """
     haystack = haystack.lower()
-    return any(kw in haystack for kw in keywords)
+    return any(re.search(r"\b" + re.escape(kw) + r"\b", haystack) for kw in keywords)
 
 
 def _parse_feed(content, source):
@@ -129,10 +138,23 @@ def _title_text(el):
     return el.get_text(strip=True)
 
 
-def _extract_page_items(html, base_url, selector=None):
+def _extract_page_items(html, base_url, selector=None, href_pattern=None):
+    """href_pattern, when given, requires the resolved href to match a regex
+    -- for a no-selector fallback page whose nav-menu links otherwise look
+    just as plausible as real articles (e.g. a client-rendered SPA shell
+    with no actual article markup in server HTML), this is the only way to
+    tell "no real content" apart from "some anchor happened to be long
+    enough" and correctly report zero items instead of nav junk.
+    """
     soup = BeautifulSoup(html, "html.parser")
-    containers = soup.select(selector) if selector else None
-    if not containers:
+    if selector:
+        # An explicit selector matching zero elements means the page's
+        # structure changed -- that must surface as zero items (a health/heal
+        # signal), not silently fall back to scraping every <a> tag on the
+        # page (nav/boilerplate links), which would mask the breakage as a
+        # working source returning junk.
+        containers = soup.select(selector)
+    else:
         containers = soup.find_all("a")
 
     items = []
@@ -153,6 +175,8 @@ def _extract_page_items(html, base_url, selector=None):
             continue
         href = urljoin(base_url, link["href"])
         if href in seen_urls or len(title) < 12:
+            continue
+        if href_pattern and not re.search(href_pattern, href):
             continue
         seen_urls.add(href)
 
@@ -195,16 +219,20 @@ def fetch_source(source, require_relevant=True):
     try:
         resp = _get(source["url"])
     except requests.RequestException as exc:
-        return [], f"fetch failed: {exc}"
+        return [], f"fetch failed: {exc}", 0
 
     try:
         if source["kind"] == "feed":
             items = _parse_feed(resp.content, source)
         else:
-            items = _extract_page_items(resp.text, source["url"], source.get("selector"))
+            items = _extract_page_items(
+                resp.text, source["url"], source.get("selector"), source.get("href_pattern")
+            )
     except Exception as exc:  # a parsing bug in one source must not kill the run
-        return [], f"parse failed: {exc}"
+        return [], f"parse failed: {exc}", 0
 
+    raw_count = len(items)  # pre-relevance-filter -- a healthy source with no
+    # crypto news today must not look like a dead one to heal.py.
     if require_relevant:
         items = [it for it in items if is_relevant(it["title"], it.get("summary", ""))]
 
@@ -213,16 +241,21 @@ def fetch_source(source, require_relevant=True):
         item["jurisdiction"] = source["jurisdiction"]
         item["tier"] = source["tier"]
 
-    return items, None
+    return items, None, raw_count
 
 
 def fetch_all(sources):
-    """Fetch items for every non-register source. Returns dict name -> {items, error}."""
+    """Fetch items for every non-register source.
+    Returns dict name -> {items, error, raw_count}.
+    """
     results = {}
     for source in sources:
         if source.get("kind") == "register":
             continue
-        items, error = fetch_source(source)
-        results[source["name"]] = {"items": items, "error": error}
-        logger.info("fetched %s: %d items%s", source["name"], len(items), f" ({error})" if error else "")
+        items, error, raw_count = fetch_source(source)
+        results[source["name"]] = {"items": items, "error": error, "raw_count": raw_count}
+        logger.info(
+            "fetched %s: %d items (raw %d)%s",
+            source["name"], len(items), raw_count, f" ({error})" if error else "",
+        )
     return results
