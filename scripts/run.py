@@ -33,7 +33,7 @@ DIGEST_PATH = ROOT / "data" / "digest.json"
 
 SEEN_ITEMS_MAX_AGE_DAYS = 90
 DIGEST_ITEMS_MAX_AGE_DAYS = 8  # a little slack past the "last 7 days" UI label
-RUN_LOG_MAX_ENTRIES = 30  # the page's audit-log tab shows recent runs, not history forever
+RUN_LOG_MAX_ENTRIES = 10  # keep the public Audit log tab to recent runs only (see the style rule in CLAUDE.md); render.py enforces the same cap defensively
 
 
 def _canonical_url(url):
@@ -155,6 +155,10 @@ def prune_seen_items(seen):
         try:
             last_seen = datetime.fromisoformat(entry["last_seen"].replace("Z", "+00:00"))
         except (KeyError, ValueError):
+            # A malformed last_seen means this entry silently vanishes from
+            # dedupe memory -- log it so a bad write is at least visible in
+            # the Action logs, instead of a bare, untraceable data loss.
+            logger.warning("prune_seen_items: dropping entry with malformed last_seen: key=%r entry=%r", key, entry)
             continue
         if last_seen >= cutoff:
             kept[key] = entry
@@ -174,6 +178,10 @@ def merge_digest_window(previous_items, fresh_items):
         try:
             first_seen = datetime.fromisoformat(item["first_seen"].replace("Z", "+00:00"))
         except (KeyError, ValueError):
+            # Same reasoning as prune_seen_items above -- a malformed
+            # first_seen must not silently drop a real item from the digest.
+            logger.warning("merge_digest_window: dropping previous item with malformed first_seen: id=%r first_seen=%r",
+                            item.get("id"), item.get("first_seen"))
             continue
         if first_seen >= cutoff:
             by_key[_dedupe_key(item)] = item
@@ -272,6 +280,14 @@ def main():
         "items": [finalize_item(it) for it in merged_items],
         "source_health": source_health,
         "run_log": run_log[-RUN_LOG_MAX_ENTRIES:],
+        # Carry forward radar rows: this dict is rebuilt from scratch every
+        # run, and radar is only ever populated by the keyless "enrich
+        # today's digest" recipe (CLAUDE.md step 5), never by this pipeline
+        # itself -- without this, the next daily run would silently discard
+        # every deadline/effective-date row the last enrichment session
+        # wrote. render.py's own sanitize step still drops past-dated rows
+        # and caps the count at render time, same as before.
+        "radar": previous_digest.get("radar") or [],
     }
 
     # Render before persisting -- a bad render must not corrupt seen-items.json

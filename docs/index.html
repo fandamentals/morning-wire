@@ -8,7 +8,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://fandamentals.github.io/morning-wire/">
 <meta property="og:title" content="Digital Assets Morning Wire — 2026-07-08">
-<meta property="og:description" content="47 items across Hong Kong, mainland China, the United States, the European Union, Singapore and global standard-setters. AI-sourced and AI-generated — verify against official sources.">
+<meta property="og:description" content="44 items across Hong Kong, mainland China, the United States, the European Union, Singapore and global standard-setters. AI-sourced and AI-generated — verify against official sources.">
 <meta property="og:image" content="https://fandamentals.github.io/morning-wire/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="alternate" type="application/rss+xml" title="Digital Assets Morning Wire" href="https://fandamentals.github.io/morning-wire/feed.xml">
@@ -128,6 +128,10 @@ try {
      ============================================================ */
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
   body {
     margin: 0;
     background: var(--bg);
@@ -181,6 +185,12 @@ try {
   }
   .mast-meta { font-size: 13.5px; color: var(--ink-3); margin: 5px 0 0; }
   .mast-meta strong { color: var(--ink-2); font-weight: 600; }
+
+  .mast-controls {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    justify-content: flex-end;
+  }
 
   .theme-toggle {
     flex: 0 0 auto;
@@ -291,27 +301,42 @@ try {
     font-family: var(--sans); font-size: 13px; font-weight: 600;
   }
   .search-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  /* Search grows open rather than snapping in -- width/opacity transition on
+     a permanently-present (never `hidden`) input, gated instead by
+     tabindex/aria-hidden while closed so a keyboard user can't land on an
+     invisible zero-width field. .open is added a frame after the element
+     becomes interactive so the transition actually has a "from" state to
+     animate out of. */
   #searchInput {
-    flex: 1 1 200px; min-width: 140px; max-width: 320px;
+    flex: 0 1 0; width: 0; min-width: 0; max-width: 0;
     min-height: 36px;
     border: 1px solid var(--border-2); border-radius: 999px;
-    padding: 0 14px;
+    padding: 0; opacity: 0;
     font-family: var(--sans); font-size: 14px;
     color: var(--ink); background: var(--card);
+    transition: max-width .34s cubic-bezier(.2,.8,.2,1), opacity .22s ease, padding .34s ease;
+  }
+  .search-wrap.open #searchInput {
+    flex: 1 1 200px; width: auto; min-width: 160px; max-width: 340px;
+    padding: 0 14px; opacity: 1;
+    animation: searchGlow .5s ease-out;
+  }
+  @keyframes searchGlow {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); border-color: var(--accent); }
+    100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent); }
   }
   #searchInput:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   #searchClear {
     appearance: none; cursor: pointer; border: none; background: none;
-    min-width: 32px; min-height: 32px; border-radius: 999px;
+    width: 0; min-width: 0; max-width: 0; min-height: 32px;
+    border-radius: 999px; overflow: hidden;
     color: var(--ink-3); font-size: 15px;
+    opacity: 0; transition: max-width .34s cubic-bezier(.2,.8,.2,1), opacity .2s ease .1s;
   }
+  .search-wrap.open #searchClear { width: auto; min-width: 32px; max-width: 32px; opacity: 1; }
   #searchClear:hover { color: var(--accent); }
-  /* 640px, not 480px: CSS zoom scales layout but not the viewport width media
-     queries evaluate against, so a reader using the font-size control at a
-     high step on a ~500px-wide screen needs this rule to still fire before
-     the toolbar runs out of room and wraps to a third sticky row. */
-  @media (max-width: 640px) {
-    .toolbar.search-open .font-ctrl { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    #searchInput, #searchClear { transition: none; animation: none; }
   }
   .tab {
     appearance: none; background: none; border: none;
@@ -364,7 +389,10 @@ try {
   /* ============================================================
      ABOUT TAB + LEGEND + FOOTER LINKS
      ============================================================ */
-  .about-body { max-width: 720px; font-size: 14.5px; color: var(--ink-2); }
+  /* margin: 0 auto matters once max-width is narrower than the wide-desktop
+     .wrap -- without it, the column pins to the left edge with a large
+     empty gutter on the right instead of centering in the available width. */
+  .about-body { max-width: 720px; margin: 0 auto; font-size: 14.5px; color: var(--ink-2); }
   .about-body h3 {
     font-family: var(--serif); font-size: 16px; color: var(--ink);
     margin: 22px 0 6px;
@@ -516,7 +544,9 @@ try {
   /* ============================================================
      FILTERS
      ============================================================ */
-  .filters { padding-top: 22px; }
+  .filters-sidebar { padding-top: 22px; }
+  .sidebar-toggle { display: none; } /* shown only in the wide-screen sidebar layout below */
+  .filters { padding-top: 0; }
   .filter-label {
     font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
     color: var(--ink-3); margin: 0 0 9px;
@@ -583,19 +613,18 @@ try {
   .banner strong { color: var(--ink); }
 
   /* ============================================================
-     TOP OF MIND
+     TOP OF MIND + PRIORITY -- side by side on wide screens (see the
+     row rule in the WIDE/DESKTOP section below), stacked on mobile.
      ============================================================ */
+  .tom-priority-row { display: flex; flex-direction: column; gap: 4px; }
+  #topmind-slot:empty, #priority-slot:empty { display: none; }
   .topmind {
-    margin-top: 22px; padding: 14px 16px;
+    padding: 12px 15px;
     background: color-mix(in srgb, var(--accent) 7%, var(--bg-2));
+    border: 1px solid var(--border);
     border-left: 3px solid var(--accent);
     border-radius: 0 10px 10px 0;
-    font-family: var(--serif); font-size: 17px; line-height: 1.55; color: var(--ink);
-  }
-  .topmind .lbl {
-    display: block; font-family: var(--sans); font-size: 11px; font-weight: 700;
-    letter-spacing: .09em; text-transform: uppercase; color: var(--accent-deep);
-    margin-bottom: 4px;
+    font-family: var(--serif); font-size: 15px; line-height: 1.5; color: var(--ink);
   }
 
   /* ============================================================
@@ -679,6 +708,7 @@ try {
     color: oklch(0.82 0.06 var(--h));
   }
   .card-date { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .discovery-note { font-style: italic; }
   .pill {
     font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
     border-radius: 999px; padding: 2px 8px; text-transform: uppercase;
@@ -722,11 +752,6 @@ try {
   .corro-sources { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-3); }
   .corro-sources .cs-lbl { font-weight: 600; }
   .corro-sources a { margin-right: 4px; }
-  .factline {
-    margin-top: 8px;
-    font-size: 12.5px; font-weight: 600;
-    color: var(--ok);
-  }
 
   /* ============================================================
      EMPTY STATE
@@ -758,6 +783,20 @@ try {
     border-bottom: 1px solid var(--border);
   }
   .health-table th { color: var(--ink-3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 10.5px; }
+  /* A real <button> inside the <th> keeps native columnheader semantics on
+     the <th> itself (aria-sort belongs there, per the ARIA spec, not on the
+     interactive control) while still giving keyboard/AT users a proper
+     button rather than a role="button" <th> that isn't one. */
+  .health-table .sort-btn {
+    appearance: none; background: none; border: none; padding: 0; margin: 0;
+    font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit;
+    cursor: pointer; user-select: none; display: inline-flex; align-items: center;
+  }
+  .health-table .sort-btn:hover, .health-table .sort-btn:focus-visible { color: var(--accent); }
+  .health-table .sort-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .health-table th .sort-caret { display: inline-block; width: 10px; margin-left: 2px; opacity: .6; }
+  .health-table th[aria-sort="ascending"] .sort-caret::after { content: "▲"; }
+  .health-table th[aria-sort="descending"] .sort-caret::after { content: "▼"; }
   .health-table td { color: var(--ink-2); }
   .health-table tr.h-group td {
     font-family: var(--serif); font-weight: 700; font-size: 13px; color: var(--ink);
@@ -777,7 +816,12 @@ try {
      [hidden] already keeps this inert whenever the tab isn't selected. */
   @media (min-width: 1100px) {
     #tab-health {
-      width: 100vw; max-width: 1400px;
+      /* `100vw` measures the real device viewport, not the zoomed-in content
+         box CSS `zoom` (see FONT SIZE below) renders into -- at any zoom
+         above 100% this overflows the page sideways. --zoom-vw is kept in
+         sync with the current zoom level by JS and used when set; 100vw is
+         only the pre-JS/no-JS fallback. */
+      width: var(--zoom-vw, 100vw); max-width: 1400px;
       position: relative; left: 50%; transform: translateX(-50%);
       padding: 0 20px;
     }
@@ -811,7 +855,7 @@ try {
     html[data-theme="matrix"] header.masthead { background: #fff !important; }
     .wordmark, .section-head h2 { text-shadow: none !important; }
     header.masthead { position: static; border-bottom: 2px solid #000; }
-    .theme-menu, .theme-toggle, .filters, .banner, .tabs, .toolbar,
+    .theme-menu, .theme-toggle, .font-ctrl, .filters-sidebar, .banner, .tabs, .toolbar,
     .copycite, .copy-briefing, .jumpnav, .fresh-dot, .foot-links,
     details.brief > summary .b-caret { display: none !important; }
     /* Print everything: a hidden tab's content still belongs in the PDF. */
@@ -839,13 +883,49 @@ try {
   /* ============================================================
      WIDE / DESKTOP — a phone-width column wastes a laptop screen.
      Same content, spread across the viewport: cards flow into a
-     2-column grid (3 on very wide screens) and the two filter
-     groups share one row, so a full day fits with far less scroll.
+     2-column grid (3 on very wide screens), and filters move to a
+     slim sticky left rail (vertical, not the old shared row) so the
+     content column keeps most of the width.
      ============================================================ */
   @media (min-width: 1100px) {
     .wrap, .mast-inner, .disclaimer-line { max-width: 1200px; }
-    .filters { display: flex; align-items: flex-start; gap: 40px; flex-wrap: wrap; }
-    .filters .filter-group + .filter-group { margin-top: 0; }
+    .digest-layout { display: flex; align-items: flex-start; gap: 28px; }
+    .digest-main { flex: 1 1 0; min-width: 0; }
+    .filters-sidebar {
+      flex: 0 0 190px; width: 190px;
+      position: sticky; top: 128px; align-self: flex-start;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg-2); padding: 16px;
+      transition: flex-basis .22s ease, width .22s ease, padding .22s ease;
+    }
+    .sidebar-toggle {
+      display: flex; align-items: center; gap: 7px; width: 100%;
+      appearance: none; cursor: pointer; border: none; background: none;
+      margin-bottom: 14px; padding: 0;
+      font-family: var(--sans); font-size: 12.5px; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2);
+    }
+    .sidebar-toggle:hover { color: var(--accent); }
+    .sidebar-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 17px; height: 17px; padding: 0 4px;
+      border-radius: 999px; background: var(--accent); color: #fff;
+      font-size: 10.5px; font-weight: 700;
+    }
+    .sidebar-badge[hidden] { display: none; }
+    /* Collapsed: a slim icon-only rail that reclaims the width for
+       content -- triggered by scroll (see the sidebarToggle JS), not a
+       fixed reader preference, so it never needs remembering. */
+    .filters-sidebar.collapsed { flex-basis: 46px; width: 46px; padding: 16px 8px; }
+    .filters-sidebar.collapsed .sidebar-toggle { flex-direction: column; justify-content: center; margin-bottom: 0; }
+    .filters-sidebar.collapsed .sidebar-toggle-label { display: none; }
+    .filters-sidebar.collapsed .filters { display: none; }
+    /* Top of mind stays a compact card at a fixed width; Priority takes
+       the rest -- both top-aligned since one is a short callout and the
+       other a capped 5-row list, not meant to match height. */
+    .tom-priority-row { flex-direction: row; align-items: flex-start; gap: 24px; }
+    .tom-priority-row > #topmind-slot { flex: 0 0 300px; max-width: 300px; }
+    .tom-priority-row > #priority-slot { flex: 1 1 auto; min-width: 0; }
     .juris-group {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -858,22 +938,33 @@ try {
     .juris-group { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
-  /* About & method reads as prose, not cards -- it should use more of a wide
-     screen than the 720px mobile-width column, but not stretch to the full
-     1200-1540px content width either (that would run past 110+ characters a
-     line at the base 14.5px size, well past the ~90-char comfortable-reading
-     ceiling). Pairing a moderate width bump with a slightly larger type size
-     keeps the measure in roughly the same ~90-100 characters/line range as
-     the original 720px column, just with more breathing room. */
+  /* About & method reads as prose, not cards -- a single centered ~800px
+     column left most of a wide monitor's .wrap (1200-1540px) empty on both
+     sides, which reads as "not using the screen" no matter how many times
+     the column's own max-width creeps up. Flowing the same prose into two
+     CSS columns instead makes the section span the same width as the rest
+     of the page (matching the Digest tab's own multi-column jurisdiction
+     grid), while each individual column stays a comfortable ~85-95
+     characters per line -- unlike a manual two-<div> split, `columns` keeps
+     one HTML flow and simply breaks it visually, so content order for
+     screen readers/print/copy-paste is unaffected. break-after/break-inside
+     stop a heading from stranding at a column's bottom or a legend entry
+     from splitting across the gap. */
   @media (min-width: 1100px) {
-    .about-body { max-width: 800px; font-size: 15.5px; }
+    .about-body {
+      max-width: 1200px; margin: 0; font-size: 15px;
+      column-count: 2; column-gap: 56px;
+    }
+    .about-body h3 { break-after: avoid; margin-top: 0; }
+    .about-body p, .about-body .legend { break-inside: avoid; }
   }
   @media (min-width: 1560px) {
-    .about-body { max-width: 860px; }
+    .about-body { max-width: 1400px; column-gap: 72px; }
   }
 </style>
 </head>
 <body>
+<div id="liveRegion" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 <canvas id="matrixCanvas" aria-hidden="true"></canvas>
 
 <noscript>
@@ -890,15 +981,22 @@ try {
       <p class="mast-meta"><strong id="mast-date">—</strong> · generated <span id="mast-time">—</span><span id="mast-fresh"></span></p>
       <p class="mast-meta" id="mast-scope"></p>
     </div>
-    <div class="theme-menu" id="themeMenu">
-      <button class="theme-toggle" id="themeBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Choose theme">
-        <span class="ico" id="themeIco">☀</span><span id="themeLbl">Light</span><span class="caret" aria-hidden="true">▾</span>
-      </button>
-      <div class="theme-options">
-        <div class="theme-options-list" role="menu" aria-label="Theme">
-          <button type="button" role="menuitemradio" aria-checked="true" data-theme-opt="light"><span class="ico">☀</span>Light</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="dark"><span class="ico">☾</span>Dark</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="matrix"><span class="ico">ﾏ</span>Matrix</button>
+    <div class="mast-controls">
+      <div class="font-ctrl" role="group" aria-label="Text size">
+        <button type="button" id="fontDec" aria-label="Decrease text size">A−</button>
+        <button type="button" id="fontReset" aria-label="Reset text size to default">Reset</button>
+        <button type="button" id="fontInc" aria-label="Increase text size">A+</button>
+      </div>
+      <div class="theme-menu" id="themeMenu">
+        <button class="theme-toggle" id="themeBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Choose theme">
+          <span class="ico" id="themeIco">☀</span><span id="themeLbl">Light</span><span class="caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="theme-options">
+          <div class="theme-options-list" role="menu" aria-label="Theme">
+            <button type="button" role="menuitemradio" aria-checked="true" data-theme-opt="light"><span class="ico">☀</span>Light</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="dark"><span class="ico">☾</span>Dark</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-theme-opt="matrix"><span class="ico">ﾏ</span>Matrix</button>
+          </div>
         </div>
       </div>
     </div>
@@ -908,69 +1006,81 @@ try {
 
 <main class="wrap">
   <div class="sticky-bar">
-    <nav class="tabs" aria-label="Sections">
-      <button class="tab" type="button" data-tab="digest" aria-selected="true">Digest</button>
-      <button class="tab" type="button" data-tab="health" aria-selected="false">Source health</button>
-      <button class="tab" type="button" data-tab="audit" aria-selected="false">Audit log</button>
-      <button class="tab" type="button" data-tab="about" aria-selected="false">About &amp; method</button>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" type="button" role="tab" id="tabbtn-digest" data-tab="digest" aria-selected="true" aria-controls="tab-digest">Digest</button>
+      <button class="tab" type="button" role="tab" id="tabbtn-health" data-tab="health" aria-selected="false" aria-controls="tab-health">Source health</button>
+      <button class="tab" type="button" role="tab" id="tabbtn-audit" data-tab="audit" aria-selected="false" aria-controls="tab-audit">Audit log</button>
+      <button class="tab" type="button" role="tab" id="tabbtn-about" data-tab="about" aria-selected="false" aria-controls="tab-about">About &amp; method</button>
     </nav>
     <div class="toolbar" id="toolbar">
-      <div class="font-ctrl" role="group" aria-label="Text size">
-        <button type="button" id="fontDec" aria-label="Decrease text size">A−</button>
-        <button type="button" id="fontReset" aria-label="Reset text size to default">Reset</button>
-        <button type="button" id="fontInc" aria-label="Increase text size">A+</button>
-      </div>
       <div class="search-wrap">
         <button type="button" class="search-toggle" id="searchBtn" aria-expanded="false" aria-controls="searchInput" aria-label="Search past digest items">
           <span aria-hidden="true">🔍</span> Search
         </button>
-        <input type="search" id="searchInput" placeholder="Search past items…" aria-label="Search past digest items" hidden>
-        <button type="button" id="searchClear" aria-label="Close search" hidden>✕</button>
+        <input type="search" id="searchInput" placeholder="Search past items…" aria-label="Search past digest items" tabindex="-1">
+        <button type="button" id="searchClear" aria-label="Close search" tabindex="-1">✕</button>
       </div>
     </div>
   </div>
 
-  <div id="tab-digest">
-    <section class="filters" aria-label="Filters">
-      <div class="filter-group range-row">
-        <p class="filter-label">Range</p>
-        <div class="chips" id="rangeChips"></div>
-      </div>
-      <div class="filter-group">
-        <p class="filter-label">Jurisdiction <button type="button" class="clear-filter" data-clear="juris" hidden>✕ Clear</button></p>
-        <div class="chips" id="jurisChips"></div>
-      </div>
-      <div class="filter-group bucket-row">
-        <p class="filter-label">Category <button type="button" class="clear-filter" data-clear="bucket" hidden>✕ Clear</button></p>
-        <div class="chips" id="bucketChips"></div>
-      </div>
-    </section>
+  <div id="tab-digest" role="tabpanel" aria-labelledby="tabbtn-digest">
+    <div class="digest-layout">
+      <aside class="filters-sidebar" id="filtersSidebar">
+        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-expanded="true" aria-controls="filtersBody">
+          <span aria-hidden="true">▤</span> <span class="sidebar-toggle-label">Filters</span>
+          <span class="sidebar-badge" id="sidebarToggleBadge" hidden></span>
+        </button>
+        <section class="filters" id="filtersBody" aria-label="Filters">
+          <div class="filter-group range-row">
+            <p class="filter-label">Range</p>
+            <div class="chips" id="rangeChips"></div>
+          </div>
+          <div class="filter-group">
+            <p class="filter-label">Jurisdiction <button type="button" class="clear-filter" data-clear="juris" hidden>✕ Clear</button></p>
+            <div class="chips" id="jurisChips"></div>
+          </div>
+          <div class="filter-group bucket-row">
+            <p class="filter-label">Category <button type="button" class="clear-filter" data-clear="bucket" hidden>✕ Clear</button></p>
+            <div class="chips" id="bucketChips"></div>
+          </div>
+        </section>
+      </aside>
 
-    <div id="banner-slot"></div>
-    <div id="topmind-slot"></div>
-    <div id="jumpnav-slot"></div>
-    <div id="priority-slot"></div>
-    <div id="radar-slot"></div>
-    <div id="catchup-slot"></div>
-    <div id="feed"></div>
+      <div class="digest-main">
+        <div id="banner-slot"></div>
+        <div class="tom-priority-row">
+          <div id="topmind-slot"></div>
+          <div id="priority-slot"></div>
+        </div>
+        <div id="jumpnav-slot"></div>
+        <div id="radar-slot"></div>
+        <div id="catchup-slot"></div>
+        <div id="feed"></div>
+      </div>
+    </div>
   </div>
 
-  <div id="tab-health" hidden>
+  <div id="tab-health" role="tabpanel" aria-labelledby="tabbtn-health" hidden>
     <div class="section-head"><h2>Source health</h2><span class="rule"></span></div>
     <p class="tab-intro">Per-source status from the latest pipeline run. A source is never silently dropped — failures surface here and self-heal retries each run.</p>
     <table class="health-table" id="healthTable">
-      <thead><tr><th>Source</th><th>Status</th><th>Last checked</th><th>Note</th></tr></thead>
+      <thead><tr>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="name">Source<span class="sort-caret"></span></button></th>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="status">Status<span class="sort-caret"></span></button></th>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="checked_at">Last checked<span class="sort-caret"></span></button></th>
+        <th scope="col"><button type="button" class="sort-btn" data-sort="note">Note<span class="sort-caret"></span></button></th>
+      </tr></thead>
       <tbody></tbody>
     </table>
   </div>
 
-  <div id="tab-audit" hidden>
+  <div id="tab-audit" role="tabpanel" aria-labelledby="tabbtn-audit" hidden>
     <div class="section-head"><h2>Audit log</h2><span class="rule"></span></div>
     <p class="tab-intro">Every data update to this page, newest first (all times Hong Kong).</p>
     <ol class="audit-list" id="auditLog"></ol>
   </div>
 
-  <div id="tab-about" hidden>
+  <div id="tab-about" role="tabpanel" aria-labelledby="tabbtn-about" hidden>
     <div class="section-head"><h2>About &amp; method</h2><span class="rule"></span></div>
     <div class="about-body">
       <h3>What this is</h3>
@@ -1009,8 +1119,9 @@ try {
       <p>The pipeline runs each weekday around 07:00 Hong Kong time; AI enrichment follows
       within the hour. The Range selector on the Digest tab defaults to Today, with Last 7
       days and Last 30 days showing everything this page currently retains within that
-      window (not a promise of a full 30 days of history — see below); the Audit log tab
-      records the last 30 data updates. Items older than seven days at ingest are not
+      window, and All showing everything retained with no cutoff at all (none of these are
+      a promise of a full 30 days of history — see below); the Audit log tab
+      records the last 10 data updates. Items older than seven days at ingest are not
       admitted — this is a daily wire, not a permanent archive. Your Range, Jurisdiction and
       Category choices are remembered on this device across visits — if the page ever looks
       unexpectedly empty or dated, check that a wider range or "All" isn't still selected
@@ -1043,7 +1154,7 @@ try {
    A downstream pipeline replaces this const with live data
    matching the same schema; nothing below reads anything else.
    ============================================================ */
-const DIGEST = {"generated_at": "2026-07-07T23:44:19.555129+00:00", "top_of_mind": "", "items": [{"id": "global-trm-labs-insights-b35f07fd2d", "jurisdiction": "GLOBAL", "source": "TRM Labs — Insights", "title": "H1 2026 Crypto Hacks Reach Record High as Losses Fall Below USD 1 Billion", "url": "https://www.trmlabs.com/resources/blog/h1-2026-crypto-hacks-reach-record-high-as-losses-fall-below-usd-1-billion", "published": "2026-07-01T12:57:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "TRM Labs — Insights", "url": "https://www.trmlabs.com/resources/blog/h1-2026-crypto-hacks-reach-record-high-as-losses-fall-below-usd-1-billion"}]}, "summary": "TRM Labs reported that the number of cryptocurrency hacks hit a record high in the first half of 2026, even though total losses fell below one billion United States dollars.", "so_what": "More frequent hacks raise the odds that client funds or counterparty exchanges are affected, so stolen-fund tracing alerts and exchange due-diligence reviews deserve continued attention.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "verified"}, {"id": "global-trm-labs-insights-4fa35664b1", "jurisdiction": "GLOBAL", "source": "TRM Labs — Insights", "title": "OFAC Sanctions 134 ISKP Cryptocurrency Addresses Tied to USD 2 Million in Terrorist Financing", "url": "https://www.trmlabs.com/resources/blog/ofac-sanctions-134-iskp-cryptocurrency-addresses-tied-to-usd-2-million-in-terrorist-financing", "published": "2026-07-01T16:15:00+00:00", "type": "designation", "priority": "high", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "TRM Labs — Insights", "url": "https://www.trmlabs.com/resources/blog/ofac-sanctions-134-iskp-cryptocurrency-addresses-tied-to-usd-2-million-in-terrorist-financing"}, {"name": "Chainalysis — Blog", "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/"}], "checked": {"at": "2026-07-07T12:02:20.644884+00:00", "against": "US Treasury OFAC — Counter Terrorism Designations, 1 July 2026", "url": "https://ofac.treasury.gov/recent-actions/20260701", "note": "The official action lists exactly 134 digital-currency addresses and names ISIS-K; the designation date (1 July 2026) matches the article's publication date."}}, "summary": "The United States Office of Foreign Assets Control (OFAC) added 134 cryptocurrency addresses linked to Islamic State Khorasan Province to its sanctions list, tied to roughly two million United States dollars in terrorist financing.", "so_what": "The newly listed addresses need to reach wallet-screening data promptly, and a retrospective exposure check against them can confirm no historical flows touched client accounts.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "verified"}, {"id": "global-acams-today-851504e812", "jurisdiction": "GLOBAL", "source": "ACAMS Today", "title": "Crypto Threats, Vulnerabilities and What to Do Next", "url": "https://www.acams.org/en/opinion/crypto-threats-vulnerabilities-and-what-do-next", "published": "2026-07-07T07:50:39.198729+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "ACAMS Today", "url": "https://www.acams.org/en/opinion/crypto-threats-vulnerabilities-and-what-do-next"}]}, "summary": "An ACAMS Today article surveys current criminal threats and control weaknesses in cryptocurrency and suggests practical next steps for compliance teams.", "so_what": "A quick horizon-scanning read, useful when refreshing cryptocurrency risk assessments or training material for financial-crime teams.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "fetch_time"}, {"id": "global-acams-today-2e465a9794", "jurisdiction": "GLOBAL", "source": "ACAMS Today", "title": "What OFAC’s crypto mixer sanctions mean for financial crime compliance", "url": "https://www.acams.org/en/opinion/what-ofacs-crypto-mixer-sanctions-mean-financial-crime-compliance", "published": "2026-07-07T07:50:39.197034+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "ACAMS Today", "url": "https://www.acams.org/en/opinion/what-ofacs-crypto-mixer-sanctions-mean-financial-crime-compliance"}]}, "summary": "An ACAMS Today article explains how the United States Office of Foreign Assets Control's sanctions on cryptocurrency mixing services affect financial-crime compliance programmes.", "so_what": "Helpful framing for tightening controls on mixer exposure, including how indirect exposure several transaction hops away should be treated in monitoring and investigations.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "fetch_time"}, {"id": "global-acams-today-2bea5a2bff", "jurisdiction": "GLOBAL", "source": "ACAMS Today", "title": "Operation Prince: Inside a $15 billion crypto fraud takedown", "url": "https://www.acams.org/en/opinion/operation-prince-inside-15-billion-crypto-fraud-takedown", "published": "2026-07-07T07:50:39.196937+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "ACAMS Today", "url": "https://www.acams.org/en/opinion/operation-prince-inside-15-billion-crypto-fraud-takedown"}]}, "summary": "An ACAMS Today feature goes inside \"Operation Prince\", a law-enforcement takedown of a cryptocurrency fraud network measuring about fifteen billion United States dollars.", "so_what": "Case studies at this scale surface red-flag typologies — romance-investment fraud patterns and mule account networks — worth folding into monitoring scenarios and investigator training.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "fetch_time"}, {"id": "global-coindesk-market-news-7146026493", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Live markets: Bitcoin and ether ETFs drew inflows on Monday", "url": "https://www.coindesk.com/tech/2026/07/07/live-markets-bitcoin-and-ether-etfs-drew-inflows-on-monday", "published": "2026-07-07T06:51:28+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/tech/2026/07/07/live-markets-bitcoin-and-ether-etfs-drew-inflows-on-monday"}]}, "summary": "Exchange-traded funds holding bitcoin and ether recorded net investor inflows on Monday, according to CoinDesk market data.", "so_what": "Steady fund inflows signal continuing institutional participation in digital assets, sustaining the volumes that flow through banks' brokerage, custody and payments relationships.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-market-news-8dcd10142f", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Grayscale says Strategy’s recent bitcoin sales should restore confidence in its financing structure", "url": "https://www.theblock.co/post/407360/grayscale-strategy-bitcoin-sales-comments?utm_source=rss&utm_medium=rss", "published": "2026-07-06T22:10:15+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407360/grayscale-strategy-bitcoin-sales-comments?utm_source=rss&utm_medium=rss"}]}, "summary": "Asset manager Grayscale said recent bitcoin sales by Strategy, the largest corporate holder of bitcoin, should reassure investors about the company's financing structure rather than alarm them.", "so_what": "Large corporate bitcoin holders adjusting positions can move prices and sentiment sharply, which matters when assessing collateral values and client exposure to bitcoin-treasury companies.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-policy-2c890e4264", "jurisdiction": "GLOBAL", "source": "CoinDesk — Policy", "title": "Bitcoin's U.S. reserve still a work-in-progress as federal agencies hash it out", "url": "https://www.coindesk.com/policy/2026/07/06/bitcoin-s-u-s-reserve-still-a-work-in-progress-as-federal-agencies-hash-it-out", "published": "2026-07-06T21:40:06+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/06/bitcoin-s-u-s-reserve-still-a-work-in-progress-as-federal-agencies-hash-it-out"}]}, "summary": "United States federal agencies are still working through legal and operational questions before the planned national bitcoin reserve becomes operational, CoinDesk reports.", "so_what": "A sovereign bitcoin reserve would further legitimise state-level holdings, and the unresolved custody and jurisdiction questions mirror those banks face when holding digital assets.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-chainalysis-blog-e10d024105", "jurisdiction": "GLOBAL", "source": "Chainalysis — Blog", "title": "Breadth, Depth, And Quality: Why Comparing Blockchain Analytics Vendors by Cluster Count Is Only Part of the Calculation", "url": "https://www.chainalysis.com/blog/comparing-blockchain-analytics-vendors/", "published": "2026-07-06T21:03:39+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Chainalysis — Blog", "url": "https://www.chainalysis.com/blog/comparing-blockchain-analytics-vendors/"}]}, "summary": "Chainalysis argues that comparing blockchain-analytics vendors on the number of labelled address clusters tells only part of the story, with breadth, depth and attribution quality all mattering.", "so_what": "Relevant when benchmarking or renewing blockchain-analytics contracts: procurement criteria should test attribution quality and coverage rather than headline cluster counts alone.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-7ba8c24571", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "President Trump’s strategic bitcoin reserve hits a legal and jurisdictional snag: Bloomberg", "url": "https://www.theblock.co/post/407356/trump-strategic-bitcoin-reserve-hits-legal-jurisdictional-snag-bloomberg?utm_source=rss&utm_medium=rss", "published": "2026-07-06T19:56:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407356/trump-strategic-bitcoin-reserve-hits-legal-jurisdictional-snag-bloomberg?utm_source=rss&utm_medium=rss"}]}, "summary": "The planned United States strategic bitcoin reserve has hit legal and jurisdictional obstacles between federal agencies, according to a Bloomberg report cited by The Block.", "so_what": "The delays highlight unsettled United States federal authority over seized and state-held cryptoassets, with knock-on implications for custody and sanctions policy worth watching.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-1f1f1d0ab9", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Judge revives fraud claim against Barry Silbert, DCG in Genesis Yield lawsuit", "url": "https://www.theblock.co/post/407337/judge-revives-fraud-claim-against-barry-silbert-dcg-genesis-yield-lawsuit?utm_source=rss&utm_medium=rss", "published": "2026-07-06T18:55:49+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407337/judge-revives-fraud-claim-against-barry-silbert-dcg-genesis-yield-lawsuit?utm_source=rss&utm_medium=rss"}]}, "summary": "A United States judge revived a fraud claim against Digital Currency Group and its founder Barry Silbert in a lawsuit over the collapsed Genesis yield programme.", "so_what": "Litigation from the 2022-23 crypto lending collapses keeps counterparty-failure risk visible; exposure reviews for clients tied to affected entities may need refreshing as claims progress.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-45e49ff153", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Vitalik Buterin proposes ‘Extremely Lean’ Ethereum, shrinking the chain to near-zero state with ZK proofs", "url": "https://www.theblock.co/post/407319/vitalik-buterin-extremely-lean-ethereum-shrinking-chain-to-near-zero-state-zk-proofs?utm_source=rss&utm_medium=rss", "published": "2026-07-06T16:34:32+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407319/vitalik-buterin-extremely-lean-ethereum-shrinking-chain-to-near-zero-state-zk-proofs?utm_source=rss&utm_medium=rss"}]}, "summary": "Ethereum co-founder Vitalik Buterin proposed an \"extremely lean\" redesign that would shrink the blockchain's stored state to near zero using zero-knowledge cryptographic proofs.", "so_what": "Protocol changes of this scale would eventually affect how transaction records used in investigations are stored and verified, though any practical impact is years away.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-institutional-moves-19b547342f", "jurisdiction": "GLOBAL", "source": "CoinDesk — Institutional moves", "title": "Circle’s USDC is leaving Tether behind in the stablecoin volume race, new data from Visa shows", "url": "https://www.coindesk.com/business/2026/07/06/circle-s-usdc-is-leaving-tether-behind-in-the-stablecoin-volume-race", "published": "2026-07-06T16:00:15+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Institutional moves", "url": "https://www.coindesk.com/business/2026/07/06/circle-s-usdc-is-leaving-tether-behind-in-the-stablecoin-volume-race"}]}, "summary": "New data published by Visa shows Circle's USDC stablecoin pulling ahead of rival Tether in on-chain transaction volume by a widening margin.", "so_what": "A volume shift toward the more regulation-forward stablecoin issuer changes the counterparty mix in client transaction flows and is useful context for stablecoin risk assessments.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-258fd6649e", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "President Trump says he’s a ‘big crypto guy,’ while distancing himself from family’s crypto ventures", "url": "https://www.theblock.co/post/407312/president-trump-big-crypto-guy-distancing-familys-crypto-ventures?utm_source=rss&utm_medium=rss", "published": "2026-07-06T15:53:22+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407312/president-trump-big-crypto-guy-distancing-familys-crypto-ventures?utm_source=rss&utm_medium=rss"}]}, "summary": "United States President Trump described himself as strongly supportive of cryptocurrency while distancing himself from his family's commercial crypto ventures.", "so_what": "Top-level political support continues to shape a permissive United States policy direction, while conflict-of-interest questions around official crypto ventures remain a reputational theme to monitor.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-market-news-9cad11867e", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "DeFi protocol Summer.fi halts Lazy Summer vaults after $6 million exploit", "url": "https://www.coindesk.com/web3/2026/07/06/defi-protocol-summer-fi-halts-lazy-summer-vaults-after-usd6-million-exploit", "published": "2026-07-06T13:42:12+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/web3/2026/07/06/defi-protocol-summer-fi-halts-lazy-summer-vaults-after-usd6-million-exploit"}]}, "summary": "Decentralised-finance protocol Summer.fi suspended its \"Lazy Summer\" investment vaults after an exploit drained about six million United States dollars.", "so_what": "Fresh exploit proceeds typically move fast through mixers and cross-chain bridges, so screening-provider alerts for exposure to the stolen funds are worth watching over the coming days.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-elliptic-blog-4edb359f95", "jurisdiction": "GLOBAL", "source": "Elliptic — Blog", "title": "How the UK's stablecoin rules came together", "url": "https://www.elliptic.co/blog/how-uk-stablecoin-rules-came-together", "published": "2026-07-06T13:00:02+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Elliptic — Blog", "url": "https://www.elliptic.co/blog/how-uk-stablecoin-rules-came-together"}]}, "summary": "Elliptic published an explainer tracing how the United Kingdom's newly finalised stablecoin regulatory regime was developed and what it covers.", "so_what": "A concise map of the United Kingdom regime helps benchmark it against the Hong Kong and European Union stablecoin frameworks when advising on cross-border issuance and custody.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-market-news-053cb92677", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Michael Saylor's Strategy dramatically ups pace of bitcoin sales, raising $216 million", "url": "https://www.coindesk.com/markets/2026/07/06/michael-saylor-s-strategy-dramatically-ups-pace-of-bitcoin-sales-raising-usd216-million", "published": "2026-07-06T12:16:28+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/markets/2026/07/06/michael-saylor-s-strategy-dramatically-ups-pace-of-bitcoin-sales-raising-usd216-million"}]}, "summary": "Strategy, the software company turned bitcoin holding vehicle led by Michael Saylor, sharply accelerated its bitcoin sales, raising about 216 million United States dollars.", "so_what": "The largest corporate bitcoin holder switching from accumulation to sizeable sales is a market-sentiment signal relevant to collateral valuations and exposure to bitcoin-treasury companies.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-policy-9559d96c92", "jurisdiction": "GLOBAL", "source": "CoinDesk — Policy", "title": "Ripple's preliminary crypto asset provider license in Luxembourg upgraded to fully compliant", "url": "https://www.coindesk.com/policy/2026/07/06/ripple-s-preliminary-crypto-asset-provider-license-in-luxembourg-upgraded-to-fully-compliant", "published": "2026-07-06T10:01:24+00:00", "type": "licensing", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/06/ripple-s-preliminary-crypto-asset-provider-license-in-luxembourg-upgraded-to-fully-compliant"}]}, "summary": "CoinDesk reports that Ripple's preliminary crypto-asset service provider licence in Luxembourg has been upgraded to fully compliant status under the European Union's Markets in Crypto-Assets Regulation (MiCA).", "so_what": "Full authorisation lets Ripple passport crypto services across the European Economic Area, adding a large licensed counterparty to the European payments and custody landscape.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-a3f39bf606", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Ripple secures full MiCA CASP authorization for crypto services across 30 EEA countries", "url": "https://www.theblock.co/post/407207/ripple-secures-full-mica-casp-authorization-for-crypto-services-across-30-eea-countries?utm_source=rss&utm_medium=rss", "published": "2026-07-06T09:30:56+00:00", "type": "licensing", "priority": "high", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407207/ripple-secures-full-mica-casp-authorization-for-crypto-services-across-30-eea-countries?utm_source=rss&utm_medium=rss"}, {"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/06/ripple-s-preliminary-crypto-asset-provider-license-in-luxembourg-upgraded-to-fully-compliant"}]}, "summary": "Ripple secured full authorisation as a crypto-asset service provider under the European Union's Markets in Crypto-Assets Regulation (MiCA), allowing it to offer crypto services across thirty European Economic Area countries.", "so_what": "A major payments-focused crypto firm gaining authorisation across the whole European Economic Area expands the set of fully licensed counterparties and sharpens comparison with Hong Kong's licensing regime.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-00a1b988af", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "South Korea develops crypto-specific procedures for asset seizures and liquidation: report", "url": "https://www.theblock.co/post/407183/south-korea-crypto-specific-procedure?utm_source=rss&utm_medium=rss", "published": "2026-07-06T08:35:54+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407183/south-korea-crypto-specific-procedure?utm_source=rss&utm_medium=rss"}]}, "summary": "South Korean authorities are developing procedures specifically for seizing and liquidating cryptocurrency in criminal and tax cases, according to a report cited by The Block.", "so_what": "Clearer seizure mechanics in a major Asian market offer a template regional peers may follow and affect how frozen-asset requests involving Korean counterparties are executed.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-market-news-2f266b7d60", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "How Sovereign Wealth Funds Invest in Digital Assets", "url": "https://www.theblock.co/learn/407186/how-sovereign-wealth-funds-invest-in-digital-assets?utm_source=rss&utm_medium=rss", "published": "2026-07-06T06:14:32+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/learn/407186/how-sovereign-wealth-funds-invest-in-digital-assets?utm_source=rss&utm_medium=rss"}]}, "summary": "An explainer from The Block describes the channels sovereign wealth funds use to invest in digital assets, from exchange-traded products to direct holdings and venture stakes.", "so_what": "Sovereign investors entering digital assets deepen institutional flows through regulated intermediaries — useful context for onboarding and source-of-funds conversations involving state-linked vehicles.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-3a49a90f7e", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Nigel Farage failed to declare funding from crypto gambling figure convicted of fraud: Sunday Times", "url": "https://www.theblock.co/post/407178/nigel-farage-failed-to-declare-funding-from-crypto-gambling-figure-convicted-of-fraud-sunday-times?utm_source=rss&utm_medium=rss", "published": "2026-07-05T22:53:05+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407178/nigel-farage-failed-to-declare-funding-from-crypto-gambling-figure-convicted-of-fraud-sunday-times?utm_source=rss&utm_medium=rss"}]}, "summary": "The Sunday Times reported that British politician Nigel Farage failed to declare funding from a cryptocurrency gambling figure previously convicted of fraud.", "so_what": "Politically exposed persons with undisclosed crypto-linked funding illustrate the adverse-media and source-of-wealth checks that cryptocurrency exposure adds to customer due diligence.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-elliptic-blog-9f279187a9", "jurisdiction": "GLOBAL", "source": "Elliptic — Blog", "title": "Introducing Continuous Monitoring: stay aware of changing crypto risk", "url": "https://www.elliptic.co/blog/introducing-continuous-monitoring", "published": "2026-07-02T13:00:01+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Elliptic — Blog", "url": "https://www.elliptic.co/blog/introducing-continuous-monitoring"}]}, "summary": "Elliptic launched a continuous-monitoring capability that re-screens cryptocurrency wallets and transactions as risk information changes after the initial check.", "so_what": "Point-in-time wallet screening ages quickly; continuous re-screening options are worth weighing when reviewing blockchain-analytics tooling against ongoing monitoring obligations.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-chainalysis-blog-987207320d", "jurisdiction": "GLOBAL", "source": "Chainalysis — Blog", "title": "OFAC Updates ISIS-Khorasan Sanctions with Over 100 Cryptocurrency Wallets", "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/", "published": "2026-07-01T20:26:45+00:00", "type": "designation", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Chainalysis — Blog", "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/"}]}, "summary": "Chainalysis analysed the United States Office of Foreign Assets Control's update adding more than one hundred cryptocurrency wallet addresses linked to Islamic State Khorasan to its sanctions designations.", "so_what": "The attribution detail on the newly designated addresses supports retrospective exposure checks and tuning of sanctions-screening rules for indirect exposure.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-5f6cc0f352", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Coinbase secures UK investment services license to add derivatives and equities trading", "url": "https://www.theblock.co/post/407410/coinbase-secures-uk-investment-services-license-to-add-derivatives-and-equities-trading?utm_source=rss&utm_medium=rss", "published": "2026-07-07T11:41:33+00:00", "type": "licensing", "priority": "high", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407410/coinbase-secures-uk-investment-services-license-to-add-derivatives-and-equities-trading?utm_source=rss&utm_medium=rss"}, {"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/business/2026/07/07/coinbase-secures-uk-authorization-to-offer-traditional-investments-alongside-crypto"}]}, "summary": "Coinbase obtained a United Kingdom investment services licence allowing it to offer derivatives and equities trading alongside its existing crypto services.", "so_what": "A major crypto exchange holding a mainstream United Kingdom investment licence blurs the line between crypto and traditional brokerage — relevant when classifying counterparties and comparing licensing scope across jurisdictions.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-e571837956", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Coinbase secures UK authorization to offer traditional investments alongside crypto", "url": "https://www.coindesk.com/business/2026/07/07/coinbase-secures-uk-authorization-to-offer-traditional-investments-alongside-crypto", "published": "2026-07-07T11:37:01+00:00", "type": "licensing", "priority": "normal", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/business/2026/07/07/coinbase-secures-uk-authorization-to-offer-traditional-investments-alongside-crypto"}, {"name": "The Block — Market news", "url": "https://www.theblock.co/post/407410/coinbase-secures-uk-investment-services-license-to-add-derivatives-and-equities-trading?utm_source=rss&utm_medium=rss"}]}, "summary": "CoinDesk reports Coinbase received United Kingdom authorisation to offer traditional investment products alongside cryptocurrency trading.", "so_what": "Confirms the same United Kingdom authorisation reported by The Block; the combined crypto-plus-securities permission set is the detail worth noting for counterparty assessments.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-229e85f2ee", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Tether’s former CIO seeks buyers for part of his stake in the firm: Bloomberg", "url": "https://www.theblock.co/post/407394/tethers-former-cio-seeks-buyers-for-part-of-his-stake-in-the-firm-bloomberg?utm_source=rss&utm_medium=rss", "published": "2026-07-07T09:22:26+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407394/tethers-former-cio-seeks-buyers-for-part-of-his-stake-in-the-firm-bloomberg?utm_source=rss&utm_medium=rss"}]}, "summary": "Bloomberg reports that Tether's former chief investment officer is seeking buyers for part of his personal stake in the stablecoin issuer.", "so_what": "Secondary sales of stakes in the largest stablecoin issuer can reveal valuation and governance information relevant to stablecoin counterparty risk assessments.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-59ba436ed5", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Upbit, Naver stock-swap deal faces second delay amid proposed crypto law debate", "url": "https://www.theblock.co/post/407389/upbit-naver-stock-swap-deal-delay?utm_source=rss&utm_medium=rss", "published": "2026-07-07T09:10:51+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407389/upbit-naver-stock-swap-deal-delay?utm_source=rss&utm_medium=rss"}]}, "summary": "The stock-swap deal between South Korean exchange Upbit's operator and internet group Naver faces a second delay while lawmakers debate a proposed cryptocurrency law.", "so_what": "South Korea's pending crypto legislation is now directly shaping major corporate transactions — a signal of how quickly the regional regulatory landscape is moving.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-011556d892", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Two traders sue Polymarket over disputed resolution of Strategy bitcoin sale market", "url": "https://www.theblock.co/post/407368/two-traders-sue-polymarket-strategy-bitcoin-sale?utm_source=rss&utm_medium=rss", "published": "2026-07-07T08:34:34+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407368/two-traders-sue-polymarket-strategy-bitcoin-sale?utm_source=rss&utm_medium=rss"}]}, "summary": "Two traders sued prediction-market platform Polymarket over how it resolved a market on Strategy's bitcoin sales.", "so_what": "Disputes over prediction-market resolutions illustrate the consumer-protection and manipulation questions regulators are beginning to examine in event-contract markets.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-60ab2faf26", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Binance taps into Bitcoin holders’ hunger for yield with new covered call yield play", "url": "https://www.coindesk.com/markets/2026/07/07/binance-taps-into-bitcoin-holders-hunger-for-yield-with-new-covered-call-yield-play", "published": "2026-07-07T08:20:00+00:00", "type": "peer_move", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/markets/2026/07/07/binance-taps-into-bitcoin-holders-hunger-for-yield-with-new-covered-call-yield-play"}]}, "summary": "Binance launched a covered-call product that lets bitcoin holders earn yield on their holdings.", "so_what": "Yield products on client crypto holdings raise custody, rehypothecation and suitability questions — useful context when assessing exchange counterparties' business models.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-chainalysis-blog-8b7d6ac67d", "jurisdiction": "GLOBAL", "source": "Chainalysis — Blog", "title": "Chainalysis Supports Robinhood Chain with Automatic Token Support", "url": "https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/", "published": "2026-07-01T19:30:58+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Chainalysis — Blog", "url": "https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/"}]}, "summary": "Chainalysis announced automatic token support for Robinhood's new blockchain, meaning assets on that chain can be traced in its analytics tools from launch.", "so_what": "Day-one analytics coverage of new chains matters for monitoring completeness — a gap between chain launch and tracing support is a window where flows go unseen.", "first_seen": "2026-07-07T12:05:14.831025+00:00", "date_source": "feed"}, {"id": "global-elliptic-blog-34fcbfc9a2", "jurisdiction": "GLOBAL", "source": "Elliptic — Blog", "title": "What the end of MiCA's transitional period means for crypto businesses", "url": "https://www.elliptic.co/blog/the-end-of-micas-transitional-period", "published": "2026-06-30T13:27:12+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Elliptic — Blog", "url": "https://www.elliptic.co/blog/the-end-of-micas-transitional-period"}]}, "summary": "Elliptic explains that the transitional window under the European Union's Markets in Crypto-Assets Regulation (MiCA) closed on 1 July 2026, after which only firms with full authorisation may serve European Union clients.", "so_what": "European counterparties still operating on lapsed national registrations are now unauthorised — worth reflecting in counterparty screening and periodic-review triggers.", "first_seen": "2026-07-07T12:05:14.831025+00:00", "date_source": "feed"}, {"id": "hk-fstb-press-releases-cf3d3aabb6", "jurisdiction": "HK", "source": "Financial Services and the Treasury Bureau — Press releases", "title": "FSTB and HKMA to further unlock potential of distributed ledger technology in Hong Kong's fixed income market", "url": "https://www.info.gov.hk/gia/general/202606/29/P2026062900677.htm", "published": "2026-06-29T00:00:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "official", "sources": [{"name": "Financial Services and the Treasury Bureau — Press releases", "url": "https://www.info.gov.hk/gia/general/202606/29/P2026062900677.htm"}]}, "summary": "The Financial Services and the Treasury Bureau and the Hong Kong Monetary Authority announced further measures to expand the use of distributed ledger technology in Hong Kong's fixed-income market.", "so_what": "Signals a continuing official push to make tokenised debt mainstream in Hong Kong — expect follow-on guidance touching settlement, custody and record-keeping controls.", "first_seen": "2026-07-07T03:54:47.072828+00:00"}, {"id": "eu-eba-news-23fee21bfb", "jurisdiction": "EU", "source": "European Banking Authority — News", "title": "The European Banking Authority consults on a draft methodology for setting fines under the Markets in Crypto-Assets Regulation (MiCA)", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/european-banking-authority-consults-draft-methodology-setting-fines-under-markets-crypto-assets", "published": "2026-06-26T13:27:24+00:00", "type": "consultation", "priority": "normal", "status": "new", "verification": {"level": "official", "sources": [{"name": "European Banking Authority — News", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/european-banking-authority-consults-draft-methodology-setting-fines-under-markets-crypto-assets"}]}, "summary": "The European Banking Authority is consulting on a draft methodology for setting fines on issuers it supervises under the EU's Markets in Crypto-Assets Regulation.", "so_what": "A concrete preview of how penalties under the EU Markets in Crypto-Assets Regulation will be sized — a useful benchmark when gauging the EU enforcement exposure of stablecoin and token issuers.", "first_seen": "2026-07-07T03:54:47.072828+00:00"}, {"id": "eu-eba-news-e444efca6b", "jurisdiction": "EU", "source": "European Banking Authority — News", "title": "The EBA updates validation rules for supervisory reporting", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/eba-updates-validation-rules-supervisory-reporting", "published": "2026-06-26T11:17:02+00:00", "type": "guidance", "priority": "normal", "status": "new", "verification": {"level": "official", "sources": [{"name": "European Banking Authority — News", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/eba-updates-validation-rules-supervisory-reporting"}]}, "summary": "The European Banking Authority published updated validation rules for supervisory reporting, flagging corrections reporting institutions should apply.", "so_what": "Routine, but worth passing to regulatory-reporting teams handling EU entities, including MiCA-related returns.", "first_seen": "2026-07-07T03:54:47.072828+00:00"}, {"id": "global-trm-labs-insights-f5039e43fc", "jurisdiction": "GLOBAL", "source": "TRM Labs — Insights", "title": "Wallet Screening Best Practices for Compliance Teams", "url": "https://www.trmlabs.com/resources/blog/wallet-screening-best-practices-for-compliance-teams", "published": "2026-07-07T07:50:47.227133+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "TRM Labs — Insights", "url": "https://www.trmlabs.com/resources/blog/wallet-screening-best-practices-for-compliance-teams"}]}, "summary": "TRM Labs published a guide on how compliance teams should screen cryptocurrency wallets for sanctions and financial-crime risk.", "so_what": "A useful benchmark for reviewing whether existing wallet-screening controls cover sanctions exposure, indirect risk and re-screening frequency in line with current industry practice.", "first_seen": "2026-07-07T07:50:49.166227+00:00"}, {"id": "global-the-block-market-news-a6c5d8514f", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Kraken wins $22 million arbitration against auditor Mazars for ditching the firm during Operation Choke Point 2.0", "url": "https://www.theblock.co/post/407524/kraken-wins-22-million-arbitration-auditor-mazars-for-ditching-during-operation-choke-point-2-0?utm_source=rss&utm_medium=rss", "published": "2026-07-07T21:30:10+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407524/kraken-wins-22-million-arbitration-auditor-mazars-for-ditching-during-operation-choke-point-2-0?utm_source=rss&utm_medium=rss"}]}, "summary": "Kraken wins $22 million arbitration against auditor Mazars for ditching the firm during Operation Choke Point 2.0", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-d319101a3e", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "CFTC charges North Carolina man over alleged $14 million crypto, futures fraud", "url": "https://www.theblock.co/post/407516/cftc-charges-north-carolina-man-alleged-14-million-crypto-futures-fraud?utm_source=rss&utm_medium=rss", "published": "2026-07-07T20:58:49+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407516/cftc-charges-north-carolina-man-alleged-14-million-crypto-futures-fraud?utm_source=rss&utm_medium=rss"}]}, "summary": "CFTC charges North Carolina man over alleged $14 million crypto, futures fraud", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-institutional-moves-dfff743d35", "jurisdiction": "GLOBAL", "source": "CoinDesk — Institutional moves", "title": "BlackRock-backed Securitize slides 40% after SPAC debut despite tokenization boom", "url": "https://www.coindesk.com/markets/2026/07/07/blackrock-backed-securitize-slides-40-after-spac-debut-despite-tokenization-boom", "published": "2026-07-07T19:35:14+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Institutional moves", "url": "https://www.coindesk.com/markets/2026/07/07/blackrock-backed-securitize-slides-40-after-spac-debut-despite-tokenization-boom"}]}, "summary": "BlackRock-backed Securitize slides 40% after SPAC debut despite tokenization boom", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-130ece762e", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Crypto exchange Kraken is trying to become a bank in Europe", "url": "https://www.coindesk.com/business/2026/07/07/crypto-exchange-kraken-is-trying-to-become-a-bank-in-europe", "published": "2026-07-07T18:38:10+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/business/2026/07/07/crypto-exchange-kraken-is-trying-to-become-a-bank-in-europe"}]}, "summary": "Crypto exchange Kraken is trying to become a bank in Europe", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-084ac14fda", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Ondo Finance says tokenized stocks can now be used as collateral for perp trading", "url": "https://www.theblock.co/post/407452/ondo-finance-says-tokenized-stocks-now-used-as-collateral-perp-trading?utm_source=rss&utm_medium=rss", "published": "2026-07-07T16:29:46+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407452/ondo-finance-says-tokenized-stocks-now-used-as-collateral-perp-trading?utm_source=rss&utm_medium=rss"}]}, "summary": "Ondo Finance says tokenized stocks can now be used as collateral for perp trading", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-policy-ba638fc27d", "jurisdiction": "GLOBAL", "source": "CoinDesk — Policy", "title": "U.S. SEC to propose crypto rule as soon as this month to ease startups, fundraising", "url": "https://www.coindesk.com/policy/2026/07/07/u-s-sec-to-propose-crypto-rule-as-soon-as-this-month-to-ease-startups-fundraising", "published": "2026-07-07T16:08:19+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/07/u-s-sec-to-propose-crypto-rule-as-soon-as-this-month-to-ease-startups-fundraising"}]}, "summary": "U.S. SEC to propose crypto rule as soon as this month to ease startups, fundraising", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-3cc6e3754c", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "SEC plans crypto rule changes for exchanges and broker dealers in 2026 regulatory agenda", "url": "https://www.theblock.co/post/407468/sec-plans-crypto-rule-changes-for-exchanges-broker-dealers-2026-regulatory-agenda?utm_source=rss&utm_medium=rss", "published": "2026-07-07T16:03:54+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407468/sec-plans-crypto-rule-changes-for-exchanges-broker-dealers-2026-regulatory-agenda?utm_source=rss&utm_medium=rss"}]}, "summary": "SEC plans crypto rule changes for exchanges and broker dealers in 2026 regulatory agenda", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-d3085b7af6", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Tether puts $20 million behind Mercado Bitcoin amid Latin America’s tokenization boom", "url": "https://www.theblock.co/post/407463/tether-20-million-behind-mercado-bitcoin-latin-america-tokenization-boom?utm_source=rss&utm_medium=rss", "published": "2026-07-07T15:57:17+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407463/tether-20-million-behind-mercado-bitcoin-latin-america-tokenization-boom?utm_source=rss&utm_medium=rss"}]}, "summary": "Tether puts $20 million behind Mercado Bitcoin amid Latin America’s tokenization boom", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-abc46eb9fb", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Former Tether investment chief is looking to sell part of his stake in the stablecoin giant: Bloomberg", "url": "https://www.coindesk.com/business/2026/07/07/former-tether-investment-chief-is-looking-to-sell-part-of-his-stake-in-the-stablecoin-giant-bloomberg", "published": "2026-07-07T13:46:25+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/business/2026/07/07/former-tether-investment-chief-is-looking-to-sell-part-of-his-stake-in-the-stablecoin-giant-bloomberg"}]}, "summary": "Former Tether investment chief is looking to sell part of his stake in the stablecoin giant: Bloomberg", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-elliptic-blog-e7ff592dfb", "jurisdiction": "GLOBAL", "source": "Elliptic — Blog", "title": "Crypto regulatory affairs: UK sets out final stablecoin rules", "url": "https://www.elliptic.co/blog/crypto-regulatory-affairs-uk-sets-out-stablecoin-rules", "published": "2026-07-07T13:00:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Elliptic — Blog", "url": "https://www.elliptic.co/blog/crypto-regulatory-affairs-uk-sets-out-stablecoin-rules"}]}, "summary": "Crypto regulatory affairs: UK sets out final stablecoin rules", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-adf3c275a9", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Bitcoin’s early July bounce rides thin summer liquidity as half of supply still sits underwater: analysts", "url": "https://www.theblock.co/post/407414/bitcoins-early-july-bounce-rides-thin-summer-liquidity-as-half-of-supply-still-sits-underwater-analysts?utm_source=rss&utm_medium=rss", "published": "2026-07-07T12:43:32+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407414/bitcoins-early-july-bounce-rides-thin-summer-liquidity-as-half-of-supply-still-sits-underwater-analysts?utm_source=rss&utm_medium=rss"}]}, "summary": "Bitcoin’s early July bounce rides thin summer liquidity as half of supply still sits underwater: analysts", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}], "source_health": [{"name": "Hong Kong Monetary Authority — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553924+00:00"}, {"name": "Hong Kong Monetary Authority — Circulars & guidance", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553939+00:00"}, {"name": "Securities and Futures Commission — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553947+00:00"}, {"name": "Securities and Futures Commission — Circulars", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553953+00:00"}, {"name": "Financial Services and the Treasury Bureau — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553959+00:00"}, {"name": "Securities and Futures Commission — Licensed virtual asset trading platforms register", "status": "ok", "note": "No change", "tier": "official", "checked_at": "2026-07-07T23:44:19.553966+00:00"}, {"name": "People's Bank of China — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553972+00:00"}, {"name": "CoinDesk — China policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.553977+00:00"}, {"name": "The Block — China policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.553982+00:00"}, {"name": "Financial Crimes Enforcement Network (FinCEN) — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553992+00:00"}, {"name": "Office of Foreign Assets Control (OFAC) — Recent actions", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553997+00:00"}, {"name": "US Securities and Exchange Commission — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554003+00:00"}, {"name": "Commodity Futures Trading Commission — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554008+00:00"}, {"name": "Office of the Comptroller of the Currency — News releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554013+00:00"}, {"name": "Federal Reserve — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554018+00:00"}, {"name": "US Department of Justice — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554023+00:00"}, {"name": "European Securities and Markets Authority — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554028+00:00"}, {"name": "European Banking Authority — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554034+00:00"}, {"name": "Monetary Authority of Singapore — Media releases", "status": "ok", "note": "Fetch failed this run (no parseable items); 3 consecutive failures — self-heal at 5.", "tier": "official", "checked_at": "2026-07-07T23:44:19.554043+00:00"}, {"name": "Financial Action Task Force (FATF) — Publications", "status": "dead", "note": "Blocked by the site's bot protection for 6 consecutive runs (content is unavailable to an automated fetch) — check the source manually.", "tier": "official", "checked_at": "2026-07-07T23:44:19.554052+00:00"}, {"name": "Wolfsberg Group — News & publications", "status": "ok", "note": "Fetch failed this run (fetch failed: HTTPSConnectionPool(host='wolfsberg-group.org', port=443): Read timed out. (read timeout=15)); 1 consecutive failure — self-heal at 5.", "tier": "official", "checked_at": "2026-07-07T23:44:19.554060+00:00"}, {"name": "Global Digital Finance (GDF) — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554065+00:00"}, {"name": "ACAMS Today", "status": "ok", "note": "Fetch failed this run (fetch failed: 403 Client Error: Forbidden for url: https://www.acams.org/en/acamstoday); 1 consecutive failure — self-heal at 5.", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554071+00:00"}, {"name": "Bank for International Settlements / Basel Committee — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554076+00:00"}, {"name": "Financial Stability Board — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554081+00:00"}, {"name": "CoinDesk — Policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554086+00:00"}, {"name": "The Block — Policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554091+00:00"}, {"name": "CoinDesk — Institutional moves", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554096+00:00"}, {"name": "The Block — Institutional moves", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554101+00:00"}, {"name": "CoinDesk — Market news", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554107+00:00"}, {"name": "The Block — Market news", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554112+00:00"}, {"name": "Chainalysis — Blog", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554117+00:00"}, {"name": "Elliptic — Blog", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554122+00:00"}, {"name": "TRM Labs — Insights", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554127+00:00"}, {"name": "Claude summarisation", "status": "dead", "note": "No ANTHROPIC_API_KEY configured -- AI summaries, corroboration and source self-healing are disabled; cards show raw source titles."}], "run_log": [{"at": "2026-07-07T07:50:49.166227+00:00", "note": "Daily fetch: 25 new items surfaced; 34/35 sources ok"}, {"at": "2026-07-07T07:53:39.038684+00:00", "note": "Enrichment: 25 items summarised and classified via Claude Code session; 2 stories corroborated"}, {"at": "2026-07-07T12:02:20.644884+00:00", "note": "Fact-check pass: 3 publication dates corrected from article structured data (TRM Labs items, incl. the OFAC ISKP story: 7 Jul -> 1 Jul); OFAC ISKP designation verified against the official OFAC action (134 addresses, ISIS-K, 1 July confirmed)."}, {"at": "2026-07-07T12:05:14.831018+00:00", "note": "Daily fetch: 8 new items surfaced; 34/35 sources ok"}, {"at": "2026-07-07T12:06:13.362510+00:00", "note": "Daily fetch: 0 new items surfaced; 33/34 sources ok"}, {"at": "2026-07-07T12:08:12.183955+00:00", "note": "Enrichment: 8 items summarised and classified via Claude Code session; Coinbase United Kingdom licence cross-corroborated (The Block + CoinDesk). MiCA transition deadline (1 July) checked — already passed, so not added to the radar."}, {"at": "2026-07-07T12:10:08.994730+00:00", "note": "Backfill: filed 19 items under their publication days so the last-7-days archive reflects the week (3 on 2026-06-26, 1 on 2026-06-29, 1 on 2026-06-30, 1 on 2026-07-01, 4 on 2026-07-02, 9 on 2026-07-06)."}, {"at": "2026-07-07T12:33:15.805137+00:00", "note": "Corrected 13 item(s) whose first_seen was wrongly backdated to their published date by an earlier maintenance step -- this had incorrectly evicted genuinely-discovered-today items (Hong Kong, European Union) from the Digest tab into the archive. first_seen now reflects true discovery time again, per"}, {"at": "2026-07-07T12:34:03.270648+00:00", "note": "Recovered 4 item(s) (Hong Kong, European Union) wrongly deleted by an earlier maintenance step: a backfill script backdated their first_seen to their published date, which then made the 8-day retention prune remove them entirely. Restored from the last known-good snapshot with true first_seen intact"}, {"at": "2026-07-07T13:16:41.448454+00:00", "note": "Corrected residual first_seen corruption on 2 item(s) that the earlier restoration missed (Chainalysis, Elliptic — freshly discovered items whose first_seen the backfill step had also wrongly backdated, but which weren't present in the git-history snapshot used for the first repair since they were a"}, {"at": "2026-07-07T23:44:19.555129+00:00", "note": "Daily fetch: 11 new items surfaced; 33/35 sources ok"}], "radar": []};
+const DIGEST = {"generated_at": "2026-07-08T00:21:22.992710+00:00", "top_of_mind": "", "items": [{"id": "global-trm-labs-insights-b35f07fd2d", "jurisdiction": "GLOBAL", "source": "TRM Labs — Insights", "title": "H1 2026 Crypto Hacks Reach Record High as Losses Fall Below USD 1 Billion", "url": "https://www.trmlabs.com/resources/blog/h1-2026-crypto-hacks-reach-record-high-as-losses-fall-below-usd-1-billion", "published": "2026-07-01T12:57:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "TRM Labs — Insights", "url": "https://www.trmlabs.com/resources/blog/h1-2026-crypto-hacks-reach-record-high-as-losses-fall-below-usd-1-billion"}]}, "summary": "TRM Labs reported that the number of cryptocurrency hacks hit a record high in the first half of 2026, even though total losses fell below one billion United States dollars.", "so_what": "More frequent hacks raise the odds that client funds or counterparty exchanges are affected, so stolen-fund tracing alerts and exchange due-diligence reviews deserve continued attention.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "verified"}, {"id": "global-trm-labs-insights-4fa35664b1", "jurisdiction": "US", "source": "TRM Labs — Insights", "title": "OFAC Sanctions 134 ISKP Cryptocurrency Addresses Tied to USD 2 Million in Terrorist Financing", "url": "https://www.trmlabs.com/resources/blog/ofac-sanctions-134-iskp-cryptocurrency-addresses-tied-to-usd-2-million-in-terrorist-financing", "published": "2026-07-01T16:15:00+00:00", "type": "designation", "priority": "high", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "TRM Labs — Insights", "url": "https://www.trmlabs.com/resources/blog/ofac-sanctions-134-iskp-cryptocurrency-addresses-tied-to-usd-2-million-in-terrorist-financing"}, {"name": "Chainalysis — Blog", "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/"}], "checked": {"at": "2026-07-07T12:02:20.644884+00:00", "against": "US Treasury OFAC — Counter Terrorism Designations, 1 July 2026", "url": "https://ofac.treasury.gov/recent-actions/20260701", "note": "The official action lists exactly 134 digital-currency addresses and names ISIS-K; the designation date (1 July 2026) matches the article's publication date."}}, "summary": "The United States Office of Foreign Assets Control (OFAC) added 134 cryptocurrency addresses linked to Islamic State Khorasan Province to its sanctions list, tied to roughly two million United States dollars in terrorist financing.", "so_what": "The newly listed addresses need to reach wallet-screening data promptly, and a retrospective exposure check against them can confirm no historical flows touched client accounts.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "verified"}, {"id": "global-acams-today-851504e812", "jurisdiction": "GLOBAL", "source": "ACAMS Today", "title": "Crypto Threats, Vulnerabilities and What to Do Next", "url": "https://www.acams.org/en/opinion/crypto-threats-vulnerabilities-and-what-do-next", "published": "2026-04-13T16:00:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "ACAMS Today", "url": "https://www.acams.org/en/opinion/crypto-threats-vulnerabilities-and-what-do-next"}]}, "summary": "An ACAMS Today article surveys current criminal threats and control weaknesses in cryptocurrency and suggests practical next steps for compliance teams.", "so_what": "A quick horizon-scanning read, useful when refreshing cryptocurrency risk assessments or training material for financial-crime teams.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "verified"}, {"id": "global-acams-today-2e465a9794", "jurisdiction": "US", "source": "ACAMS Today", "title": "What OFAC’s crypto mixer sanctions mean for financial crime compliance", "url": "https://www.acams.org/en/opinion/what-ofacs-crypto-mixer-sanctions-mean-financial-crime-compliance", "published": "2026-03-08T16:00:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "ACAMS Today", "url": "https://www.acams.org/en/opinion/what-ofacs-crypto-mixer-sanctions-mean-financial-crime-compliance"}]}, "summary": "An ACAMS Today article explains how the United States Office of Foreign Assets Control's sanctions on cryptocurrency mixing services affect financial-crime compliance programmes.", "so_what": "Helpful framing for tightening controls on mixer exposure, including how indirect exposure several transaction hops away should be treated in monitoring and investigations.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "verified"}, {"id": "global-acams-today-2bea5a2bff", "jurisdiction": "GLOBAL", "source": "ACAMS Today", "title": "Operation Prince: Inside a $15 billion crypto fraud takedown", "url": "https://www.acams.org/en/opinion/operation-prince-inside-15-billion-crypto-fraud-takedown", "published": "2026-03-23T16:00:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "ACAMS Today", "url": "https://www.acams.org/en/opinion/operation-prince-inside-15-billion-crypto-fraud-takedown"}]}, "summary": "An ACAMS Today feature goes inside \"Operation Prince\", a law-enforcement takedown of a cryptocurrency fraud network measuring about fifteen billion United States dollars.", "so_what": "Case studies at this scale surface red-flag typologies — romance-investment fraud patterns and mule account networks — worth folding into monitoring scenarios and investigator training.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "verified"}, {"id": "global-coindesk-market-news-7146026493", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Live markets: Bitcoin and ether ETFs drew inflows on Monday", "url": "https://www.coindesk.com/tech/2026/07/07/live-markets-bitcoin-and-ether-etfs-drew-inflows-on-monday", "published": "2026-07-07T06:51:28+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/tech/2026/07/07/live-markets-bitcoin-and-ether-etfs-drew-inflows-on-monday"}]}, "summary": "Exchange-traded funds holding bitcoin and ether recorded net investor inflows on Monday, according to CoinDesk market data.", "so_what": "Steady fund inflows signal continuing institutional participation in digital assets, sustaining the volumes that flow through banks' brokerage, custody and payments relationships.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-market-news-8dcd10142f", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Grayscale says Strategy’s recent bitcoin sales should restore confidence in its financing structure", "url": "https://www.theblock.co/post/407360/grayscale-strategy-bitcoin-sales-comments?utm_source=rss&utm_medium=rss", "published": "2026-07-06T22:10:15+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407360/grayscale-strategy-bitcoin-sales-comments?utm_source=rss&utm_medium=rss"}]}, "summary": "Asset manager Grayscale said recent bitcoin sales by Strategy, the largest corporate holder of bitcoin, should reassure investors about the company's financing structure rather than alarm them.", "so_what": "Large corporate bitcoin holders adjusting positions can move prices and sentiment sharply, which matters when assessing collateral values and client exposure to bitcoin-treasury companies.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-policy-2c890e4264", "jurisdiction": "GLOBAL", "source": "CoinDesk — Policy", "title": "Bitcoin's U.S. reserve still a work-in-progress as federal agencies hash it out", "url": "https://www.coindesk.com/policy/2026/07/06/bitcoin-s-u-s-reserve-still-a-work-in-progress-as-federal-agencies-hash-it-out", "published": "2026-07-06T21:40:06+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/06/bitcoin-s-u-s-reserve-still-a-work-in-progress-as-federal-agencies-hash-it-out"}]}, "summary": "United States federal agencies are still working through legal and operational questions before the planned national bitcoin reserve becomes operational, CoinDesk reports.", "so_what": "A sovereign bitcoin reserve would further legitimise state-level holdings, and the unresolved custody and jurisdiction questions mirror those banks face when holding digital assets.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-7ba8c24571", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "President Trump’s strategic bitcoin reserve hits a legal and jurisdictional snag: Bloomberg", "url": "https://www.theblock.co/post/407356/trump-strategic-bitcoin-reserve-hits-legal-jurisdictional-snag-bloomberg?utm_source=rss&utm_medium=rss", "published": "2026-07-06T19:56:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407356/trump-strategic-bitcoin-reserve-hits-legal-jurisdictional-snag-bloomberg?utm_source=rss&utm_medium=rss"}]}, "summary": "The planned United States strategic bitcoin reserve has hit legal and jurisdictional obstacles between federal agencies, according to a Bloomberg report cited by The Block.", "so_what": "The delays highlight unsettled United States federal authority over seized and state-held cryptoassets, with knock-on implications for custody and sanctions policy worth watching.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-1f1f1d0ab9", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Judge revives fraud claim against Barry Silbert, DCG in Genesis Yield lawsuit", "url": "https://www.theblock.co/post/407337/judge-revives-fraud-claim-against-barry-silbert-dcg-genesis-yield-lawsuit?utm_source=rss&utm_medium=rss", "published": "2026-07-06T18:55:49+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407337/judge-revives-fraud-claim-against-barry-silbert-dcg-genesis-yield-lawsuit?utm_source=rss&utm_medium=rss"}]}, "summary": "A United States judge revived a fraud claim against Digital Currency Group and its founder Barry Silbert in a lawsuit over the collapsed Genesis yield programme.", "so_what": "Litigation from the 2022-23 crypto lending collapses keeps counterparty-failure risk visible; exposure reviews for clients tied to affected entities may need refreshing as claims progress.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-45e49ff153", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Vitalik Buterin proposes ‘Extremely Lean’ Ethereum, shrinking the chain to near-zero state with ZK proofs", "url": "https://www.theblock.co/post/407319/vitalik-buterin-extremely-lean-ethereum-shrinking-chain-to-near-zero-state-zk-proofs?utm_source=rss&utm_medium=rss", "published": "2026-07-06T16:34:32+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407319/vitalik-buterin-extremely-lean-ethereum-shrinking-chain-to-near-zero-state-zk-proofs?utm_source=rss&utm_medium=rss"}]}, "summary": "Ethereum co-founder Vitalik Buterin proposed an \"extremely lean\" redesign that would shrink the blockchain's stored state to near zero using zero-knowledge cryptographic proofs.", "so_what": "Protocol changes of this scale would eventually affect how transaction records used in investigations are stored and verified, though any practical impact is years away.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-institutional-moves-19b547342f", "jurisdiction": "GLOBAL", "source": "CoinDesk — Institutional moves", "title": "Circle’s USDC is leaving Tether behind in the stablecoin volume race, new data from Visa shows", "url": "https://www.coindesk.com/business/2026/07/06/circle-s-usdc-is-leaving-tether-behind-in-the-stablecoin-volume-race", "published": "2026-07-06T16:00:15+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Institutional moves", "url": "https://www.coindesk.com/business/2026/07/06/circle-s-usdc-is-leaving-tether-behind-in-the-stablecoin-volume-race"}]}, "summary": "New data published by Visa shows Circle's USDC stablecoin pulling ahead of rival Tether in on-chain transaction volume by a widening margin.", "so_what": "A volume shift toward the more regulation-forward stablecoin issuer changes the counterparty mix in client transaction flows and is useful context for stablecoin risk assessments.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-258fd6649e", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "President Trump says he’s a ‘big crypto guy,’ while distancing himself from family’s crypto ventures", "url": "https://www.theblock.co/post/407312/president-trump-big-crypto-guy-distancing-familys-crypto-ventures?utm_source=rss&utm_medium=rss", "published": "2026-07-06T15:53:22+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407312/president-trump-big-crypto-guy-distancing-familys-crypto-ventures?utm_source=rss&utm_medium=rss"}]}, "summary": "United States President Trump described himself as strongly supportive of cryptocurrency while distancing himself from his family's commercial crypto ventures.", "so_what": "Top-level political support continues to shape a permissive United States policy direction, while conflict-of-interest questions around official crypto ventures remain a reputational theme to monitor.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-market-news-9cad11867e", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "DeFi protocol Summer.fi halts Lazy Summer vaults after $6 million exploit", "url": "https://www.coindesk.com/web3/2026/07/06/defi-protocol-summer-fi-halts-lazy-summer-vaults-after-usd6-million-exploit", "published": "2026-07-06T13:42:12+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/web3/2026/07/06/defi-protocol-summer-fi-halts-lazy-summer-vaults-after-usd6-million-exploit"}]}, "summary": "Decentralised-finance protocol Summer.fi suspended its \"Lazy Summer\" investment vaults after an exploit drained about six million United States dollars.", "so_what": "Fresh exploit proceeds typically move fast through mixers and cross-chain bridges, so screening-provider alerts for exposure to the stolen funds are worth watching over the coming days.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-elliptic-blog-4edb359f95", "jurisdiction": "GLOBAL", "source": "Elliptic — Blog", "title": "How the UK's stablecoin rules came together", "url": "https://www.elliptic.co/blog/how-uk-stablecoin-rules-came-together", "published": "2026-07-06T13:00:02+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Elliptic — Blog", "url": "https://www.elliptic.co/blog/how-uk-stablecoin-rules-came-together"}]}, "summary": "Elliptic published an explainer tracing how the United Kingdom's newly finalised stablecoin regulatory regime was developed and what it covers.", "so_what": "A concise map of the United Kingdom regime helps benchmark it against the Hong Kong and European Union stablecoin frameworks when advising on cross-border issuance and custody.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-market-news-053cb92677", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Michael Saylor's Strategy dramatically ups pace of bitcoin sales, raising $216 million", "url": "https://www.coindesk.com/markets/2026/07/06/michael-saylor-s-strategy-dramatically-ups-pace-of-bitcoin-sales-raising-usd216-million", "published": "2026-07-06T12:16:28+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/markets/2026/07/06/michael-saylor-s-strategy-dramatically-ups-pace-of-bitcoin-sales-raising-usd216-million"}]}, "summary": "Strategy, the software company turned bitcoin holding vehicle led by Michael Saylor, sharply accelerated its bitcoin sales, raising about 216 million United States dollars.", "so_what": "The largest corporate bitcoin holder switching from accumulation to sizeable sales is a market-sentiment signal relevant to collateral valuations and exposure to bitcoin-treasury companies.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-coindesk-policy-9559d96c92", "jurisdiction": "GLOBAL", "source": "CoinDesk — Policy", "title": "Ripple's preliminary crypto asset provider license in Luxembourg upgraded to fully compliant", "url": "https://www.coindesk.com/policy/2026/07/06/ripple-s-preliminary-crypto-asset-provider-license-in-luxembourg-upgraded-to-fully-compliant", "published": "2026-07-06T10:01:24+00:00", "type": "licensing", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/06/ripple-s-preliminary-crypto-asset-provider-license-in-luxembourg-upgraded-to-fully-compliant"}]}, "summary": "CoinDesk reports that Ripple's preliminary crypto-asset service provider licence in Luxembourg has been upgraded to fully compliant status under the European Union's Markets in Crypto-Assets Regulation (MiCA).", "so_what": "Full authorisation lets Ripple passport crypto services across the European Economic Area, adding a large licensed counterparty to the European payments and custody landscape.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-a3f39bf606", "jurisdiction": "EU", "source": "The Block — Policy", "title": "Ripple secures full MiCA CASP authorization for crypto services across 30 EEA countries", "url": "https://www.theblock.co/post/407207/ripple-secures-full-mica-casp-authorization-for-crypto-services-across-30-eea-countries?utm_source=rss&utm_medium=rss", "published": "2026-07-06T09:30:56+00:00", "type": "licensing", "priority": "high", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407207/ripple-secures-full-mica-casp-authorization-for-crypto-services-across-30-eea-countries?utm_source=rss&utm_medium=rss"}, {"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/06/ripple-s-preliminary-crypto-asset-provider-license-in-luxembourg-upgraded-to-fully-compliant"}]}, "summary": "Ripple secured full authorisation as a crypto-asset service provider under the European Union's Markets in Crypto-Assets Regulation (MiCA), allowing it to offer crypto services across thirty European Economic Area countries.", "so_what": "A major payments-focused crypto firm gaining authorisation across the whole European Economic Area expands the set of fully licensed counterparties and sharpens comparison with Hong Kong's licensing regime.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-00a1b988af", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "South Korea develops crypto-specific procedures for asset seizures and liquidation: report", "url": "https://www.theblock.co/post/407183/south-korea-crypto-specific-procedure?utm_source=rss&utm_medium=rss", "published": "2026-07-06T08:35:54+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407183/south-korea-crypto-specific-procedure?utm_source=rss&utm_medium=rss"}]}, "summary": "South Korean authorities are developing procedures specifically for seizing and liquidating cryptocurrency in criminal and tax cases, according to a report cited by The Block.", "so_what": "Clearer seizure mechanics in a major Asian market offer a template regional peers may follow and affect how frozen-asset requests involving Korean counterparties are executed.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-market-news-2f266b7d60", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "How Sovereign Wealth Funds Invest in Digital Assets", "url": "https://www.theblock.co/learn/407186/how-sovereign-wealth-funds-invest-in-digital-assets?utm_source=rss&utm_medium=rss", "published": "2026-07-06T06:14:32+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/learn/407186/how-sovereign-wealth-funds-invest-in-digital-assets?utm_source=rss&utm_medium=rss"}]}, "summary": "An explainer from The Block describes the channels sovereign wealth funds use to invest in digital assets, from exchange-traded products to direct holdings and venture stakes.", "so_what": "Sovereign investors entering digital assets deepen institutional flows through regulated intermediaries — useful context for onboarding and source-of-funds conversations involving state-linked vehicles.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-3a49a90f7e", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Nigel Farage failed to declare funding from crypto gambling figure convicted of fraud: Sunday Times", "url": "https://www.theblock.co/post/407178/nigel-farage-failed-to-declare-funding-from-crypto-gambling-figure-convicted-of-fraud-sunday-times?utm_source=rss&utm_medium=rss", "published": "2026-07-05T22:53:05+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407178/nigel-farage-failed-to-declare-funding-from-crypto-gambling-figure-convicted-of-fraud-sunday-times?utm_source=rss&utm_medium=rss"}]}, "summary": "The Sunday Times reported that British politician Nigel Farage failed to declare funding from a cryptocurrency gambling figure previously convicted of fraud.", "so_what": "Politically exposed persons with undisclosed crypto-linked funding illustrate the adverse-media and source-of-wealth checks that cryptocurrency exposure adds to customer due diligence.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-chainalysis-blog-987207320d", "jurisdiction": "US", "source": "Chainalysis — Blog", "title": "OFAC Updates ISIS-Khorasan Sanctions with Over 100 Cryptocurrency Wallets", "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/", "published": "2026-07-01T20:26:45+00:00", "type": "designation", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Chainalysis — Blog", "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/"}]}, "summary": "Chainalysis analysed the United States Office of Foreign Assets Control's update adding more than one hundred cryptocurrency wallet addresses linked to Islamic State Khorasan to its sanctions designations.", "so_what": "The attribution detail on the newly designated addresses supports retrospective exposure checks and tuning of sanctions-screening rules for indirect exposure.", "first_seen": "2026-07-07T07:50:49.166227+00:00", "date_source": "page"}, {"id": "global-the-block-policy-5f6cc0f352", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Coinbase secures UK investment services license to add derivatives and equities trading", "url": "https://www.theblock.co/post/407410/coinbase-secures-uk-investment-services-license-to-add-derivatives-and-equities-trading?utm_source=rss&utm_medium=rss", "published": "2026-07-07T11:41:33+00:00", "type": "licensing", "priority": "high", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407410/coinbase-secures-uk-investment-services-license-to-add-derivatives-and-equities-trading?utm_source=rss&utm_medium=rss"}, {"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/business/2026/07/07/coinbase-secures-uk-authorization-to-offer-traditional-investments-alongside-crypto"}]}, "summary": "Coinbase obtained a United Kingdom investment services licence allowing it to offer derivatives and equities trading alongside its existing crypto services.", "so_what": "A major crypto exchange holding a mainstream United Kingdom investment licence blurs the line between crypto and traditional brokerage — relevant when classifying counterparties and comparing licensing scope across jurisdictions.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-e571837956", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Coinbase secures UK authorization to offer traditional investments alongside crypto", "url": "https://www.coindesk.com/business/2026/07/07/coinbase-secures-uk-authorization-to-offer-traditional-investments-alongside-crypto", "published": "2026-07-07T11:37:01+00:00", "type": "licensing", "priority": "normal", "status": "new", "verification": {"level": "corroborated", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/business/2026/07/07/coinbase-secures-uk-authorization-to-offer-traditional-investments-alongside-crypto"}, {"name": "The Block — Market news", "url": "https://www.theblock.co/post/407410/coinbase-secures-uk-investment-services-license-to-add-derivatives-and-equities-trading?utm_source=rss&utm_medium=rss"}]}, "summary": "CoinDesk reports Coinbase received United Kingdom authorisation to offer traditional investment products alongside cryptocurrency trading.", "so_what": "Confirms the same United Kingdom authorisation reported by The Block; the combined crypto-plus-securities permission set is the detail worth noting for counterparty assessments.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-229e85f2ee", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Tether’s former CIO seeks buyers for part of his stake in the firm: Bloomberg", "url": "https://www.theblock.co/post/407394/tethers-former-cio-seeks-buyers-for-part-of-his-stake-in-the-firm-bloomberg?utm_source=rss&utm_medium=rss", "published": "2026-07-07T09:22:26+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407394/tethers-former-cio-seeks-buyers-for-part-of-his-stake-in-the-firm-bloomberg?utm_source=rss&utm_medium=rss"}]}, "summary": "Bloomberg reports that Tether's former chief investment officer is seeking buyers for part of his personal stake in the stablecoin issuer.", "so_what": "Secondary sales of stakes in the largest stablecoin issuer can reveal valuation and governance information relevant to stablecoin counterparty risk assessments.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-59ba436ed5", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Upbit, Naver stock-swap deal faces second delay amid proposed crypto law debate", "url": "https://www.theblock.co/post/407389/upbit-naver-stock-swap-deal-delay?utm_source=rss&utm_medium=rss", "published": "2026-07-07T09:10:51+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407389/upbit-naver-stock-swap-deal-delay?utm_source=rss&utm_medium=rss"}]}, "summary": "The stock-swap deal between South Korean exchange Upbit's operator and internet group Naver faces a second delay while lawmakers debate a proposed cryptocurrency law.", "so_what": "South Korea's pending crypto legislation is now directly shaping major corporate transactions — a signal of how quickly the regional regulatory landscape is moving.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-011556d892", "jurisdiction": "GLOBAL", "source": "The Block — Policy", "title": "Two traders sue Polymarket over disputed resolution of Strategy bitcoin sale market", "url": "https://www.theblock.co/post/407368/two-traders-sue-polymarket-strategy-bitcoin-sale?utm_source=rss&utm_medium=rss", "published": "2026-07-07T08:34:34+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407368/two-traders-sue-polymarket-strategy-bitcoin-sale?utm_source=rss&utm_medium=rss"}]}, "summary": "Two traders sued prediction-market platform Polymarket over how it resolved a market on Strategy's bitcoin sales.", "so_what": "Disputes over prediction-market resolutions illustrate the consumer-protection and manipulation questions regulators are beginning to examine in event-contract markets.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-60ab2faf26", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Binance taps into Bitcoin holders’ hunger for yield with new covered call yield play", "url": "https://www.coindesk.com/markets/2026/07/07/binance-taps-into-bitcoin-holders-hunger-for-yield-with-new-covered-call-yield-play", "published": "2026-07-07T08:20:00+00:00", "type": "peer_move", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/markets/2026/07/07/binance-taps-into-bitcoin-holders-hunger-for-yield-with-new-covered-call-yield-play"}]}, "summary": "Binance launched a covered-call product that lets bitcoin holders earn yield on their holdings.", "so_what": "Yield products on client crypto holdings raise custody, rehypothecation and suitability questions — useful context when assessing exchange counterparties' business models.", "first_seen": "2026-07-07T12:05:14.831018+00:00", "date_source": "feed"}, {"id": "global-elliptic-blog-34fcbfc9a2", "jurisdiction": "EU", "source": "Elliptic — Blog", "title": "What the end of MiCA's transitional period means for crypto businesses", "url": "https://www.elliptic.co/blog/the-end-of-micas-transitional-period", "published": "2026-06-30T13:27:12+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Elliptic — Blog", "url": "https://www.elliptic.co/blog/the-end-of-micas-transitional-period"}]}, "summary": "Elliptic explains that the transitional window under the European Union's Markets in Crypto-Assets Regulation (MiCA) closed on 1 July 2026, after which only firms with full authorisation may serve European Union clients.", "so_what": "European counterparties still operating on lapsed national registrations are now unauthorised — worth reflecting in counterparty screening and periodic-review triggers.", "first_seen": "2026-07-07T12:05:14.831025+00:00", "date_source": "feed"}, {"id": "hk-fstb-press-releases-cf3d3aabb6", "jurisdiction": "HK", "source": "Financial Services and the Treasury Bureau — Press releases", "title": "FSTB and HKMA to further unlock potential of distributed ledger technology in Hong Kong's fixed income market", "url": "https://www.info.gov.hk/gia/general/202606/29/P2026062900677.htm", "published": "2026-06-29T00:00:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "official", "sources": [{"name": "Financial Services and the Treasury Bureau — Press releases", "url": "https://www.info.gov.hk/gia/general/202606/29/P2026062900677.htm"}]}, "summary": "The Financial Services and the Treasury Bureau and the Hong Kong Monetary Authority announced further measures to expand the use of distributed ledger technology in Hong Kong's fixed-income market.", "so_what": "Signals a continuing official push to make tokenised debt mainstream in Hong Kong — expect follow-on guidance touching settlement, custody and record-keeping controls.", "first_seen": "2026-07-07T03:54:47.072828+00:00"}, {"id": "eu-eba-news-23fee21bfb", "jurisdiction": "EU", "source": "European Banking Authority — News", "title": "The European Banking Authority consults on a draft methodology for setting fines under the Markets in Crypto-Assets Regulation (MiCA)", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/european-banking-authority-consults-draft-methodology-setting-fines-under-markets-crypto-assets", "published": "2026-06-26T13:27:24+00:00", "type": "consultation", "priority": "normal", "status": "new", "verification": {"level": "official", "sources": [{"name": "European Banking Authority — News", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/european-banking-authority-consults-draft-methodology-setting-fines-under-markets-crypto-assets"}]}, "summary": "The European Banking Authority is consulting on a draft methodology for setting fines on issuers it supervises under the EU's Markets in Crypto-Assets Regulation.", "so_what": "A concrete preview of how penalties under the EU Markets in Crypto-Assets Regulation will be sized — a useful benchmark when gauging the EU enforcement exposure of stablecoin and token issuers.", "first_seen": "2026-07-07T03:54:47.072828+00:00"}, {"id": "eu-eba-news-e444efca6b", "jurisdiction": "EU", "source": "European Banking Authority — News", "title": "The EBA updates validation rules for supervisory reporting", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/eba-updates-validation-rules-supervisory-reporting", "published": "2026-06-26T11:17:02+00:00", "type": "guidance", "priority": "normal", "status": "new", "verification": {"level": "official", "sources": [{"name": "European Banking Authority — News", "url": "https://www.eba.europa.eu/publications-and-media/press-releases/eba-updates-validation-rules-supervisory-reporting"}]}, "summary": "The European Banking Authority published updated validation rules for supervisory reporting, flagging corrections reporting institutions should apply.", "so_what": "Routine, but worth passing to regulatory-reporting teams handling EU entities, including MiCA-related returns.", "first_seen": "2026-07-07T03:54:47.072828+00:00"}, {"id": "global-trm-labs-insights-f5039e43fc", "jurisdiction": "GLOBAL", "source": "TRM Labs — Insights", "title": "Wallet Screening Best Practices for Compliance Teams", "url": "https://www.trmlabs.com/resources/blog/wallet-screening-best-practices-for-compliance-teams", "published": "2026-07-07T07:50:47.227133+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "TRM Labs — Insights", "url": "https://www.trmlabs.com/resources/blog/wallet-screening-best-practices-for-compliance-teams"}]}, "summary": "TRM Labs published a guide on how compliance teams should screen cryptocurrency wallets for sanctions and financial-crime risk.", "so_what": "A useful benchmark for reviewing whether existing wallet-screening controls cover sanctions exposure, indirect risk and re-screening frequency in line with current industry practice.", "first_seen": "2026-07-07T07:50:49.166227+00:00"}, {"id": "global-the-block-market-news-a6c5d8514f", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Kraken wins $22 million arbitration against auditor Mazars for ditching the firm during Operation Choke Point 2.0", "url": "https://www.theblock.co/post/407524/kraken-wins-22-million-arbitration-auditor-mazars-for-ditching-during-operation-choke-point-2-0?utm_source=rss&utm_medium=rss", "published": "2026-07-07T21:30:10+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407524/kraken-wins-22-million-arbitration-auditor-mazars-for-ditching-during-operation-choke-point-2-0?utm_source=rss&utm_medium=rss"}]}, "summary": "Kraken wins $22 million arbitration against auditor Mazars for ditching the firm during Operation Choke Point 2.0", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-d319101a3e", "jurisdiction": "US", "source": "The Block — Policy", "title": "CFTC charges North Carolina man over alleged $14 million crypto, futures fraud", "url": "https://www.theblock.co/post/407516/cftc-charges-north-carolina-man-alleged-14-million-crypto-futures-fraud?utm_source=rss&utm_medium=rss", "published": "2026-07-07T20:58:49+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407516/cftc-charges-north-carolina-man-alleged-14-million-crypto-futures-fraud?utm_source=rss&utm_medium=rss"}]}, "summary": "CFTC charges North Carolina man over alleged $14 million crypto, futures fraud", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-institutional-moves-dfff743d35", "jurisdiction": "GLOBAL", "source": "CoinDesk — Institutional moves", "title": "BlackRock-backed Securitize slides 40% after SPAC debut despite tokenization boom", "url": "https://www.coindesk.com/markets/2026/07/07/blackrock-backed-securitize-slides-40-after-spac-debut-despite-tokenization-boom", "published": "2026-07-07T19:35:14+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Institutional moves", "url": "https://www.coindesk.com/markets/2026/07/07/blackrock-backed-securitize-slides-40-after-spac-debut-despite-tokenization-boom"}]}, "summary": "BlackRock-backed Securitize slides 40% after SPAC debut despite tokenization boom", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-130ece762e", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Crypto exchange Kraken is trying to become a bank in Europe", "url": "https://www.coindesk.com/business/2026/07/07/crypto-exchange-kraken-is-trying-to-become-a-bank-in-europe", "published": "2026-07-07T18:38:10+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/business/2026/07/07/crypto-exchange-kraken-is-trying-to-become-a-bank-in-europe"}]}, "summary": "Crypto exchange Kraken is trying to become a bank in Europe", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-084ac14fda", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Ondo Finance says tokenized stocks can now be used as collateral for perp trading", "url": "https://www.theblock.co/post/407452/ondo-finance-says-tokenized-stocks-now-used-as-collateral-perp-trading?utm_source=rss&utm_medium=rss", "published": "2026-07-07T16:29:46+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407452/ondo-finance-says-tokenized-stocks-now-used-as-collateral-perp-trading?utm_source=rss&utm_medium=rss"}]}, "summary": "Ondo Finance says tokenized stocks can now be used as collateral for perp trading", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-policy-ba638fc27d", "jurisdiction": "US", "source": "CoinDesk — Policy", "title": "U.S. SEC to propose crypto rule as soon as this month to ease startups, fundraising", "url": "https://www.coindesk.com/policy/2026/07/07/u-s-sec-to-propose-crypto-rule-as-soon-as-this-month-to-ease-startups-fundraising", "published": "2026-07-07T16:08:19+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Policy", "url": "https://www.coindesk.com/policy/2026/07/07/u-s-sec-to-propose-crypto-rule-as-soon-as-this-month-to-ease-startups-fundraising"}]}, "summary": "U.S. SEC to propose crypto rule as soon as this month to ease startups, fundraising", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-policy-3cc6e3754c", "jurisdiction": "US", "source": "The Block — Policy", "title": "SEC plans crypto rule changes for exchanges and broker dealers in 2026 regulatory agenda", "url": "https://www.theblock.co/post/407468/sec-plans-crypto-rule-changes-for-exchanges-broker-dealers-2026-regulatory-agenda?utm_source=rss&utm_medium=rss", "published": "2026-07-07T16:03:54+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Policy", "url": "https://www.theblock.co/post/407468/sec-plans-crypto-rule-changes-for-exchanges-broker-dealers-2026-regulatory-agenda?utm_source=rss&utm_medium=rss"}]}, "summary": "SEC plans crypto rule changes for exchanges and broker dealers in 2026 regulatory agenda", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-d3085b7af6", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Tether puts $20 million behind Mercado Bitcoin amid Latin America’s tokenization boom", "url": "https://www.theblock.co/post/407463/tether-20-million-behind-mercado-bitcoin-latin-america-tokenization-boom?utm_source=rss&utm_medium=rss", "published": "2026-07-07T15:57:17+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407463/tether-20-million-behind-mercado-bitcoin-latin-america-tokenization-boom?utm_source=rss&utm_medium=rss"}]}, "summary": "Tether puts $20 million behind Mercado Bitcoin amid Latin America’s tokenization boom", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-coindesk-market-news-abc46eb9fb", "jurisdiction": "GLOBAL", "source": "CoinDesk — Market news", "title": "Former Tether investment chief is looking to sell part of his stake in the stablecoin giant: Bloomberg", "url": "https://www.coindesk.com/business/2026/07/07/former-tether-investment-chief-is-looking-to-sell-part-of-his-stake-in-the-stablecoin-giant-bloomberg", "published": "2026-07-07T13:46:25+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "CoinDesk — Market news", "url": "https://www.coindesk.com/business/2026/07/07/former-tether-investment-chief-is-looking-to-sell-part-of-his-stake-in-the-stablecoin-giant-bloomberg"}]}, "summary": "Former Tether investment chief is looking to sell part of his stake in the stablecoin giant: Bloomberg", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-elliptic-blog-e7ff592dfb", "jurisdiction": "GLOBAL", "source": "Elliptic — Blog", "title": "Crypto regulatory affairs: UK sets out final stablecoin rules", "url": "https://www.elliptic.co/blog/crypto-regulatory-affairs-uk-sets-out-stablecoin-rules", "published": "2026-07-07T13:00:00+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "Elliptic — Blog", "url": "https://www.elliptic.co/blog/crypto-regulatory-affairs-uk-sets-out-stablecoin-rules"}]}, "summary": "Crypto regulatory affairs: UK sets out final stablecoin rules", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}, {"id": "global-the-block-market-news-adf3c275a9", "jurisdiction": "GLOBAL", "source": "The Block — Market news", "title": "Bitcoin’s early July bounce rides thin summer liquidity as half of supply still sits underwater: analysts", "url": "https://www.theblock.co/post/407414/bitcoins-early-july-bounce-rides-thin-summer-liquidity-as-half-of-supply-still-sits-underwater-analysts?utm_source=rss&utm_medium=rss", "published": "2026-07-07T12:43:32+00:00", "type": "news", "priority": "normal", "status": "new", "verification": {"level": "single_source", "sources": [{"name": "The Block — Market news", "url": "https://www.theblock.co/post/407414/bitcoins-early-july-bounce-rides-thin-summer-liquidity-as-half-of-supply-still-sits-underwater-analysts?utm_source=rss&utm_medium=rss"}]}, "summary": "Bitcoin’s early July bounce rides thin summer liquidity as half of supply still sits underwater: analysts", "so_what": "Review the source directly; automated analysis unavailable.", "first_seen": "2026-07-07T23:44:19.555129+00:00", "date_source": "feed"}], "source_health": [{"name": "Hong Kong Monetary Authority — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553924+00:00"}, {"name": "Hong Kong Monetary Authority — Circulars & guidance", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553939+00:00"}, {"name": "Securities and Futures Commission — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553947+00:00"}, {"name": "Securities and Futures Commission — Circulars", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553953+00:00"}, {"name": "Financial Services and the Treasury Bureau — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553959+00:00"}, {"name": "Securities and Futures Commission — Licensed virtual asset trading platforms register", "status": "ok", "note": "No change", "tier": "official", "checked_at": "2026-07-07T23:44:19.553966+00:00"}, {"name": "People's Bank of China — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553972+00:00"}, {"name": "CoinDesk — China policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.553977+00:00"}, {"name": "The Block — China policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.553982+00:00"}, {"name": "Financial Crimes Enforcement Network (FinCEN) — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553992+00:00"}, {"name": "Office of Foreign Assets Control (OFAC) — Recent actions", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.553997+00:00"}, {"name": "US Securities and Exchange Commission — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554003+00:00"}, {"name": "Commodity Futures Trading Commission — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554008+00:00"}, {"name": "Office of the Comptroller of the Currency — News releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554013+00:00"}, {"name": "Federal Reserve — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554018+00:00"}, {"name": "US Department of Justice — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554023+00:00"}, {"name": "European Securities and Markets Authority — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554028+00:00"}, {"name": "European Banking Authority — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554034+00:00"}, {"name": "Monetary Authority of Singapore — Media releases", "status": "ok", "note": "Fetch failed this run (no parseable items); 3 consecutive failures — self-heal at 5.", "tier": "official", "checked_at": "2026-07-07T23:44:19.554043+00:00"}, {"name": "Wolfsberg Group — News & publications", "status": "ok", "note": "Fetch failed this run (fetch failed: HTTPSConnectionPool(host='wolfsberg-group.org', port=443): Read timed out. (read timeout=15)); 1 consecutive failure — self-heal at 5.", "tier": "official", "checked_at": "2026-07-07T23:44:19.554060+00:00"}, {"name": "Global Digital Finance (GDF) — News", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554065+00:00"}, {"name": "ACAMS Today", "status": "ok", "note": "Fetch failed this run (fetch failed: 403 Client Error: Forbidden for url: https://www.acams.org/en/acamstoday); 1 consecutive failure — self-heal at 5.", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554071+00:00"}, {"name": "Bank for International Settlements / Basel Committee — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554076+00:00"}, {"name": "Financial Stability Board — Press releases", "status": "ok", "note": "Feed responding normally", "tier": "official", "checked_at": "2026-07-07T23:44:19.554081+00:00"}, {"name": "CoinDesk — Policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554086+00:00"}, {"name": "The Block — Policy", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554091+00:00"}, {"name": "CoinDesk — Institutional moves", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554096+00:00"}, {"name": "The Block — Institutional moves", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554101+00:00"}, {"name": "CoinDesk — Market news", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554107+00:00"}, {"name": "The Block — Market news", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554112+00:00"}, {"name": "Chainalysis — Blog", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554117+00:00"}, {"name": "Elliptic — Blog", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554122+00:00"}, {"name": "TRM Labs — Insights", "status": "ok", "note": "Feed responding normally", "tier": "industry", "checked_at": "2026-07-07T23:44:19.554127+00:00"}, {"name": "Claude summarisation", "status": "ok", "note": "Sonnet — Claude Code session on 2026-07-08"}], "run_log": [{"at": "2026-07-07T12:05:14.831018+00:00", "note": "Daily fetch: 8 new items surfaced; 34/35 sources ok"}, {"at": "2026-07-07T12:06:13.362510+00:00", "note": "Daily fetch: 0 new items surfaced; 33/34 sources ok"}, {"at": "2026-07-07T12:08:12.183955+00:00", "note": "Enrichment: 8 items summarised and classified via Claude Code session; 1 item cross-corroborated."}, {"at": "2026-07-07T12:10:08.994730+00:00", "note": "Backfill: filed 19 items under their true publication days across the past week."}, {"at": "2026-07-07T12:33:15.805137+00:00", "note": "Corrected a data display issue affecting 13 items."}, {"at": "2026-07-07T12:34:03.270648+00:00", "note": "Restored 4 items that had been temporarily unavailable."}, {"at": "2026-07-07T13:16:41.448454+00:00", "note": "Corrected a residual data issue affecting 2 items."}, {"at": "2026-07-07T20:55:12.313700+00:00", "note": "Corrected 3 article dates, removed 3 vendor-promotional posts, and refined jurisdiction tagging on 5 items. Today's summaries were written with Sonnet."}, {"at": "2026-07-07T23:44:19.555129+00:00", "note": "Daily fetch: 11 new items surfaced; 33/35 sources ok"}, {"at": "2026-07-08T00:21:22.992710+00:00", "note": "Reconciled with a same-day pipeline run: merged its newly surfaced items and re-applied this session's date/jurisdiction/marketing-screening fixes."}], "radar": []};
 
 /* ============================================================
    LABEL MAPS — plain English in all UI chrome
@@ -1058,6 +1169,13 @@ const TYPE_HUE = {
   enforcement: 27, designation: 15, final_rule: 255, guidance: 232, consultation: 205,
   licensing: 150, peer_move: 172, speech: 300, news: 95
 };
+// Reader-lens order: CLAUDE.md defines this page for an HK/China-focused
+// compliance reader, so HK and mainland China sit first in ties. This is a
+// single tunable list, not a hardcoded "if jurisdiction === HK" branch --
+// swapping the reader's home market means reordering this array, nothing
+// else. It only breaks ties: renderPriority()'s round-robin still gives
+// every jurisdiction a fair shot per round, so a jurisdiction with several
+// genuinely high-priority items isn't crowded out once HK/CN run dry.
 const JURIS_ORDER = ["HK", "CN", "US", "EU", "SG", "GLOBAL"];
 const JURIS_FULL  = { HK: "Hong Kong", CN: "Mainland China", US: "United States", EU: "European Union", SG: "Singapore", GLOBAL: "Global" };
 const BUCKETS = {
@@ -1076,8 +1194,8 @@ const BUCKETS = {
 // same items as "Last 7 days" until more history accumulates; that's honest
 // behaviour, not a bug, the same way a 30-day search filter over a week-old
 // dataset naturally returns a week's worth of results.
-const RANGE_ORDER = ["today", "7", "30"];
-const RANGE_LABEL = { today: "Today", "7": "Last 7 days", "30": "Last 30 days" };
+const RANGE_ORDER = ["today", "7", "30", "all"];
+const RANGE_LABEL = { today: "Today", "7": "Last 7 days", "30": "Last 30 days", all: "All" };
 
 /* ---------- date helpers (all in Asia/Hong_Kong) ---------- */
 function hkDayKey(iso) {
@@ -1114,6 +1232,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<":
    ============================================================ */
 const state = { juris: "ALL", bucket: "ALL", range: "today", search: "" };
 let pendingFocus = null;  // [attr, value] of a chip to refocus after re-render
+let healthSort = { key: null, dir: 1 };  // null key -> default tier-grouped view
 const GEN_DAY = hkDayKey(DIGEST.generated_at);
 
 /* ---------- returning-reader state (all client-side, all optional) ---------- */
@@ -1198,14 +1317,31 @@ function dayDiff(iso) {
   const d2 = Date.parse(GEN_DAY + "T00:00:00Z");
   return Math.round((d2 - d1) / 86400000);
 }
+/* Some sources (Hong Kong's FSTB, the European Banking Authority) list an
+   item days after they actually published it -- first_seen (when THIS
+   pipeline discovered it) is what buckets an item into Today/Last 7/Last 30
+   days, deliberately never published (see README's first_seen-vs-published
+   invariant; conflating them is the exact class of bug this page has
+   suffered a real incident over). That's correct, but a card showing a
+   9-day-old published date sitting in "Today" looks like a mistake unless
+   the reader can SEE why -- previously that was hover-tooltip-only. Surface
+   it visibly whenever the gap is large enough to be confusing. */
+function discoveryNote(it) {
+  const gap = dayDiff(it.published) - dayDiff(it.first_seen || it.published);
+  if (gap < 2) return "";
+  return ` <span class="discovery-note">· discovered ${esc(fmtDay(it.first_seen))}</span>`;
+}
 /* "7"/"30" are inclusive of today (so "Last 7 days" = today + 6 prior days =
    7 calendar days total, matching the chip's own label; "Last 30 days" =
    today + 29 prior days). Both are upper bounds, not promises -- the
    pipeline only retains ~8 days (run.DIGEST_ITEMS_MAX_AGE_DAYS), so in
    practice "Last 30 days" shows whatever "Last 7 days" already shows until
-   more history accumulates -- honest behaviour, not a bug. */
+   more history accumulates -- honest behaviour, not a bug. "All" has no
+   cutoff at all -- everything this digest currently retains, which will
+   keep growing past 30 days as more daily history accumulates. */
 function rangeItems(range) {
   if (range === "today") return todayItems();
+  if (range === "all") return DIGEST.items.slice();
   const maxDiff = range === "7" ? 6 : 29;
   return DIGEST.items.filter(it => dayDiff(it.first_seen || it.published) <= maxDiff);
 }
@@ -1251,6 +1387,13 @@ function renderChips() {
     b.hidden = state[b.dataset.clear] === "ALL";
   });
 
+  // Collapsed-rail badge: a count so a reader who scrolled past the
+  // sidebar still knows filters are active, not just hidden away.
+  const activeFilterCount = (state.juris !== "ALL" ? 1 : 0) + (state.bucket !== "ALL" ? 1 : 0);
+  const badge = document.getElementById("sidebarToggleBadge");
+  badge.textContent = activeFilterCount || "";
+  badge.hidden = !activeFilterCount;
+
   // renderChips() rebuilds these buttons via innerHTML, which drops keyboard
   // focus to <body> and loses the user's place. Restore focus to the chip that
   // was just activated so a keyboard user stays on their control.
@@ -1261,17 +1404,12 @@ function renderChips() {
   }
 }
 
-/* ---------- warning banner ---------- */
-function renderBanner() {
-  const bad = DIGEST.source_health.filter(s => s.status !== "ok");
-  const slot = document.getElementById("banner-slot");
-  if (!bad.length) { slot.innerHTML = ""; return; }
-  const names = bad.map(s => `${esc(s.name)} (${s.status})`).join(", ");
-  slot.innerHTML = `<div class="banner" role="status">
-    <span class="b-ico" aria-hidden="true">⚠</span>
-    <div><strong>${bad.length} source${bad.length > 1 ? "s" : ""} ${bad.length > 1 ? "need" : "needs"} attention.</strong> ${names}. Affected items may rely on cached data — verify manually. Details on the <button type="button" class="linklike" data-goto="health">Source health</button> tab.</div>
-  </div>`;
-}
+/* Source-health degradation is NOT surfaced as a Digest-tab warning banner --
+   a per-source status message here read as an alarming, vague "something is
+   wrong" signal to a reader with no way to act on it. The Source health tab
+   is the dedicated, always-accurate place for that detail; the freshness
+   banner below (renderFreshness) is what actually affects whether TODAY'S
+   content is trustworthy and stays as the one Digest-tab warning. */
 
 /* ---------- verification badge: an inspectable claim, not decoration ---------- */
 const VERIFY_EXPLAIN = {
@@ -1297,13 +1435,6 @@ function verifyDetails(v, it) {
     </div>
   </details>`;
 }
-/* Always-visible one-liner: the check a compliance reader can cite. Only
-   rendered when a check was actually performed and recorded. */
-function factLine(v) {
-  const c = v.checked;
-  return c ? `<div class="factline">✓ Checked against ${esc(c.against)}</div>` : "";
-}
-
 /* ---------- card ---------- */
 function cardHTML(it) {
   // "Updated" reflects pipeline status; "New" is relative to YOUR last visit
@@ -1317,7 +1448,7 @@ function cardHTML(it) {
     <div class="card-top">
       <span class="src-badge">${esc(it.source)}</span>
       <span class="type-tag" style="--h:${TYPE_HUE[it.type] || 90}">${esc(TYPE_LABEL[it.type] || it.type)}</span>
-      <span class="card-date" title="First logged ${esc(fmtAudit(it.first_seen || it.published))}">${fmtCardDate(it.published)}</span>
+      <span class="card-date" title="First logged ${esc(fmtAudit(it.first_seen || it.published))}">${fmtCardDate(it.published)}${discoveryNote(it)}</span>
       <span class="spacer"></span>
       ${pill}
     </div>
@@ -1325,7 +1456,6 @@ function cardHTML(it) {
     <p class="summary">${esc(it.summary)}</p>
     <p class="sowhat"><span class="lbl">→ So what:</span> ${esc(it.so_what)}</p>
     ${verifyDetails(it.verification, it)}
-    ${factLine(it.verification)}
   </article>`;
 }
 
@@ -1342,14 +1472,14 @@ function briefHTML(it) {
     <summary>
       <span class="b-caret" aria-hidden="true">▶</span>
       <span class="b-title">${esc(it.title)}${isNewSinceVisit(it) ? ` <span class="pill new">New</span>` : ""}</span>
-      <span class="b-meta">${esc(it.source.split("—")[0].trim())} · ${fmtCardDate(it.published)}</span>
+      <span class="b-meta">${esc(it.source.split("—")[0].trim())} · ${fmtCardDate(it.published)}${discoveryNote(it)}</span>
     </summary>
     <div class="brief-body">
       <p class="summary">${esc(it.summary)}</p>
       <p class="sowhat"><span class="lbl">→ So what:</span> ${esc(it.so_what)}</p>
       <a href="${esc(it.url)}" target="_blank" rel="noopener">Read at the source <span class="ext" aria-hidden="true">↗</span></a>
       · <button class="copycite" type="button" data-cite="${esc(it.id)}">Copy cite</button>
-      <div>${verifyDetails(it.verification, it)}${factLine(it.verification)}</div>
+      <div>${verifyDetails(it.verification, it)}</div>
     </div>
   </details>`;
 }
@@ -1359,7 +1489,8 @@ function renderTopOfMind() {
   const slot = document.getElementById("topmind-slot");
   const text = (DIGEST.top_of_mind || "").trim();
   if (!text) { slot.innerHTML = ""; return; }
-  slot.innerHTML = `<div class="topmind"><span class="lbl">Top of mind</span>${esc(text)}</div>`;
+  slot.innerHTML = `<div class="section-head"><h2>Top of mind</h2><span class="rule"></span></div>
+    <div class="topmind">${esc(text)}</div>`;
 }
 
 /* ---------- priority strip (capped -- a 12-row list isn't a priority) ---------- */
@@ -1408,7 +1539,11 @@ function renderPriority(items) {
 // "Today" and the old collapsed "Last 7 days" disclosure are ONE feed now,
 // scoped by the range chips (see RANGE_ORDER/rangeItems) -- no separate
 // expand-to-see-older-items step.
-const RANGE_WIRE = { today: "today's", "7": "the last 7 days'", "30": "the last 30 days'" };
+const RANGE_WIRE = { today: "today's", "7": "the last 7 days'", "30": "the last 30 days'", all: "the full history's" };
+const RANGE_QUIET_LABEL = {
+  today: "Quiet day — no new items", "7": "No items in the last 7 days",
+  "30": "No items in the last 30 days", all: "No items yet",
+};
 function renderFeed(items) {
   const feed = document.getElementById("feed");
   const rangeScope = rangeItems(state.range);
@@ -1417,7 +1552,7 @@ function renderFeed(items) {
     // 28 items, just none matching this slice. Only claim quiet when the
     // reader is looking at everything in the selected range.
     const unfiltered = state.juris === "ALL" && state.bucket === "ALL";
-    const quietLabel = state.range === "today" ? "Quiet day — no new items" : `No items in ${RANGE_LABEL[state.range].toLowerCase()}`;
+    const quietLabel = RANGE_QUIET_LABEL[state.range];
     feed.innerHTML = `<div class="empty">
       <div class="e-mark" aria-hidden="true">${unfiltered ? "☕" : "🔍"}</div>
       <h3>${unfiltered ? quietLabel : "No items match these filters"}</h3>
@@ -1478,6 +1613,7 @@ function renderSearchResults() {
       <h3>No matches for "${esc(state.search.trim())}"${scopeNote}</h3>
       <p>Search covers the items currently retained in this digest (within the selected range/filters above), not the live web.</p>
     </div>`;
+    announce(`No matches for ${state.search.trim()}`);
     return;
   }
   const cards = matches.filter(it => !isBrief(it));
@@ -1485,9 +1621,14 @@ function renderSearchResults() {
   feed.innerHTML = `<div class="section-head"><h2>${matches.length} result${matches.length > 1 ? "s" : ""} for "${esc(state.search.trim())}"${scopeNote}</h2><span class="rule"></span></div>
     ${cards.map(cardHTML).join("")}
     ${briefs.length ? `<div class="brief-block"><p class="brief-head">In brief — ${briefs.length} market headline${briefs.length > 1 ? "s" : ""}</p><div class="brief-list">${briefs.map(briefHTML).join("")}</div></div>` : ""}`;
+  announce(`${matches.length} result${matches.length > 1 ? "s" : ""} for ${state.search.trim()}`);
 }
 
-/* ---------- source-health table (Source health tab) ---------- */
+/* ---------- source-health table (Source health tab) ----------
+   Default view groups by tier (official/industry/pipeline) with no sort
+   applied. Clicking a column header flattens the groups and sorts every
+   row by that column instead -- grouping and explicit sorting both convey
+   "order", so mixing them would be confusing. */
 function renderHealth() {
   const tb = document.querySelector("#healthTable tbody");
   const row = s => `<tr>
@@ -1496,16 +1637,34 @@ function renderHealth() {
        <td>${s.checked_at ? esc(fmtAudit(s.checked_at)) : "—"}</td>
        <td>${esc(s.note)}</td>
      </tr>`;
-  const groups = [
-    ["Official sources", s => s.tier === "official"],
-    ["Industry sources", s => s.tier === "industry"],
-    ["Pipeline", s => s.tier !== "official" && s.tier !== "industry"],
-  ];
-  tb.innerHTML = groups.map(([label, match]) => {
-    const rows = DIGEST.source_health.filter(match);
-    if (!rows.length) return "";
-    return `<tr class="h-group"><td colspan="4">${label}</td></tr>` + rows.map(row).join("");
-  }).join("");
+
+  document.querySelectorAll("#healthTable .sort-btn").forEach(btn => {
+    const th = btn.closest("th");
+    th.removeAttribute("aria-sort");
+    if (btn.dataset.sort === healthSort.key) th.setAttribute("aria-sort", healthSort.dir === 1 ? "ascending" : "descending");
+  });
+
+  if (!healthSort.key) {
+    const groups = [
+      ["Official sources", s => s.tier === "official"],
+      ["Industry sources", s => s.tier === "industry"],
+      ["Pipeline", s => s.tier !== "official" && s.tier !== "industry"],
+    ];
+    tb.innerHTML = groups.map(([label, match]) => {
+      const rows = DIGEST.source_health.filter(match);
+      if (!rows.length) return "";
+      return `<tr class="h-group"><td colspan="4">${label}</td></tr>` + rows.map(row).join("");
+    }).join("");
+    return;
+  }
+
+  const { key, dir } = healthSort;
+  const val = s => key === "checked_at" ? new Date(s.checked_at || 0).getTime() : String(s[key] || "").toLowerCase();
+  const sorted = DIGEST.source_health.slice().sort((a, b) => {
+    const av = val(a), bv = val(b);
+    return (av < bv ? -1 : av > bv ? 1 : 0) * dir;
+  });
+  tb.innerHTML = sorted.map(row).join("");
 }
 
 /* ---------- audit log (Audit log tab) ---------- */
@@ -1659,7 +1818,19 @@ function toClipboard(text, html) {
 function flashButton(btn, label) {
   const prev = btn.textContent;
   btn.textContent = label;
+  announce(label);
   setTimeout(() => { btn.textContent = prev; }, 1500);
+}
+/* ---------- screen-reader announcements for state changes that are only
+   otherwise visible (search result counts, sort order, copy confirmations)
+   -- an aria-live region that visibly-sighted users never see. Clearing
+   first, then setting on the next frame, forces a re-announcement even
+   when the new text is identical to what's already there (a live region
+   only fires on an actual DOM mutation). ---------- */
+const liveRegion = document.getElementById("liveRegion");
+function announce(text) {
+  liveRegion.textContent = "";
+  requestAnimationFrame(() => { liveRegion.textContent = text; });
 }
 function citeText(it) {
   const c = it.verification.checked;
@@ -1723,14 +1894,18 @@ function buildWeekView() {
    ============================================================ */
 function render() {
   renderChips();
-  renderBanner();
   renderFreshness();
   renderScope();
-  renderTopOfMind();
+  updateSidebarCollapse();
+  // Top of mind is a "what matters overall" summary -- irrelevant once the
+  // reader has narrowed to a specific query, so it (and the filters sidebar,
+  // via updateSidebarCollapse above) steps out of the way during search.
   if (state.search.trim()) {
+    document.getElementById("topmind-slot").innerHTML = "";
     renderSearchResults();
     return;
   }
+  renderTopOfMind();
   const scoped = rangeItems(state.range).filter(matchesFilters);
   renderJumpnav(scoped);
   renderPriority(scoped);
@@ -1883,9 +2058,20 @@ let fontStepIdx = FONT_STEPS.indexOf(100);
 const fontDecBtn = document.getElementById("fontDec");
 const fontIncBtn = document.getElementById("fontInc");
 const fontResetBtn = document.getElementById("fontReset");
+function updateZoomSafeViewportWidth() {
+  // window.innerWidth reports the real, unzoomed device viewport regardless
+  // of document.documentElement.style.zoom -- dividing by the zoom fraction
+  // converts it into the zoomed context's own local CSS-px viewport width,
+  // which is what a breakout element measured from inside that context
+  // actually needs (see #tab-health's `100vw` overflow-at-zoom comment).
+  const pct = FONT_STEPS[fontStepIdx];
+  document.documentElement.style.setProperty("--zoom-vw", (window.innerWidth / (pct / 100)) + "px");
+}
+window.addEventListener("resize", updateZoomSafeViewportWidth, { passive: true });
 function applyFontScale() {
   const pct = FONT_STEPS[fontStepIdx];
   document.documentElement.style.zoom = pct + "%";
+  updateZoomSafeViewportWidth();
   const atMin = fontStepIdx === 0, atMax = fontStepIdx === FONT_STEPS.length - 1;
   // Disabling a focused button silently drops focus to <body> with no
   // visible indication of where it went -- move it to Reset first (always
@@ -1916,21 +2102,27 @@ document.getElementById("fontReset").onclick = () => { fontStepIdx = FONT_STEPS.
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClear");
+const searchWrap = document.querySelector(".search-wrap");
+function isSearchOpen() { return searchWrap.classList.contains("open"); }
 function openSearch() {
   // Results render into #tab-digest -- switch there first, or a reader on
   // Source health/Audit log/About would type a query and see nothing happen.
   selectTab("digest");
-  searchBtn.hidden = true;
-  searchInput.hidden = false;
-  searchClearBtn.hidden = false;
+  searchInput.removeAttribute("tabindex");
+  searchClearBtn.removeAttribute("tabindex");
   document.getElementById("toolbar").classList.add("search-open");
   searchBtn.setAttribute("aria-expanded", "true");
-  searchInput.focus();
+  // A frame after tabindex is cleared (so the field is truly interactive),
+  // add .open so the width/opacity transition has a real "from" state.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    searchWrap.classList.add("open");
+    searchInput.focus();
+  }));
 }
 function closeSearch() {
-  searchBtn.hidden = false;
-  searchInput.hidden = true;
-  searchClearBtn.hidden = true;
+  searchWrap.classList.remove("open");
+  searchInput.setAttribute("tabindex", "-1");
+  searchClearBtn.setAttribute("tabindex", "-1");
   searchInput.value = "";
   document.getElementById("toolbar").classList.remove("search-open");
   searchBtn.setAttribute("aria-expanded", "false");
@@ -1948,8 +2140,50 @@ searchInput.addEventListener("keydown", e => { if (e.key === "Escape") closeSear
 // Clicking away from an EMPTY open search box collapses it back to the
 // button -- an active query (something to click into) is left open.
 document.addEventListener("click", e => {
-  if (!searchInput.hidden && !e.target.closest(".search-wrap") && !searchInput.value.trim()) closeSearch();
+  if (isSearchOpen() && !e.target.closest(".search-wrap") && !searchInput.value.trim()) closeSearch();
 });
+
+/* ============================================================
+   FILTERS SIDEBAR -- collapses to a slim icon rail once the reader
+   scrolls past it, or as soon as a search is active (desktop only; the
+   CSS gates .collapsed to the wide-screen sidebar layout, so this is a
+   harmless no-op on mobile). `sidebarOverride` lets a manual click hold
+   the opposite of whatever this would otherwise auto-pick -- e.g. to
+   change a filter mid-search without closing search first -- but only
+   until the reader scrolls back near the top, so a stale "I reopened it
+   once" choice doesn't outlive the reason it was made.
+   ============================================================ */
+const filtersSidebar = document.getElementById("filtersSidebar");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const SIDEBAR_COLLAPSE_SCROLL_Y = 120;
+let sidebarOverride = null; // null = auto (scroll/search-driven); true/false = forced open/closed
+function updateSidebarCollapse() {
+  // Collapsing sets .filters to display:none, which yanks focus out from
+  // under a keyboard user mid-Tab if it's currently on a chip inside the
+  // sidebar (the browser drops it to <body> with no way back in) -- a
+  // scroll caused by the browser's own focus-follow auto-scroll must never
+  // trigger the auto-collapse it would otherwise apply. This only guards
+  // the automatic scroll-driven path; an explicit sidebarToggle click
+  // still collapses on request even with focus inside.
+  if (document.activeElement && filtersSidebar.contains(document.activeElement)) return;
+  const autoCollapse = window.scrollY > SIDEBAR_COLLAPSE_SCROLL_Y || !!state.search.trim();
+  const collapsed = sidebarOverride !== null ? !sidebarOverride : autoCollapse;
+  filtersSidebar.classList.toggle("collapsed", collapsed);
+  sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+}
+window.addEventListener("scroll", () => {
+  if (window.scrollY < 40) sidebarOverride = null;
+  requestAnimationFrame(updateSidebarCollapse);
+}, { passive: true });
+// Once focus leaves the sidebar (Tab/Shift+Tab out, or a click elsewhere),
+// re-evaluate immediately so a since-passed scroll threshold still collapses
+// it -- the guard above only defers the decision, it doesn't cancel it.
+filtersSidebar.addEventListener("focusout", () => requestAnimationFrame(updateSidebarCollapse));
+sidebarToggle.onclick = () => {
+  sidebarOverride = filtersSidebar.classList.contains("collapsed");
+  updateSidebarCollapse();
+};
+updateSidebarCollapse();
 
 /* ---------- print: a closed <details> won't expand via CSS alone ---------- */
 let printOpened = [];
@@ -2008,7 +2242,23 @@ document.addEventListener("click", e => {
   // Read-marking: any headline/source link inside an item
   const link = e.target.closest("a[href]");
   if (link) { const host = link.closest("[data-id]"); if (host) markRead(host.dataset.id); }
+  // Source health: click a column header to sort by it (click again to
+  // reverse direction); clicking the same header a third time returns to
+  // the default tier-grouped view. A real <button> means Enter/Space already
+  // fire this same click event natively -- no separate keydown handler needed.
+  const sortBtn = e.target.closest("#healthTable .sort-btn");
+  if (sortBtn) { toggleHealthSort(sortBtn.dataset.sort); return; }
 });
+const HEALTH_SORT_LABEL = { name: "Source", status: "Status", checked_at: "Last checked", note: "Note" };
+function toggleHealthSort(key) {
+  if (healthSort.key !== key) healthSort = { key, dir: 1 };
+  else if (healthSort.dir === 1) healthSort = { key, dir: -1 };
+  else healthSort = { key: null, dir: 1 };
+  renderHealth();
+  announce(healthSort.key
+    ? `Sorted by ${HEALTH_SORT_LABEL[healthSort.key]}, ${healthSort.dir === 1 ? "ascending" : "descending"}`
+    : "Sort cleared, showing default grouping");
+}
 // Brief rows count as read once expanded.
 document.addEventListener("toggle", e => {
   const d = e.target;
@@ -2027,7 +2277,7 @@ function ensureItemVisible(id) {
   const it = DIGEST.items.find(x => x.id === id);
   if (!it) return;
   state.juris = "ALL"; state.bucket = "ALL";
-  if (!searchInput.hidden) closeSearch(); else state.search = "";
+  if (isSearchOpen()) closeSearch(); else state.search = "";
   const diff = dayDiff(it.first_seen || it.published);
   if (diff > 0) state.range = diff <= 6 ? "7" : "30";
 }

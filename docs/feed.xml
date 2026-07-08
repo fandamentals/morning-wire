@@ -4,7 +4,7 @@
 <title>Digital Assets Morning Wire</title>
 <link>https://fandamentals.github.io/morning-wire/</link>
 <description>Daily digital-asset regulatory and market digest. AI-sourced and AI-generated — verify against official sources before acting.</description>
-<lastBuildDate>Tue, 07 Jul 2026 23:44:19 +0000</lastBuildDate>
+<lastBuildDate>Wed, 08 Jul 2026 00:21:22 +0000</lastBuildDate>
 <atom:link href="https://fandamentals.github.io/morning-wire/feed.xml" rel="self" type="application/rss+xml"/>
 <item>
 <title>H1 2026 Crypto Hacks Reach Record High as Losses Fall Below USD 1 Billion</title>
@@ -21,14 +21,14 @@
 <guid isPermaLink="false">global-trm-labs-insights-4fa35664b1</guid>
 <pubDate>Wed, 01 Jul 2026 16:15:00 +0000</pubDate>
 <description>The United States Office of Foreign Assets Control (OFAC) added 134 cryptocurrency addresses linked to Islamic State Khorasan Province to its sanctions list, tied to roughly two million United States dollars in terrorist financing. So what: The newly listed addresses need to reach wallet-screening data promptly, and a retrospective exposure check against them can confirm no historical flows touched client accounts. [corroborated]</description>
-<category>GLOBAL</category>
+<category>US</category>
 <category>designation</category>
 </item>
 <item>
 <title>Crypto Threats, Vulnerabilities and What to Do Next</title>
 <link>https://www.acams.org/en/opinion/crypto-threats-vulnerabilities-and-what-do-next</link>
 <guid isPermaLink="false">global-acams-today-851504e812</guid>
-<pubDate>Tue, 07 Jul 2026 07:50:39 +0000</pubDate>
+<pubDate>Mon, 13 Apr 2026 16:00:00 +0000</pubDate>
 <description>An ACAMS Today article surveys current criminal threats and control weaknesses in cryptocurrency and suggests practical next steps for compliance teams. So what: A quick horizon-scanning read, useful when refreshing cryptocurrency risk assessments or training material for financial-crime teams. [single source]</description>
 <category>GLOBAL</category>
 <category>news</category>
@@ -37,16 +37,16 @@
 <title>What OFAC’s crypto mixer sanctions mean for financial crime compliance</title>
 <link>https://www.acams.org/en/opinion/what-ofacs-crypto-mixer-sanctions-mean-financial-crime-compliance</link>
 <guid isPermaLink="false">global-acams-today-2e465a9794</guid>
-<pubDate>Tue, 07 Jul 2026 07:50:39 +0000</pubDate>
+<pubDate>Sun, 08 Mar 2026 16:00:00 +0000</pubDate>
 <description>An ACAMS Today article explains how the United States Office of Foreign Assets Control's sanctions on cryptocurrency mixing services affect financial-crime compliance programmes. So what: Helpful framing for tightening controls on mixer exposure, including how indirect exposure several transaction hops away should be treated in monitoring and investigations. [single source]</description>
-<category>GLOBAL</category>
+<category>US</category>
 <category>news</category>
 </item>
 <item>
 <title>Operation Prince: Inside a $15 billion crypto fraud takedown</title>
 <link>https://www.acams.org/en/opinion/operation-prince-inside-15-billion-crypto-fraud-takedown</link>
 <guid isPermaLink="false">global-acams-today-2bea5a2bff</guid>
-<pubDate>Tue, 07 Jul 2026 07:50:39 +0000</pubDate>
+<pubDate>Mon, 23 Mar 2026 16:00:00 +0000</pubDate>
 <description>An ACAMS Today feature goes inside "Operation Prince", a law-enforcement takedown of a cryptocurrency fraud network measuring about fifteen billion United States dollars. So what: Case studies at this scale surface red-flag typologies — romance-investment fraud patterns and mule account networks — worth folding into monitoring scenarios and investigator training. [single source]</description>
 <category>GLOBAL</category>
 <category>news</category>
@@ -75,15 +75,6 @@
 <guid isPermaLink="false">global-coindesk-policy-2c890e4264</guid>
 <pubDate>Mon, 06 Jul 2026 21:40:06 +0000</pubDate>
 <description>United States federal agencies are still working through legal and operational questions before the planned national bitcoin reserve becomes operational, CoinDesk reports. So what: A sovereign bitcoin reserve would further legitimise state-level holdings, and the unresolved custody and jurisdiction questions mirror those banks face when holding digital assets. [single source]</description>
-<category>GLOBAL</category>
-<category>news</category>
-</item>
-<item>
-<title>Breadth, Depth, And Quality: Why Comparing Blockchain Analytics Vendors by Cluster Count Is Only Part of the Calculation</title>
-<link>https://www.chainalysis.com/blog/comparing-blockchain-analytics-vendors/</link>
-<guid isPermaLink="false">global-chainalysis-blog-e10d024105</guid>
-<pubDate>Mon, 06 Jul 2026 21:03:39 +0000</pubDate>
-<description>Chainalysis argues that comparing blockchain-analytics vendors on the number of labelled address clusters tells only part of the story, with breadth, depth and attribution quality all mattering. So what: Relevant when benchmarking or renewing blockchain-analytics contracts: procurement criteria should test attribution quality and coverage rather than headline cluster counts alone. [single source]</description>
 <category>GLOBAL</category>
 <category>news</category>
 </item>
@@ -174,7 +165,7 @@
 <guid isPermaLink="false">global-the-block-policy-a3f39bf606</guid>
 <pubDate>Mon, 06 Jul 2026 09:30:56 +0000</pubDate>
 <description>Ripple secured full authorisation as a crypto-asset service provider under the European Union's Markets in Crypto-Assets Regulation (MiCA), allowing it to offer crypto services across thirty European Economic Area countries. So what: A major payments-focused crypto firm gaining authorisation across the whole European Economic Area expands the set of fully licensed counterparties and sharpens comparison with Hong Kong's licensing regime. [corroborated]</description>
-<category>GLOBAL</category>
+<category>EU</category>
 <category>licensing</category>
 </item>
 <item>
@@ -205,21 +196,12 @@
 <category>news</category>
 </item>
 <item>
-<title>Introducing Continuous Monitoring: stay aware of changing crypto risk</title>
-<link>https://www.elliptic.co/blog/introducing-continuous-monitoring</link>
-<guid isPermaLink="false">global-elliptic-blog-9f279187a9</guid>
-<pubDate>Thu, 02 Jul 2026 13:00:01 +0000</pubDate>
-<description>Elliptic launched a continuous-monitoring capability that re-screens cryptocurrency wallets and transactions as risk information changes after the initial check. So what: Point-in-time wallet screening ages quickly; continuous re-screening options are worth weighing when reviewing blockchain-analytics tooling against ongoing monitoring obligations. [single source]</description>
-<category>GLOBAL</category>
-<category>news</category>
-</item>
-<item>
 <title>OFAC Updates ISIS-Khorasan Sanctions with Over 100 Cryptocurrency Wallets</title>
 <link>https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/</link>
 <guid isPermaLink="false">global-chainalysis-blog-987207320d</guid>
 <pubDate>Wed, 01 Jul 2026 20:26:45 +0000</pubDate>
 <description>Chainalysis analysed the United States Office of Foreign Assets Control's update adding more than one hundred cryptocurrency wallet addresses linked to Islamic State Khorasan to its sanctions designations. So what: The attribution detail on the newly designated addresses supports retrospective exposure checks and tuning of sanctions-screening rules for indirect exposure. [single source]</description>
-<category>GLOBAL</category>
+<category>US</category>
 <category>designation</category>
 </item>
 <item>
@@ -277,21 +259,12 @@
 <category>peer_move</category>
 </item>
 <item>
-<title>Chainalysis Supports Robinhood Chain with Automatic Token Support</title>
-<link>https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/</link>
-<guid isPermaLink="false">global-chainalysis-blog-8b7d6ac67d</guid>
-<pubDate>Wed, 01 Jul 2026 19:30:58 +0000</pubDate>
-<description>Chainalysis announced automatic token support for Robinhood's new blockchain, meaning assets on that chain can be traced in its analytics tools from launch. So what: Day-one analytics coverage of new chains matters for monitoring completeness — a gap between chain launch and tracing support is a window where flows go unseen. [single source]</description>
-<category>GLOBAL</category>
-<category>news</category>
-</item>
-<item>
 <title>What the end of MiCA's transitional period means for crypto businesses</title>
 <link>https://www.elliptic.co/blog/the-end-of-micas-transitional-period</link>
 <guid isPermaLink="false">global-elliptic-blog-34fcbfc9a2</guid>
 <pubDate>Tue, 30 Jun 2026 13:27:12 +0000</pubDate>
 <description>Elliptic explains that the transitional window under the European Union's Markets in Crypto-Assets Regulation (MiCA) closed on 1 July 2026, after which only firms with full authorisation may serve European Union clients. So what: European counterparties still operating on lapsed national registrations are now unauthorised — worth reflecting in counterparty screening and periodic-review triggers. [single source]</description>
-<category>GLOBAL</category>
+<category>EU</category>
 <category>news</category>
 </item>
 <item>
@@ -345,7 +318,7 @@
 <guid isPermaLink="false">global-the-block-policy-d319101a3e</guid>
 <pubDate>Tue, 07 Jul 2026 20:58:49 +0000</pubDate>
 <description>CFTC charges North Carolina man over alleged $14 million crypto, futures fraud So what: Review the source directly; automated analysis unavailable. [single source]</description>
-<category>GLOBAL</category>
+<category>US</category>
 <category>news</category>
 </item>
 <item>
@@ -381,7 +354,7 @@
 <guid isPermaLink="false">global-coindesk-policy-ba638fc27d</guid>
 <pubDate>Tue, 07 Jul 2026 16:08:19 +0000</pubDate>
 <description>U.S. SEC to propose crypto rule as soon as this month to ease startups, fundraising So what: Review the source directly; automated analysis unavailable. [single source]</description>
-<category>GLOBAL</category>
+<category>US</category>
 <category>news</category>
 </item>
 <item>
@@ -390,7 +363,7 @@
 <guid isPermaLink="false">global-the-block-policy-3cc6e3754c</guid>
 <pubDate>Tue, 07 Jul 2026 16:03:54 +0000</pubDate>
 <description>SEC plans crypto rule changes for exchanges and broker dealers in 2026 regulatory agenda So what: Review the source directly; automated analysis unavailable. [single source]</description>
-<category>GLOBAL</category>
+<category>US</category>
 <category>news</category>
 </item>
 <item>

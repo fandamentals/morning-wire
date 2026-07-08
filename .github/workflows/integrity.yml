@@ -43,33 +43,56 @@ jobs:
         run: |
           set +e
           python scripts/audit.py --ci --json > audit-result.json
-          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           cat audit-result.json
 
-      - name: Open or update tripwire issue on HARD failure
-        if: steps.audit.outputs.exit_code != '0'
+      - name: Open/update/close tripwire issue
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const result = JSON.parse(fs.readFileSync('audit-result.json', 'utf8'));
-            const hard = result.findings.filter(f => f.mode === 'hard' && (f.severity === 'critical' || f.severity === 'could_not_run'));
+            const allHard = result.findings.filter(f => f.mode === 'hard' && (f.severity === 'critical' || f.severity === 'could_not_run'));
+            // A could_not_run caused solely by "not enough post-install history
+            // yet" (see base.could_not_run's bootstrap_expected flag) is a known,
+            // temporary, self-resolving state -- not something worth paging a
+            // human about every day for weeks. Only genuinely alarming hard
+            // findings should open/keep open an issue; scripts/audit.py's own
+            // exit code (used by the human-run weekly playbook) is unaffected --
+            // this filtering only changes what the unattended DAILY tripwire pages on.
+            const alarming = allHard.filter(f => !(f.evidence && f.evidence.bootstrap_expected));
             const title = 'Integrity audit: HARD check failure';
-            const body = [
-              `Daily integrity tripwire found ${hard.length} HARD-check finding(s) as of ${new Date().toISOString()}.`,
-              '',
-              'This is report-only -- nothing was changed. See `audit/PLAYBOOK.md` for how the',
-              'weekly audit Routine should triage this, and `audit/lessons.md` (L1) for the',
-              'incident this check set exists to catch.',
-              '',
-              ...hard.map(f => `- **[${f.severity}]** \`${f.check}\`: ${f.title}\n  ${f.detail}`),
-            ].join('\n');
 
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               state: 'open', labels: 'integrity-audit',
             });
             const match = existing.data.find(i => i.title === title);
+
+            if (alarming.length === 0) {
+              if (match) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: match.number,
+                  body: 'HARD checks are clean (or only showing the expected early-operation bootstrap state) as of this run -- closing.',
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: match.number, state: 'closed',
+                });
+              }
+              return;
+            }
+
+            const body = [
+              `Daily integrity tripwire found ${alarming.length} HARD-check finding(s) as of ${new Date().toISOString()}.`,
+              '',
+              'This is report-only -- nothing was changed. See `audit/PLAYBOOK.md` for how the',
+              'weekly audit Routine should triage this, and `audit/lessons.md` (L1) for the',
+              'incident this check set exists to catch.',
+              '',
+              ...alarming.map(f => `- **[${f.severity}]** \`${f.check}\`: ${f.title}\n  ${f.detail}`),
+            ].join('\n');
+
             if (match) {
               await github.rest.issues.update({
                 owner: context.repo.owner, repo: context.repo.repo,
@@ -79,28 +102,5 @@ jobs:
               await github.rest.issues.create({
                 owner: context.repo.owner, repo: context.repo.repo,
                 title, body, labels: ['integrity-audit'],
-              });
-            }
-
-      - name: Close tripwire issue if clean
-        if: steps.audit.outputs.exit_code == '0'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const title = 'Integrity audit: HARD check failure';
-            const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner, repo: context.repo.repo,
-              state: 'open', labels: 'integrity-audit',
-            });
-            const match = existing.data.find(i => i.title === title);
-            if (match) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: match.number,
-                body: 'HARD checks are clean as of this run -- closing.',
-              });
-              await github.rest.issues.update({
-                owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: match.number, state: 'closed',
               });
             }

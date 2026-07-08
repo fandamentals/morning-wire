@@ -35,6 +35,22 @@ def _domain(url):
     return host[4:] if host.startswith("www.") else host
 
 
+def _same_publisher(conf_dom, base_dom):
+    """True if the two hostnames belong to the same publisher -- exact match
+    OR a subdomain relationship in either direction (markets.coindesk.com and
+    www.coindesk.com are the same outlet; comparing hostnames for exact
+    equality alone missed this, since only a leading "www." is stripped
+    above). This is a hostname-suffix heuristic, not true registrable-domain
+    (eTLD+1) parsing -- good enough for "is this the same publisher" without
+    a public-suffix-list dependency, for the specific outlets this pipeline
+    actually sees."""
+    if not conf_dom or not base_dom:
+        return False
+    return (conf_dom == base_dom
+            or conf_dom.endswith("." + base_dom)
+            or base_dom.endswith("." + conf_dom))
+
+
 def _is_distinct_confirmation(confirming, base):
     """A confirming source must be genuinely independent of the original.
     Name comparison alone is useless -- the internal config name is
@@ -45,8 +61,7 @@ def _is_distinct_confirmation(confirming, base):
     conf_url = confirming.get("url", "")
     if conf_url.strip().rstrip("/") == base["url"].strip().rstrip("/"):
         return False
-    conf_dom, base_dom = _domain(conf_url), _domain(base["url"])
-    if conf_dom and base_dom and conf_dom == base_dom:
+    if _same_publisher(_domain(conf_url), _domain(base["url"])):
         return False
     outlet = base["name"].split("—")[0].strip().lower()
     conf_name = confirming.get("name", "").strip().lower()

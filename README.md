@@ -27,7 +27,7 @@ Each scheduled run (`scripts/run.py`):
    the web-search tool) to find and validate a replacement URL, updates
    `data/sources.json` in place, and logs the change to `CHANGELOG-sources.md`. A source
    is never silently dropped — if nothing validates, it's marked `dead` and surfaced in
-   the page footer (`scripts/heal.py`).
+   the Source health tab (`scripts/heal.py`).
 4. **Dedupe** — matches items by canonical URL against `data/seen-items.json`. A repeat
    with an unchanged title is skipped. A repeat with a *changed* title is only
    resurfaced (as `status: "update"`) if Claude judges the change materially significant
@@ -90,6 +90,12 @@ Each scheduled run (`scripts/run.py`):
 4. **First run** — trigger `workflow_dispatch` manually once to seed
    `data/digest.json`, `data/seen-items.json`, `data/registers/`, and
    `data/source-health.json`.
+5. **Branch protection (optional, repo-admin only)** — `CODEOWNERS` names
+   required reviewers for the audit system's own files, but GitHub only
+   enforces it once branch protection is turned on for `main` with "Require a
+   pull request before merging" + "Require review from Code Owners" checked
+   (Settings → Branches → Add rule). No workflow or bot token can enable this
+   from the outside — it's a one-time human, repo-admin action.
 
 ## Repo layout
 
@@ -97,6 +103,8 @@ Each scheduled run (`scripts/run.py`):
 /.github/workflows/digest.yml   cron + workflow_dispatch (the daily pipeline)
 /.github/workflows/pages.yml    deploys docs/ to Pages (workflow_run on "Daily
                                 digest" + push to docs/** + manual dispatch)
+/.github/workflows/integrity.yml    daily report-only tripwire (HARD checks only)
+/.github/workflows/audit-guard.yml  CI guard: blocks weakening a PROTECTED check
 /scripts/run.py                 orchestrator (fetch -> ... -> render)
 /scripts/fetch.py               feed/page fetching + parsing
 /scripts/registers.py           official-register snapshot + diff
@@ -105,12 +113,20 @@ Each scheduled run (`scripts/run.py`):
 /scripts/summarise.py           Claude API calls (summary/so_what/type/priority)
 /scripts/render.py              digest.json -> docs/index.html
 /scripts/templates/page.html    the designed page template (DIGEST placeholder)
+/scripts/audit.py               weekly/daily integrity-audit harness
+/scripts/audit_checks/          one module per check (auto-discovered by audit.py)
 /data/sources.json               source registry
 /data/registers/                 last-known snapshots of official registers
 /data/source-health.json         per-source consecutive-failure tracking
 /data/seen-items.json            dedupe memory (pruned after 90 days)
 /data/digest.json                rolling ~8-day window of published items
 /docs/index.html                 published page (GitHub Pages serves this)
+/audit/PLAYBOOK.md              runbook for the weekly integrity-audit routine
+/audit/lessons.md               LESSON/INVARIANT/CHECK log of past incidents
+/audit/ledger.jsonl             append-only history of audit runs
+/audit/exceptions.json          scoped, expiring suppressions of specific findings
+/CODEOWNERS                     required-reviewer map (needs branch protection
+                                enabled to actually enforce — see Setup)
 /CHANGELOG-sources.md            auto-log of healed/replaced sources
 ```
 
@@ -129,7 +145,13 @@ Each scheduled run (`scripts/run.py`):
   for the first time.
 - **Model.** Summarisation, verification, and self-healing all use
   `claude-sonnet-4-6` via the `anthropic` Python SDK, with the web-search tool for
-  verify/heal.
+  verify/heal. The keyless "enrich today's digest" recipe (a Claude Code session
+  standing in for the API call) defaults to Sonnet for the same reason — it's
+  routine summarisation/classification — and escalates to Opus only for a
+  genuinely harder-than-usual day (a large backlog, several corroboration
+  judgment calls, or enrichment bundled with a structural change). Whichever
+  tier actually did the work is disclosed in the Source health tab's "Claude
+  summarisation" row, dated to the day it ran.
 - **Topical filter.** General-mandate regulator feeds (bank supervision, futures,
   securities-at-large) are keyword-filtered to digital-asset-relevant items before
   anything else runs, so a CFTC or Federal Reserve press feed doesn't flood the digest
@@ -141,6 +163,29 @@ Each scheduled run (`scripts/run.py`):
   would otherwise flood a *daily* digest with months-old items presented as new. The
   page's priority strip is stricter still: it only admits items published within the
   last 7 days, each row showing its publication date.
+- **No mechanical historical backfill.** The digest fills in gradually from each
+  day's real fetch, not by reaching backwards for a month of history on day one:
+  RSS/Atom feeds only expose their current recent-items window (typically the last
+  handful of entries), not an arbitrary date range, so there is no live source to
+  backfill 30 days of genuine history *from*. A "Today"/"Last 7 days"/"Last 30
+  days"/"All" range selector is provided so the reader's own view grows as real
+  runs accumulate. (This also follows directly from `audit/lessons.md` L1: a prior
+  attempt to backdate `item.first_seen` to simulate a fuller archive silently
+  deleted real items downstream — retention and range bucketing are keyed off
+  `first_seen`, the moment this pipeline actually discovered the item, and that
+  field is never rewritten to manufacture history.)
+- **Vendor-marketing filtering.** An industry-tier source (Chainalysis, Elliptic,
+  TRM Labs, and similar analytics/compliance vendors) is monitored for its genuine
+  news and analysis, not its own marketing. The "enrich today's digest" recipe in
+  `CLAUDE.md` screens out product launches, feature/partnership announcements, and
+  competitive-positioning posts about the vendor's own tooling before they'd
+  otherwise be enriched and published.
+- **Jurisdiction reflects the story, not just the source.** A `GLOBAL`-tier
+  industry source (e.g. a compliance-vendor blog) covering one specific
+  jurisdiction's regulatory action (an OFAC sanctions list update, a MiCA rule)
+  is tagged with that jurisdiction, not folded into Global by default.
+  `scripts/audit_checks/check_item_jurisdiction_signal.py` flags likely
+  mistags for human/enrichment-session judgment; it never rewrites a tag itself.
 - **Known scraping caveats.** FATF's public site 403s a plain HTTP client outright. MAS's
   press-release listing is fully client-rendered (no article markup in the server HTML at
   all), so it's gated with a `href_pattern` requiring an actual `/news/media-releases/...`

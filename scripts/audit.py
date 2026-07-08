@@ -37,6 +37,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CHECKS_DIR = REPO_ROOT / "scripts" / "audit_checks"
 LEDGER_PATH = REPO_ROOT / "audit" / "ledger.jsonl"
+EXCEPTIONS_PATH = REPO_ROOT / "audit" / "exceptions.json"
 
 PROTECTED_CHECK_IDS = {
     "first_seen_3way",
@@ -45,6 +46,62 @@ PROTECTED_CHECK_IDS = {
     "docs_feed_parity",
     "enum_constant_freeze",
 }
+
+
+def _load_active_exceptions(repo_root, today=None):
+    """audit/exceptions.json entries: {"check": <check id>, "evidence":
+    {<key>: <value>, ...}, "expires": "YYYY-MM-DD", "reason": "..."}. Every
+    key in `evidence` must match the finding's own evidence dict for the
+    entry to apply -- this is the "one exact finding" scoping
+    audit/PLAYBOOK.md requires, not a whole-check suppression. Expired
+    entries (and, per the playbook's never-list, any entry that would
+    suppress a PROTECTED check's critical finding) are never applied --
+    the latter is enforced in _apply_exceptions below, not just documented.
+    Malformed/unreadable exceptions.json degrades to "no exceptions active"
+    rather than crashing the harness.
+    """
+    path = repo_root / "audit" / "exceptions.json"
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+    except Exception:
+        return []
+    if not isinstance(raw, list):
+        return []
+    today = today or datetime.now(timezone.utc).date().isoformat()
+    active = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        if not isinstance(entry.get("check"), str) or not isinstance(entry.get("evidence"), dict):
+            continue
+        expires = entry.get("expires")
+        if not isinstance(expires, str) or expires < today:
+            continue  # expired, or missing an expiry -- PLAYBOOK requires a concrete one
+        active.append(entry)
+    return active
+
+
+def _apply_exceptions(findings, exceptions):
+    """Mark each finding suppressed=True/False; never actually removes a
+    finding (the ledger/report keeps the full, honest picture) -- callers
+    decide what "suppressed" means for exit codes and display. A PROTECTED
+    check's critical finding can never be matched, no matter what
+    exceptions.json contains -- audit/PLAYBOOK.md's never-list is a hard
+    invariant of this function, not a request made of whoever edits the
+    file."""
+    for f in findings:
+        f["suppressed"] = False
+        if f["check"] in PROTECTED_CHECK_IDS and f["severity"] == "critical":
+            continue
+        for exc in exceptions:
+            if exc["check"] != f["check"]:
+                continue
+            evidence = f.get("evidence") or {}
+            if all(evidence.get(k) == v for k, v in exc["evidence"].items()):
+                f["suppressed"] = True
+                f["suppressed_reason"] = exc.get("reason", "")
+                break
+    return findings
 
 
 def _discover_checks():
@@ -94,6 +151,8 @@ def run_audit(mode="full"):
             f.setdefault("mode", getattr(m, "MODE", "soft"))
         all_findings.extend(findings)
 
+    exceptions = _load_active_exceptions(REPO_ROOT)
+    _apply_exceptions(all_findings, exceptions)
     return all_findings, checks_ran, len(modules), None
 
 
@@ -115,13 +174,19 @@ def _simulate(repo_root):
 
     pruned_seen = run_mod.prune_seen_items(copy.deepcopy(seen))
 
+    sanitize_crashed = False
     try:
         import render as render_mod
         clean = render_mod.sanitize_digest({**digest, "items": merged})
         sanitized_ids = {it["id"] for it in clean["items"]}
     except Exception as exc:
-        print(f"--simulate: sanitize_digest raised: {exc}")
+        # This is the exact "mandatory proof" step L1's RULE requires before
+        # a data-affecting fix ships -- a crash here must never read as
+        # "zero loss" just because there's nothing to diff against. Treated
+        # as its own failure below, never silently folded into lost_in_sanitize.
+        print(f"--simulate: sanitize_digest RAISED (could not verify item loss): {exc}")
         sanitized_ids = after_ids
+        sanitize_crashed = True
 
     lost_in_prune = before_ids - after_ids
     lost_in_sanitize = after_ids - sanitized_ids
@@ -136,9 +201,12 @@ def _simulate(repo_root):
         print("  (Expected only for items already outside the retention window -- verify each one's first_seen.)")
     if lost_in_sanitize:
         print(f"  ATTENTION -- sanitize_digest would drop {len(lost_in_sanitize)} item(s): {sorted(lost_in_sanitize)}")
-    if not lost_in_prune and not lost_in_sanitize:
+    if sanitize_crashed:
+        print("  FAILED -- sanitize_digest raised, so item loss could not be verified (see above). "
+              "This is NOT proof of zero loss -- do not attach this output to a PR as if it were.")
+    elif not lost_in_prune and not lost_in_sanitize:
         print("  zero unexpected item loss")
-    return 1 if lost_in_sanitize else 0
+    return 1 if (lost_in_sanitize or sanitize_crashed) else 0
 
 
 def main():
@@ -158,7 +226,8 @@ def main():
         print(f"CRITICAL: {error}")
         sys.exit(2)
 
-    hard_critical = [f for f in findings if f["mode"] == "hard" and f["severity"] in ("critical", "could_not_run")]
+    hard_critical = [f for f in findings if f["mode"] == "hard" and f["severity"] in ("critical", "could_not_run")
+                     and not f.get("suppressed")]
     exit_code = 1 if hard_critical else 0
 
     if args.json:
@@ -170,16 +239,21 @@ def main():
 
     print(f"Reg Radar integrity audit -- {datetime.now(timezone.utc).isoformat()}")
     print(f"Checks ran: {len(checks_ran)}/{checks_expected}  ({', '.join(checks_ran)})")
-    if not findings:
-        print("No findings. Clean run.")
+    active = [f for f in findings if not f.get("suppressed")]
+    suppressed = [f for f in findings if f.get("suppressed")]
+    if not active:
+        print("No findings. Clean run." if not suppressed else "No active findings (see suppressed below).")
     else:
         by_sev = {"critical": [], "could_not_run": [], "warn": [], "info": []}
-        for f in findings:
+        for f in active:
             by_sev.setdefault(f["severity"], []).append(f)
         for sev in ("critical", "could_not_run", "warn", "info"):
             for f in by_sev.get(sev, []):
                 print(f"\n[{sev.upper()}] ({f['mode']}) {f['check']}: {f['title']}")
                 print(f"  {f['detail']}")
+    for f in suppressed:
+        print(f"\n[SUPPRESSED] ({f['mode']}) {f['check']}: {f['title']}")
+        print(f"  exception reason: {f.get('suppressed_reason', '(none given)')}")
 
     if not args.ci:
         LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)

@@ -41,5 +41,38 @@
   "MAX_ITEM_AGE_DAYS": 7,
   "MAX_CHURN_FRACTION": 0.5,
   "MAX_CHURN_FLOOR": 5,
-  "FAILURE_THRESHOLD": 5
+  "FAILURE_THRESHOLD": 5,
+  "SUMMARISE_VALID_TYPES": [
+    "consultation",
+    "designation",
+    "enforcement",
+    "final_rule",
+    "guidance",
+    "licensing",
+    "news",
+    "peer_move",
+    "speech"
+  ],
+  "PAGE_HTML_TYPE_LABEL_KEYS": [
+    "consultation",
+    "designation",
+    "enforcement",
+    "final_rule",
+    "guidance",
+    "licensing",
+    "news",
+    "peer_move",
+    "speech"
+  ],
+  "PAGE_HTML_BUCKET_TYPES": [
+    "consultation",
+    "designation",
+    "enforcement",
+    "final_rule",
+    "guidance",
+    "licensing",
+    "news",
+    "peer_move",
+    "speech"
+  ]
 }

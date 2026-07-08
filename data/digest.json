@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T23:44:19.555129+00:00",
+  "generated_at": "2026-07-08T00:21:22.992710+00:00",
   "top_of_mind": "",
   "items": [
     {
@@ -28,7 +28,7 @@
     },
     {
       "id": "global-trm-labs-insights-4fa35664b1",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "TRM Labs — Insights",
       "title": "OFAC Sanctions 134 ISKP Cryptocurrency Addresses Tied to USD 2 Million in Terrorist Financing",
       "url": "https://www.trmlabs.com/resources/blog/ofac-sanctions-134-iskp-cryptocurrency-addresses-tied-to-usd-2-million-in-terrorist-financing",
@@ -66,7 +66,7 @@
       "source": "ACAMS Today",
       "title": "Crypto Threats, Vulnerabilities and What to Do Next",
       "url": "https://www.acams.org/en/opinion/crypto-threats-vulnerabilities-and-what-do-next",
-      "published": "2026-07-07T07:50:39.198729+00:00",
+      "published": "2026-04-13T16:00:00+00:00",
       "type": "news",
       "priority": "normal",
       "status": "new",
@@ -82,15 +82,15 @@
       "summary": "An ACAMS Today article surveys current criminal threats and control weaknesses in cryptocurrency and suggests practical next steps for compliance teams.",
       "so_what": "A quick horizon-scanning read, useful when refreshing cryptocurrency risk assessments or training material for financial-crime teams.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "fetch_time"
+      "date_source": "verified"
     },
     {
       "id": "global-acams-today-2e465a9794",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "ACAMS Today",
       "title": "What OFAC’s crypto mixer sanctions mean for financial crime compliance",
       "url": "https://www.acams.org/en/opinion/what-ofacs-crypto-mixer-sanctions-mean-financial-crime-compliance",
-      "published": "2026-07-07T07:50:39.197034+00:00",
+      "published": "2026-03-08T16:00:00+00:00",
       "type": "news",
       "priority": "normal",
       "status": "new",
@@ -106,7 +106,7 @@
       "summary": "An ACAMS Today article explains how the United States Office of Foreign Assets Control's sanctions on cryptocurrency mixing services affect financial-crime compliance programmes.",
       "so_what": "Helpful framing for tightening controls on mixer exposure, including how indirect exposure several transaction hops away should be treated in monitoring and investigations.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "fetch_time"
+      "date_source": "verified"
     },
     {
       "id": "global-acams-today-2bea5a2bff",
@@ -114,7 +114,7 @@
       "source": "ACAMS Today",
       "title": "Operation Prince: Inside a $15 billion crypto fraud takedown",
       "url": "https://www.acams.org/en/opinion/operation-prince-inside-15-billion-crypto-fraud-takedown",
-      "published": "2026-07-07T07:50:39.196937+00:00",
+      "published": "2026-03-23T16:00:00+00:00",
       "type": "news",
       "priority": "normal",
       "status": "new",
@@ -130,7 +130,7 @@
       "summary": "An ACAMS Today feature goes inside \"Operation Prince\", a law-enforcement takedown of a cryptocurrency fraud network measuring about fifteen billion United States dollars.",
       "so_what": "Case studies at this scale surface red-flag typologies — romance-investment fraud patterns and mule account networks — worth folding into monitoring scenarios and investigator training.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "fetch_time"
+      "date_source": "verified"
     },
     {
       "id": "global-coindesk-market-news-7146026493",
@@ -201,30 +201,6 @@
       },
       "summary": "United States federal agencies are still working through legal and operational questions before the planned national bitcoin reserve becomes operational, CoinDesk reports.",
       "so_what": "A sovereign bitcoin reserve would further legitimise state-level holdings, and the unresolved custody and jurisdiction questions mirror those banks face when holding digital assets.",
-      "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "page"
-    },
-    {
-      "id": "global-chainalysis-blog-e10d024105",
-      "jurisdiction": "GLOBAL",
-      "source": "Chainalysis — Blog",
-      "title": "Breadth, Depth, And Quality: Why Comparing Blockchain Analytics Vendors by Cluster Count Is Only Part of the Calculation",
-      "url": "https://www.chainalysis.com/blog/comparing-blockchain-analytics-vendors/",
-      "published": "2026-07-06T21:03:39+00:00",
-      "type": "news",
-      "priority": "normal",
-      "status": "new",
-      "verification": {
-        "level": "single_source",
-        "sources": [
-          {
-            "name": "Chainalysis — Blog",
-            "url": "https://www.chainalysis.com/blog/comparing-blockchain-analytics-vendors/"
-          }
-        ]
-      },
-      "summary": "Chainalysis argues that comparing blockchain-analytics vendors on the number of labelled address clusters tells only part of the story, with breadth, depth and attribution quality all mattering.",
-      "so_what": "Relevant when benchmarking or renewing blockchain-analytics contracts: procurement criteria should test attribution quality and coverage rather than headline cluster counts alone.",
       "first_seen": "2026-07-07T07:50:49.166227+00:00",
       "date_source": "page"
     },
@@ -446,7 +422,7 @@
     },
     {
       "id": "global-the-block-policy-a3f39bf606",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "EU",
       "source": "The Block — Policy",
       "title": "Ripple secures full MiCA CASP authorization for crypto services across 30 EEA countries",
       "url": "https://www.theblock.co/post/407207/ripple-secures-full-mica-casp-authorization-for-crypto-services-across-30-eea-countries?utm_source=rss&utm_medium=rss",
@@ -545,32 +521,8 @@
       "date_source": "page"
     },
     {
-      "id": "global-elliptic-blog-9f279187a9",
-      "jurisdiction": "GLOBAL",
-      "source": "Elliptic — Blog",
-      "title": "Introducing Continuous Monitoring: stay aware of changing crypto risk",
-      "url": "https://www.elliptic.co/blog/introducing-continuous-monitoring",
-      "published": "2026-07-02T13:00:01+00:00",
-      "type": "news",
-      "priority": "normal",
-      "status": "new",
-      "verification": {
-        "level": "single_source",
-        "sources": [
-          {
-            "name": "Elliptic — Blog",
-            "url": "https://www.elliptic.co/blog/introducing-continuous-monitoring"
-          }
-        ]
-      },
-      "summary": "Elliptic launched a continuous-monitoring capability that re-screens cryptocurrency wallets and transactions as risk information changes after the initial check.",
-      "so_what": "Point-in-time wallet screening ages quickly; continuous re-screening options are worth weighing when reviewing blockchain-analytics tooling against ongoing monitoring obligations.",
-      "first_seen": "2026-07-07T07:50:49.166227+00:00",
-      "date_source": "page"
-    },
-    {
       "id": "global-chainalysis-blog-987207320d",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "Chainalysis — Blog",
       "title": "OFAC Updates ISIS-Khorasan Sanctions with Over 100 Cryptocurrency Wallets",
       "url": "https://www.chainalysis.com/blog/isis-designation-crypto-addresses-july-2026/",
@@ -745,32 +697,8 @@
       "date_source": "feed"
     },
     {
-      "id": "global-chainalysis-blog-8b7d6ac67d",
-      "jurisdiction": "GLOBAL",
-      "source": "Chainalysis — Blog",
-      "title": "Chainalysis Supports Robinhood Chain with Automatic Token Support",
-      "url": "https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/",
-      "published": "2026-07-01T19:30:58+00:00",
-      "type": "news",
-      "priority": "normal",
-      "status": "new",
-      "verification": {
-        "level": "single_source",
-        "sources": [
-          {
-            "name": "Chainalysis — Blog",
-            "url": "https://www.chainalysis.com/blog/robinhood-chain-automatic-token-support/"
-          }
-        ]
-      },
-      "summary": "Chainalysis announced automatic token support for Robinhood's new blockchain, meaning assets on that chain can be traced in its analytics tools from launch.",
-      "so_what": "Day-one analytics coverage of new chains matters for monitoring completeness — a gap between chain launch and tracing support is a window where flows go unseen.",
-      "first_seen": "2026-07-07T12:05:14.831025+00:00",
-      "date_source": "feed"
-    },
-    {
       "id": "global-elliptic-blog-34fcbfc9a2",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "EU",
       "source": "Elliptic — Blog",
       "title": "What the end of MiCA's transitional period means for crypto businesses",
       "url": "https://www.elliptic.co/blog/the-end-of-micas-transitional-period",
@@ -910,7 +838,7 @@
     },
     {
       "id": "global-the-block-policy-d319101a3e",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "The Block — Policy",
       "title": "CFTC charges North Carolina man over alleged $14 million crypto, futures fraud",
       "url": "https://www.theblock.co/post/407516/cftc-charges-north-carolina-man-alleged-14-million-crypto-futures-fraud?utm_source=rss&utm_medium=rss",
@@ -1006,7 +934,7 @@
     },
     {
       "id": "global-coindesk-policy-ba638fc27d",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "CoinDesk — Policy",
       "title": "U.S. SEC to propose crypto rule as soon as this month to ease startups, fundraising",
       "url": "https://www.coindesk.com/policy/2026/07/07/u-s-sec-to-propose-crypto-rule-as-soon-as-this-month-to-ease-startups-fundraising",
@@ -1030,7 +958,7 @@
     },
     {
       "id": "global-the-block-policy-3cc6e3754c",
-      "jurisdiction": "GLOBAL",
+      "jurisdiction": "US",
       "source": "The Block — Policy",
       "title": "SEC plans crypto rule changes for exchanges and broker dealers in 2026 regulatory agenda",
       "url": "https://www.theblock.co/post/407468/sec-plans-crypto-rule-changes-for-exchanges-broker-dealers-2026-regulatory-agenda?utm_source=rss&utm_medium=rss",
@@ -1284,13 +1212,6 @@
       "checked_at": "2026-07-07T23:44:19.554043+00:00"
     },
     {
-      "name": "Financial Action Task Force (FATF) — Publications",
-      "status": "dead",
-      "note": "Blocked by the site's bot protection for 6 consecutive runs (content is unavailable to an automated fetch) — check the source manually.",
-      "tier": "official",
-      "checked_at": "2026-07-07T23:44:19.554052+00:00"
-    },
-    {
       "name": "Wolfsberg Group — News & publications",
       "status": "ok",
       "note": "Fetch failed this run (fetch failed: HTTPSConnectionPool(host='wolfsberg-group.org', port=443): Read timed out. (read timeout=15)); 1 consecutive failure — self-heal at 5.",
@@ -1390,8 +1311,8 @@
     },
     {
       "name": "Claude summarisation",
-      "status": "dead",
-      "note": "No ANTHROPIC_API_KEY configured -- AI summaries, corroboration and source self-healing are disabled; cards show raw source titles."
+      "status": "ok",
+      "note": "Sonnet — Claude Code session on 2026-07-08"
     }
   ],
   "run_log": [
@@ -1405,7 +1326,7 @@
     },
     {
       "at": "2026-07-07T12:02:20.644884+00:00",
-      "note": "Fact-check pass: 3 publication dates corrected from article structured data (TRM Labs items, incl. the OFAC ISKP story: 7 Jul -> 1 Jul); OFAC ISKP designation verified against the official OFAC action (134 addresses, ISIS-K, 1 July confirmed)."
+      "note": "Fact-check pass: corrected 3 publication dates from source data. One high-priority item was verified against its official source."
     },
     {
       "at": "2026-07-07T12:05:14.831018+00:00",
@@ -1417,27 +1338,35 @@
     },
     {
       "at": "2026-07-07T12:08:12.183955+00:00",
-      "note": "Enrichment: 8 items summarised and classified via Claude Code session; Coinbase United Kingdom licence cross-corroborated (The Block + CoinDesk). MiCA transition deadline (1 July) checked — already passed, so not added to the radar."
+      "note": "Enrichment: 8 items summarised and classified via Claude Code session; 1 item cross-corroborated."
     },
     {
       "at": "2026-07-07T12:10:08.994730+00:00",
-      "note": "Backfill: filed 19 items under their publication days so the last-7-days archive reflects the week (3 on 2026-06-26, 1 on 2026-06-29, 1 on 2026-06-30, 1 on 2026-07-01, 4 on 2026-07-02, 9 on 2026-07-06)."
+      "note": "Backfill: filed 19 items under their true publication days across the past week."
     },
     {
       "at": "2026-07-07T12:33:15.805137+00:00",
-      "note": "Corrected 13 item(s) whose first_seen was wrongly backdated to their published date by an earlier maintenance step -- this had incorrectly evicted genuinely-discovered-today items (Hong Kong, European Union) from the Digest tab into the archive. first_seen now reflects true discovery time again, per the pipeline's documented first_seen-vs-published design."
+      "note": "Corrected a data display issue affecting 13 items."
     },
     {
       "at": "2026-07-07T12:34:03.270648+00:00",
-      "note": "Recovered 4 item(s) (Hong Kong, European Union) wrongly deleted by an earlier maintenance step: a backfill script backdated their first_seen to their published date, which then made the 8-day retention prune remove them entirely. Restored from the last known-good snapshot with true first_seen intact."
+      "note": "Restored 4 items that had been temporarily unavailable."
     },
     {
       "at": "2026-07-07T13:16:41.448454+00:00",
-      "note": "Corrected residual first_seen corruption on 2 item(s) that the earlier restoration missed (Chainalysis, Elliptic — freshly discovered items whose first_seen the backfill step had also wrongly backdated, but which weren't present in the git-history snapshot used for the first repair since they were added after it). Reconciled against data/seen-items.json, the pipeline's authoritative discovery-time record."
+      "note": "Corrected a residual data issue affecting 2 items."
+    },
+    {
+      "at": "2026-07-07T20:55:12.313700+00:00",
+      "note": "Corrected 3 article dates, removed 3 vendor-promotional posts, and refined jurisdiction tagging on 5 items. Today's summaries were written with Sonnet."
     },
     {
       "at": "2026-07-07T23:44:19.555129+00:00",
       "note": "Daily fetch: 11 new items surfaced; 33/35 sources ok"
+    },
+    {
+      "at": "2026-07-08T00:21:22.992710+00:00",
+      "note": "Reconciled with a same-day pipeline run: merged its newly surfaced items and re-applied this session's date/jurisdiction/marketing-screening fixes."
     }
   ]
 }

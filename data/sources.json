@@ -163,14 +163,6 @@
     "href_pattern": "/news/(media-releases|speeches|monographs)/{year}/"
   },
   {
-    "name": "Financial Action Task Force (FATF) — Publications",
-    "jurisdiction": "GLOBAL",
-    "kind": "page",
-    "url": "https://www.fatf-gafi.org/en/publications.html",
-    "tier": "official",
-    "href_pattern": "/en/publications/"
-  },
-  {
     "name": "Wolfsberg Group — News & publications",
     "jurisdiction": "GLOBAL",
     "kind": "page",

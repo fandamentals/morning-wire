@@ -110,9 +110,28 @@ this coverage map, one area per week, recorded as a `run_log`-style note in
 the ledger so the next run picks up the next one (check the last few
 `audit/ledger.jsonl` entries for which area was last deep-dived):
 
-1. Source coverage & keyword tuning (are HK/CN/US/EU/SG official sources and
-   the tracked institutions still being caught? any new digital-asset
-   regulator or bank move that should be added to `data/sources.json`?)
+1. Source coverage, keyword tuning, and reassessment. Are HK/CN/US/EU/SG
+   official sources and the tracked institutions still being caught?
+   Reassess whether `data/sources.json` still serves the reader CLAUDE.md
+   defines this page for — an HK/China-focused digital-asset
+   financial-crime-compliance officer at an international bank — and
+   propose additions on a branch + PR (never add directly; a human decides
+   what actually gets merged, same as every other change this routine
+   makes) when a source would be genuinely useful to that reader:
+   - A regulator, central bank, or standard-setter with digital-asset
+     remit that isn't covered yet (check for gaps across HK, mainland
+     China, the US, the EU, Singapore, and global bodies).
+   - A bank, exchange, or custody/tokenisation initiative that's become
+     material enough to track as a recurring "Industry intel" source,
+     not just a one-off item.
+   - A reputable industry-research publication (e.g. an annual crime/
+     compliance report series) — never a vendor's own marketing/product
+     blog; the same promotional-content judgment the enrichment recipe
+     applies per-item in CLAUDE.md applies here too, at the source level.
+   Also flag (don't silently drop) a source that's become irrelevant or
+   redundant so a human can decide whether to retire it — this routine
+   never removes a source itself outside the existing dead-source repair
+   path.
 2. UI/UX button-by-button Playwright audit (both themes' light/dark modes,
    mobile + desktop) — only if `scripts/templates/page.html` or its
    JS/CSS changed since the last deep-dive.
@@ -157,25 +176,24 @@ analogous to the daily pipeline's own `run_log` appends, or the "enrich
 today's digest" recipe's step 9 in CLAUDE.md), not a change to data or
 pipeline behavior. It is safe to commit directly to `main`.
 
-1. Write one line summarising the run, matching whichever of these fits:
-   - Clean run, nothing to report: `{"at": "<now UTC ISO>", "note": "Weekly
-     integrity audit: 11/11 checks ran, no findings — nothing changed."}`
-     (use the actual checks-ran count from this run's `scripts/audit.py`
-     output, not a hardcoded 11 — a future check being added or removed
-     should show up here too).
+1. Write one line summarising the run, following the **Audit log style rule**
+   in CLAUDE.md (at most 2 complete sentences; no forensic detail — never
+   name a check id, a bug's mechanism, or which items were affected; the
+   full technical story belongs in the PR and in `audit/lessons.md`, not the
+   public log). Pick whichever of these fits, adapting the number:
+   - Clean run: `{"at": "<now UTC ISO>", "note": "Weekly integrity audit:
+     11/11 checks ran, nothing to report."}` (use the real checks-ran count).
    - Findings triaged, a fix PR opened: `{"at": "<now>", "note": "Weekly
-     integrity audit: found <N> finding(s) (<one-line what>); opened PR #<NN>
-     proposing <what>. No other changes."}`
+     integrity audit: found and addressed 1 item; see PR #<NN>."}`
    - A HARD/critical finding needing urgent human attention: `{"at": "<now>",
-     "note": "Weekly integrity audit: CRITICAL — <check id> flagged <what>;
-     opened PR #<NN> with <the fix>. Needs prompt review."}`
+     "note": "Weekly integrity audit: found a priority item needing review;
+     opened PR #<NN>."}`
    - A new lesson absorbed: `{"at": "<now>", "note": "Weekly integrity audit:
-     identified a new failure class (<what>); added audit/lessons.md entry
-     <Lx> and a red-fixture-backed check; opened PR #<NN>."}`
+     added a new permanent safeguard; opened PR #<NN>."}`
    - `could_not_run` on a protected check due to `BOOTSTRAP_CUTOFF` (expected
      during the project's early weeks): `{"at": "<now>", "note": "Weekly
-     integrity audit: <check id> could not run yet (not enough post-cutoff
-     history) — expected, not a fault. No other findings."}`
+     integrity audit: too little history yet for the deepest checks —
+     expected during early operation."}`
 2. RACE GUARD (repeat, don't skip because Phase 0 already checked this once):
    an audit run can take a while, and this step happens at the END of it --
    re-check the latest "Daily digest" workflow run via the GitHub MCP actions
@@ -184,9 +202,9 @@ pipeline behavior. It is safe to commit directly to `main`.
    `main` again. Committing here mid-pipeline-run risks the exact same
    guaranteed `docs/index.html` push conflict the "enrich today's digest"
    recipe's own Phase-0-equivalent step exists to avoid.
-3. Append the entry to `data/digest.json`'s top-level `run_log` (the pipeline
-   caps it at 30; do not otherwise touch `run_log`, `source_health`, or
-   `top_of_mind`).
+3. Append the entry to `data/digest.json`'s top-level `run_log` (`scripts/render.py`
+   keeps only the most recent `RUN_LOG_MAX_ENTRIES` (10) on the rendered page;
+   do not otherwise touch `run_log`, `source_health`, or `top_of_mind`).
 4. Re-render: `python3 scripts/render.py`.
 5. Commit `data/digest.json`, `docs/index.html` and `docs/feed.xml` directly
    to `main` (plain message, e.g. "chore: log weekly integrity audit run" —
