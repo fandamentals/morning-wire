@@ -16,6 +16,13 @@ extraction makes (good enough to catch the known-risky pattern, not a
 general-purpose static analyzer). A human reviewing a PR that adds a new
 workflow step should still eyeball any `${{ }}` usage in `run:` -- this check
 is a backstop, not a replacement for that.
+
+Known limitation, not yet closed (see audit/lessons.md L6): a `run:` value
+written as a multi-line quoted scalar (e.g. `run: 'echo\n  ${{ ... }}'`,
+folding across lines without a `|`/`>` block indicator) has its continuation
+lines silently dropped by `_run_blocks`, which only treats `|`/`>` as
+multi-line. No workflow in this repo currently uses this style; flagged
+here rather than silently assumed fixed.
 """
 import re
 
@@ -46,22 +53,35 @@ UNTRUSTED_PATTERNS = [
     r"github\.event\.pages\b",
 ]
 _UNTRUSTED_RE = re.compile("|".join(UNTRUSTED_PATTERNS))
-_EXPR_RE = re.compile(r"\$\{\{(.*?)\}\}")
+# DOTALL: a block-scalar's lines are joined with "\n" before this searches
+# them (see _run_blocks) -- without DOTALL, an expression split across two
+# physical lines inside that joined block would evade detection because "."
+# wouldn't match the newline between them.
+_EXPR_RE = re.compile(r"\$\{\{(.*?)\}\}", re.DOTALL)
 
 
 def _run_blocks(text):
     """Yield (line_no, block_text) for every `run:` step body in a workflow
     file -- both single-line (`run: cmd`) and block-scalar (`run: |` /
-    `run: >`, indented continuation lines) forms. A sibling `env:` key,
-    whether before or after `run:` in the step, is never included: it sits
-    at the same indentation as `run:`, not deeper, so the block-scalar
-    continuation scan stops before it and the single-line form never reaches
-    it at all."""
+    `run: >`, indented continuation lines) forms, and both the `- run:
+    cmd` inline-list-item style and the `- name: ...` / `run: ...` two-line
+    style. A sibling `env:` key, whether before or after `run:` in the step,
+    is never included: it sits at the same indentation as `run:` (or the
+    dash that precedes it), not deeper, so the block-scalar continuation
+    scan stops before it and the single-line form never reaches it at all.
+
+    Known evasion this does NOT catch (see audit/lessons.md L6): a `run:`
+    value written as a multi-line quoted scalar (folding across lines
+    without a `|`/`>` indicator) -- only its first physical line is ever
+    scanned."""
     lines = text.splitlines()
     i = 0
     while i < len(lines):
         line = lines[i]
-        m = re.match(r"^(\s*)run:\s*(.*)$", line)
+        # Optional `- ` (a YAML sequence item marker) directly before `run:`
+        # covers the common single-line step shorthand `- run: cmd`, which
+        # the whitespace-only match below would otherwise skip entirely.
+        m = re.match(r"^(\s*)(?:-\s+)?run:\s*(.*)$", line)
         if not m:
             i += 1
             continue
