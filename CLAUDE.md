@@ -100,8 +100,8 @@ do this:
    an implication the source items don't themselves support. Plain English, no
    acronyms, neutral voice. Set it to "" on quiet days. The page shows it as a callout
    beside the priority list (which is capped at 5 rows — jurisdiction order, then
-   recency — and only admits items published within the last 7 days, so a stale item
-   marked `high` never headlines).
+   recency — and only admits items first seen (or published) within the last 7 days,
+   so a stale item marked `high` never headlines).
 5. While summarising, capture any EXPLICIT future dates the items mention —
    consultation comment deadlines, rule effective dates, licence application
    windows — into the top-level `radar` list (the page's "On the radar" strip):
