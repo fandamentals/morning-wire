@@ -150,9 +150,10 @@ try {
   /* ============================================================
      HEADER
      ============================================================ */
-  /* The masthead scrolls away; the TAB ROW below is the frozen element
-     (Sheets-style) so Digest / Source health / Audit log / About stay
-     reachable at any scroll depth on every viewport. */
+  /* The masthead (incl. section tabs, font-size control, theme picker)
+     scrolls away with the page; the Digest tab's own filter toolbar is the
+     one sticky/frozen element (see .filter-toolbar) -- tabs are occasional
+     secondary destinations, not something that needs to stay pinned. */
   header.masthead {
     border-bottom: 1px solid var(--border);
     background: var(--bg);
@@ -256,25 +257,70 @@ try {
   .disclaimer-line .bolt { color: var(--accent); }
 
   /* ============================================================
-     TABS + TOOLBAR (font size, search) -- one sticky block so both
-     stay reachable at any scroll depth, each on its own row so the
-     tab labels and the toolbar icons never compete for width.
+     SECTION TABS -- live in .mast-controls now (top right, next to the
+     font-size control and theme picker), quiet and secondary: the reader
+     mostly wants the Digest, so Source health/Audit log/About no longer
+     compete for the same visual weight as the main content.
      ============================================================ */
-  .sticky-bar {
+  .tabs { display: flex; align-items: center; gap: 2px; }
+  .tab {
+    appearance: none; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    padding: 6px 9px; min-height: 36px;
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    color: var(--ink-3); cursor: pointer;
+    transition: color .16s ease;
+  }
+  .tab:hover { color: var(--accent); }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab-intro { font-size: 13.5px; color: var(--ink-3); margin: 0 0 14px; }
+
+  /* ============================================================
+     FILTER TOOLBAR -- the Digest tab's one sticky element (search,
+     Range/Jurisdiction/Category chips, and a conditional applied-filters
+     strip), replacing a collapsible sidebar that could get stuck hidden.
+     ============================================================ */
+  .filter-toolbar {
     position: sticky; top: 0; z-index: 30;
     background: var(--bg);
-  }
-  html[data-theme="matrix"] .sticky-bar { background: rgba(2,9,4,.97); }
-  .tabs {
-    display: flex; gap: 2px;
-    padding-top: 14px;
+    padding: 14px 0 10px;
     border-bottom: 1px solid var(--border);
   }
-  .toolbar {
-    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
+  html[data-theme="matrix"] .filter-toolbar { background: rgba(2,9,4,.97); }
+  .toolbar-row { display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; }
+  .toolbar-row + .toolbar-row { margin-top: 10px; }
+  .tb-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tb-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--ink-3);
   }
+  .filter-toolbar .chip { min-height: 32px; font-size: 13px; padding: 0 12px; }
+  .applied-strip {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    font-size: 13px; color: var(--ink-3);
+  }
+  .applied-strip .strip-count { font-variant-numeric: tabular-nums; }
+  .applied-strip .fchip {
+    display: inline-flex; align-items: center; gap: 4px;
+    border: 1px solid var(--accent); border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent-deep); font-weight: 600;
+    padding: 3px 6px 3px 11px;
+  }
+  .applied-strip .fchip button {
+    appearance: none; border: none; background: none; cursor: pointer;
+    color: inherit; font-size: 13px; padding: 0 4px; min-height: 24px;
+  }
+  .applied-strip .strip-clear {
+    margin-left: auto;
+    appearance: none; border: none; background: none;
+    cursor: pointer; color: var(--accent); font-weight: 700;
+    font-size: 13px; min-height: 32px;
+  }
+  .applied-strip .strip-clear:hover { color: var(--accent-h); text-decoration: underline; }
+
   .font-ctrl {
     display: inline-flex; align-items: center; gap: 2px;
     border: 1px solid var(--border-2); border-radius: 999px;
@@ -338,18 +384,6 @@ try {
   @media (prefers-reduced-motion: reduce) {
     #searchInput, #searchClear { transition: none; animation: none; }
   }
-  .tab {
-    appearance: none; background: none; border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    padding: 10px 14px; min-height: 44px;
-    font-family: var(--sans); font-size: 14px; font-weight: 600;
-    color: var(--ink-3); cursor: pointer;
-    transition: color .16s ease;
-  }
-  .tab:hover { color: var(--accent); }
-  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
-  .tab-intro { font-size: 13.5px; color: var(--ink-3); margin: 0 0 14px; }
 
   /* ============================================================
      AUDIT LOG
@@ -417,9 +451,10 @@ try {
   .jumpnav a { color: var(--ink-2); font-weight: 600; }
   .jumpnav a:hover { color: var(--accent); }
   .jumpnav .jn-count { color: var(--ink-3); font-weight: 400; font-variant-numeric: tabular-nums; }
-  /* Measured sticky-bar height is ~117-127px now that it's two rows (tabs +
-     toolbar) instead of one -- 140px leaves headroom so an anchor jump never
-     lands partially hidden underneath it. */
+  /* The sticky element is now .filter-toolbar (two chip rows, plus a
+     conditional applied-filters strip) -- 140px leaves headroom so an
+     anchor jump never lands partially hidden underneath it; re-measure and
+     trim if a browser pass shows too much/too little clearance. */
   .juris-group, .card, details.brief { scroll-margin-top: 140px; }
 
   .radar, .catchup {
@@ -449,14 +484,6 @@ try {
   .catchup-item .cdate { font-size: 12px; color: var(--ink-3); }
   @media (max-width: 480px) {
     .radar-item, .catchup-item { flex-wrap: wrap; gap: 4px 10px; }
-  }
-
-  .signoff {
-    margin: 34px 0 6px; padding-top: 16px;
-    border-top: 1px solid var(--border);
-    text-align: center;
-    font-family: var(--serif); font-style: italic;
-    font-size: 14.5px; color: var(--ink-3);
   }
 
   /* ============================================================
@@ -544,24 +571,6 @@ try {
   /* ============================================================
      FILTERS
      ============================================================ */
-  .filters-sidebar { padding-top: 22px; }
-  .sidebar-toggle { display: none; } /* shown only in the wide-screen sidebar layout below */
-  .filters { padding-top: 0; }
-  .filter-label {
-    font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
-    color: var(--ink-3); margin: 0 0 9px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .clear-filter {
-    appearance: none; cursor: pointer;
-    border: 1px solid var(--accent); border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
-    color: var(--accent-deep);
-    font-family: var(--sans); font-size: 11px; font-weight: 700;
-    letter-spacing: .04em; text-transform: none;
-    padding: 3px 11px; min-height: 24px;
-  }
-  .clear-filter:hover { background: var(--accent); color: var(--bg); }
   .clear-all {
     appearance: none; cursor: pointer; margin-top: 14px;
     border: none; border-radius: 999px;
@@ -662,6 +671,11 @@ try {
   .priority-item a:hover { color: var(--accent); }
   .priority-item .psrc { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
   .priority-more { padding: 10px 14px; font-size: 12.5px; color: var(--ink-3); }
+  .priority-quiet {
+    font-size: 13.5px; color: var(--ink-3); margin: 0;
+    padding: 12px 14px; border: 1px dashed var(--border-2);
+    border-radius: 10px; background: var(--bg-2);
+  }
   @media (max-width: 480px) {
     .priority-item { flex-direction: column; gap: 3px; }
     .priority-item .pj { min-width: 0; }
@@ -740,6 +754,14 @@ try {
   }
   .sowhat .lbl { color: var(--accent-deep); font-weight: 700; font-style: italic; }
 
+  .unenriched {
+    font-size: 13.5px; font-style: italic; color: var(--ink-3);
+    margin: 0 0 12px; padding: 8px 12px;
+    border-left: 2px solid var(--border-2);
+    background: var(--bg-2);
+    border-radius: 0 8px 8px 0;
+  }
+
   .verify {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 12.5px; font-weight: 600;
@@ -805,30 +827,15 @@ try {
   /* "Last checked" (3rd column) must never wrap to two lines, whatever the
      container width -- the Note column is the one that can afford to wrap. */
   .health-table th:nth-child(3), .health-table td:nth-child(3) { white-space: nowrap; }
+  /* Source health used to break out of .wrap to render as a wider table --
+     centered on the (scrollbar-inclusive) viewport rather than on .wrap's
+     own (scrollbar-excluded) centering, which visibly misaligned its left
+     edge against every other tab's content. Dropped for consistency: all
+     four tabs now share the same .wrap width; the Note column already wraps
+     by design (see the nth-child(3) rule above) so it isn't starved for
+     room. overflow-x:auto is kept for very narrow/high-zoom cases where the
+     table still doesn't fit. */
   #tab-health { overflow-x: auto; }
-  /* Source health reads better as a wide table than the normal prose column
-     width. Breaks out of .wrap on its own (centered on the viewport, not on
-     .wrap's off-center position once wider) rather than widening .wrap
-     itself -- widening the shared container instead would shift the tab row
-     (and the just-clicked tab) sideways out from under the pointer, and
-     desync the masthead's alignment with the content below it, since the
-     masthead is a SEPARATE element that would be left at its normal width.
-     [hidden] already keeps this inert whenever the tab isn't selected. */
-  @media (min-width: 1100px) {
-    #tab-health {
-      /* `100vw` measures the real device viewport, not the zoomed-in content
-         box CSS `zoom` (see FONT SIZE below) renders into -- at any zoom
-         above 100% this overflows the page sideways. --zoom-vw is kept in
-         sync with the current zoom level by JS and used when set; 100vw is
-         only the pre-JS/no-JS fallback. */
-      width: var(--zoom-vw, 100vw); max-width: 1400px;
-      position: relative; left: 50%; transform: translateX(-50%);
-      padding: 0 20px;
-    }
-  }
-  @media (min-width: 1560px) {
-    #tab-health { max-width: 1600px; }
-  }
   .hstatus { font-weight: 700; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
   .hstatus.ok { color: var(--ok); }
   .hstatus.replaced { color: var(--warn); }
@@ -855,7 +862,7 @@ try {
     html[data-theme="matrix"] header.masthead { background: #fff !important; }
     .wordmark, .section-head h2 { text-shadow: none !important; }
     header.masthead { position: static; border-bottom: 2px solid #000; }
-    .theme-menu, .theme-toggle, .font-ctrl, .filters-sidebar, .banner, .tabs, .toolbar,
+    .theme-menu, .theme-toggle, .font-ctrl, .filter-toolbar, .banner, .tabs,
     .copycite, .copy-briefing, .jumpnav, .fresh-dot, .foot-links,
     details.brief > summary .b-caret { display: none !important; }
     /* Print everything: a hidden tab's content still belongs in the PDF. */
@@ -875,51 +882,28 @@ try {
     .wrap { max-width: 100%; padding: 0; }
   }
 
+  /* .mast-controls now holds the section tabs plus the font-size control and
+     theme picker -- wrap it onto its own full-width row once the masthead
+     gets tight, rather than letting everything crowd onto one line. */
+  @media (max-width: 720px) {
+    .mast-inner { flex-wrap: wrap; }
+    .mast-controls { flex-basis: 100%; justify-content: flex-start; }
+  }
   @media (max-width: 480px) {
     .wordmark { font-size: 24px; }
     .card h4 { font-size: 18px; }
+    .tab { font-size: 12px; padding: 4px 6px; min-height: 32px; }
   }
 
   /* ============================================================
      WIDE / DESKTOP — a phone-width column wastes a laptop screen.
      Same content, spread across the viewport: cards flow into a
-     2-column grid (3 on very wide screens), and filters move to a
-     slim sticky left rail (vertical, not the old shared row) so the
-     content column keeps most of the width.
+     2-column grid (3 on very wide screens); the filter toolbar and
+     masthead tabs stay full-width rows and simply get more breathing
+     room from the wider .wrap.
      ============================================================ */
   @media (min-width: 1100px) {
     .wrap, .mast-inner, .disclaimer-line { max-width: 1200px; }
-    .digest-layout { display: flex; align-items: flex-start; gap: 28px; }
-    .digest-main { flex: 1 1 0; min-width: 0; }
-    .filters-sidebar {
-      flex: 0 0 190px; width: 190px;
-      position: sticky; top: 128px; align-self: flex-start;
-      border: 1px solid var(--border); border-radius: 10px;
-      background: var(--bg-2); padding: 16px;
-      transition: flex-basis .22s ease, width .22s ease, padding .22s ease;
-    }
-    .sidebar-toggle {
-      display: flex; align-items: center; gap: 7px; width: 100%;
-      appearance: none; cursor: pointer; border: none; background: none;
-      margin-bottom: 14px; padding: 0;
-      font-family: var(--sans); font-size: 12.5px; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2);
-    }
-    .sidebar-toggle:hover { color: var(--accent); }
-    .sidebar-badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-width: 17px; height: 17px; padding: 0 4px;
-      border-radius: 999px; background: var(--accent); color: #fff;
-      font-size: 10.5px; font-weight: 700;
-    }
-    .sidebar-badge[hidden] { display: none; }
-    /* Collapsed: a slim icon-only rail that reclaims the width for
-       content -- triggered by scroll (see the sidebarToggle JS), not a
-       fixed reader preference, so it never needs remembering. */
-    .filters-sidebar.collapsed { flex-basis: 46px; width: 46px; padding: 16px 8px; }
-    .filters-sidebar.collapsed .sidebar-toggle { flex-direction: column; justify-content: center; margin-bottom: 0; }
-    .filters-sidebar.collapsed .sidebar-toggle-label { display: none; }
-    .filters-sidebar.collapsed .filters { display: none; }
     /* Top of mind stays a compact card at a fixed width; Priority takes
        the rest -- both top-aligned since one is a short callout and the
        other a capped 5-row list, not meant to match height. */
@@ -982,6 +966,12 @@ try {
       <p class="mast-meta" id="mast-scope"></p>
     </div>
     <div class="mast-controls">
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button class="tab" type="button" role="tab" id="tabbtn-digest" data-tab="digest" aria-selected="true" aria-controls="tab-digest">Digest</button>
+        <button class="tab" type="button" role="tab" id="tabbtn-health" data-tab="health" aria-selected="false" aria-controls="tab-health">Source health</button>
+        <button class="tab" type="button" role="tab" id="tabbtn-audit" data-tab="audit" aria-selected="false" aria-controls="tab-audit">Audit log</button>
+        <button class="tab" type="button" role="tab" id="tabbtn-about" data-tab="about" aria-selected="false" aria-controls="tab-about">About &amp; method</button>
+      </nav>
       <div class="font-ctrl" role="group" aria-label="Text size">
         <button type="button" id="fontDec" aria-label="Decrease text size">A−</button>
         <button type="button" id="fontReset" aria-label="Reset text size to default">Reset</button>
@@ -1005,58 +995,44 @@ try {
 </header>
 
 <main class="wrap">
-  <div class="sticky-bar">
-    <nav class="tabs" role="tablist" aria-label="Sections">
-      <button class="tab" type="button" role="tab" id="tabbtn-digest" data-tab="digest" aria-selected="true" aria-controls="tab-digest">Digest</button>
-      <button class="tab" type="button" role="tab" id="tabbtn-health" data-tab="health" aria-selected="false" aria-controls="tab-health">Source health</button>
-      <button class="tab" type="button" role="tab" id="tabbtn-audit" data-tab="audit" aria-selected="false" aria-controls="tab-audit">Audit log</button>
-      <button class="tab" type="button" role="tab" id="tabbtn-about" data-tab="about" aria-selected="false" aria-controls="tab-about">About &amp; method</button>
-    </nav>
-    <div class="toolbar" id="toolbar">
-      <div class="search-wrap">
-        <button type="button" class="search-toggle" id="searchBtn" aria-expanded="false" aria-controls="searchInput" aria-label="Search past digest items">
-          <span aria-hidden="true">🔍</span> Search
-        </button>
-        <input type="search" id="searchInput" placeholder="Search past items…" aria-label="Search past digest items" tabindex="-1">
-        <button type="button" id="searchClear" aria-label="Close search" tabindex="-1">✕</button>
-      </div>
-    </div>
-  </div>
-
   <div id="tab-digest" role="tabpanel" aria-labelledby="tabbtn-digest">
-    <div class="digest-layout">
-      <aside class="filters-sidebar" id="filtersSidebar">
-        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-expanded="true" aria-controls="filtersBody">
-          <span aria-hidden="true">▤</span> <span class="sidebar-toggle-label">Filters</span>
-          <span class="sidebar-badge" id="sidebarToggleBadge" hidden></span>
-        </button>
-        <section class="filters" id="filtersBody" aria-label="Filters">
-          <div class="filter-group range-row">
-            <p class="filter-label">Range</p>
-            <div class="chips" id="rangeChips"></div>
-          </div>
-          <div class="filter-group">
-            <p class="filter-label">Jurisdiction <button type="button" class="clear-filter" data-clear="juris" hidden>✕ Clear</button></p>
-            <div class="chips" id="jurisChips"></div>
-          </div>
-          <div class="filter-group bucket-row">
-            <p class="filter-label">Category <button type="button" class="clear-filter" data-clear="bucket" hidden>✕ Clear</button></p>
-            <div class="chips" id="bucketChips"></div>
-          </div>
-        </section>
-      </aside>
-
-      <div class="digest-main">
-        <div id="banner-slot"></div>
-        <div class="tom-priority-row">
-          <div id="topmind-slot"></div>
-          <div id="priority-slot"></div>
+    <div class="filter-toolbar" id="filterToolbar">
+      <div class="toolbar-row" id="toolbar">
+        <div class="search-wrap">
+          <button type="button" class="search-toggle" id="searchBtn" aria-expanded="false" aria-controls="searchInput" aria-label="Search past digest items">
+            <span aria-hidden="true">🔍</span> Search
+          </button>
+          <input type="search" id="searchInput" placeholder="Search past items…" aria-label="Search past digest items" tabindex="-1">
+          <button type="button" id="searchClear" aria-label="Close search" tabindex="-1">✕</button>
         </div>
-        <div id="jumpnav-slot"></div>
-        <div id="radar-slot"></div>
-        <div id="catchup-slot"></div>
-        <div id="feed"></div>
+        <div class="tb-group range-row">
+          <span class="tb-label" id="rangeLbl">Range</span>
+          <div class="chips" id="rangeChips" role="group" aria-labelledby="rangeLbl"></div>
+        </div>
       </div>
+      <div class="toolbar-row">
+        <div class="tb-group">
+          <span class="tb-label" id="jurisLbl">Jurisdiction</span>
+          <div class="chips" id="jurisChips" role="group" aria-labelledby="jurisLbl"></div>
+        </div>
+        <div class="tb-group bucket-row">
+          <span class="tb-label" id="bucketLbl">Category</span>
+          <div class="chips" id="bucketChips" role="group" aria-labelledby="bucketLbl"></div>
+        </div>
+      </div>
+      <div class="applied-strip" id="appliedStrip" hidden></div>
+    </div>
+
+    <div class="digest-main">
+      <div id="banner-slot"></div>
+      <div class="tom-priority-row">
+        <div id="topmind-slot"></div>
+        <div id="priority-slot"></div>
+      </div>
+      <div id="jumpnav-slot"></div>
+      <div id="radar-slot"></div>
+      <div id="catchup-slot"></div>
+      <div id="feed"></div>
     </div>
   </div>
 
@@ -1085,10 +1061,10 @@ try {
     <div class="about-body">
       <h3>What this is</h3>
       <p>A self-maintaining daily digest of digital-asset regulatory and market developments,
-      curated for a financial-crime-compliance readership with a Hong Kong and mainland China
-      focus, then the United States, the European Union, Singapore and global standard-setters.
-      It is AI-sourced and AI-generated: an automated pipeline fetches the sources each weekday
-      morning, and a language model writes the plain-English summaries and implications.
+      written for financial-crime-compliance readers at international banks, covering major
+      regulatory jurisdictions and global standard-setters worldwide. It is AI-sourced and
+      AI-generated: an automated pipeline fetches the sources each weekday morning, and a
+      language model writes the plain-English summaries and implications.
       <strong>Verify against the linked official sources before acting — this page is
       aggregation, not advice.</strong></p>
 
@@ -1301,6 +1277,8 @@ function matchesFilters(it) {
   if (state.bucket !== "ALL" && !BUCKETS[state.bucket].types.includes(it.type)) return false;
   return true;
 }
+const matchesSearch = (it, q) =>
+  `${it.title} ${it.summary} ${it.so_what} ${it.source}`.toLowerCase().includes(q);
 /* Bucketing uses first_seen (the HKT date this run first ingested the item),
    not published -- overnight US/EU items are frequently published on the
    prior HKT calendar day and would otherwise be misfiled into the archive
@@ -1381,27 +1359,42 @@ function renderChips() {
   jc.querySelectorAll("[data-juris]").forEach(b => b.onclick = () => { state.juris = b.dataset.juris; saveFilters(); pendingFocus = ["data-juris", b.dataset.juris]; render(); });
   bc.querySelectorAll("[data-bucket]").forEach(b => b.onclick = () => { state.bucket = b.dataset.bucket; saveFilters(); pendingFocus = ["data-bucket", b.dataset.bucket]; render(); });
 
-  // The obvious way out of a filtered view: per-group "✕ Clear" buttons,
-  // visible only while that dimension is actually filtering.
-  document.querySelectorAll(".clear-filter").forEach(b => {
-    b.hidden = state[b.dataset.clear] === "ALL";
-  });
+  renderAppliedStrip();
 
-  // Collapsed-rail badge: a count so a reader who scrolled past the
-  // sidebar still knows filters are active, not just hidden away.
-  const activeFilterCount = (state.juris !== "ALL" ? 1 : 0) + (state.bucket !== "ALL" ? 1 : 0);
-  const badge = document.getElementById("sidebarToggleBadge");
-  badge.textContent = activeFilterCount || "";
-  badge.hidden = !activeFilterCount;
-
-  // renderChips() rebuilds these buttons via innerHTML, which drops keyboard
-  // focus to <body> and loses the user's place. Restore focus to the chip that
-  // was just activated so a keyboard user stays on their control.
+  // renderChips() (and renderAppliedStrip() above) rebuild these buttons via
+  // innerHTML, which drops keyboard focus to <body> and loses the user's
+  // place. Restore focus to the chip/control that was just activated -- this
+  // must run last, after every innerHTML rebuild in this function.
   if (pendingFocus) {
     const el = document.querySelector(`[${pendingFocus[0]}="${pendingFocus[1]}"]`);
     if (el) el.focus({ preventScroll: true });
     pendingFocus = null;
   }
+}
+
+/* Applied-filters strip: shows a live "N of M items" count plus one
+   removable chip per active dimension (jurisdiction, category, search --
+   never range, which always has a value), and a persistent "Clear filters"
+   button. Replaces the old per-group "✕ Clear" pills and the sidebar's
+   collapsed-rail badge with one always-visible, unambiguous control -- this
+   IS the "clear function" the reader asked to be made more prominent. */
+function renderAppliedStrip() {
+  const strip = document.getElementById("appliedStrip");
+  const q = state.search.trim();
+  const dims = [];
+  if (state.juris !== "ALL") dims.push({ key: "juris", label: JURIS_FULL[state.juris] });
+  if (state.bucket !== "ALL") dims.push({ key: "bucket", label: BUCKETS[state.bucket].label });
+  if (q) dims.push({ key: "search", label: `“${q}”` });
+  if (!dims.length) { strip.hidden = true; strip.innerHTML = ""; return; }
+  const pool = rangeItems(state.range);
+  const ql = q.toLowerCase();
+  const shown = pool.filter(matchesFilters).filter(it => !ql || matchesSearch(it, ql));
+  strip.hidden = false;
+  strip.innerHTML =
+    `<span class="strip-count">${shown.length} of ${pool.length} item${pool.length !== 1 ? "s" : ""}</span>` +
+    dims.map(d => `<span class="fchip">${esc(d.label)}
+       <button type="button" data-unset="${d.key}" aria-label="Remove filter: ${esc(d.label)}">✕</button></span>`).join("") +
+    `<button type="button" class="strip-clear" data-clear="all">Clear filters (${dims.length})</button>`;
 }
 
 /* Source-health degradation is NOT surfaced as a Digest-tab warning banner --
@@ -1453,8 +1446,7 @@ function cardHTML(it) {
       ${pill}
     </div>
     <h4><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}<span class="ext" aria-hidden="true">↗</span></a></h4>
-    <p class="summary">${esc(it.summary)}</p>
-    <p class="sowhat"><span class="lbl">→ So what:</span> ${esc(it.so_what)}</p>
+    ${unenrichedOrSummaryHTML(it)}
     ${verifyDetails(it.verification, it)}
   </article>`;
 }
@@ -1463,10 +1455,35 @@ function cardHTML(it) {
    Normal-priority market news reads as a one-line expandable row: 22 pieces
    of market chatter must not carry the same visual weight as a sanctions
    designation. The full summary / so-what / badge sit inside the disclosure.
-   Official-tier statements (verification level "official") always keep a
-   full card, whatever their type -- a regulator speaking is never chatter. */
-const isBrief = it => it.type === "news" && it.priority !== "high"
-  && (it.verification || {}).level !== "official";
+   Tiering is decided ONLY by editorial signals (type + priority) --
+   verification level is a provenance claim (who published it), not a
+   materiality judgment: every Hong Kong source happens to be tier:"official"
+   in data/sources.json, so exempting "official" verification here used to
+   give every HK item a blanket full card regardless of substance. Material
+   regulator output still always gets a full card via its type
+   (enforcement/final_rule/guidance/consultation/speech/designation/
+   licensing/peer_move are never "news") or via priority:"high" (including
+   the deliberate HK/mainland-China materiality boost in the classification
+   rules) -- so nothing material loses weight, only routine "news"+"normal"
+   items from an official source no longer get padded into a full card
+   purely because of their source's tier. */
+const isBrief = it => it.type === "news" && it.priority !== "high";
+
+/* Keyless/fallback enrichment publishes summary === title and a boilerplate
+   so_what (see scripts/summarise.py's fallback and CLAUDE.md's own
+   needs-enrichment detector) -- render that state as one honest line
+   instead of printing the same sentence twice (title, then a "summary"
+   that's just the title again). */
+const isUnenriched = it => it.summary === it.title
+  || (it.so_what || "").startsWith("Review the source directly");
+function unenrichedOrSummaryHTML(it) {
+  if (isUnenriched(it)) {
+    return `<p class="unenriched">No AI summary yet — this card shows the raw source headline. Read the linked source for details.</p>`;
+  }
+  return `<p class="summary">${esc(it.summary)}</p>
+    <p class="sowhat"><span class="lbl">→ So what:</span> ${esc(it.so_what)}</p>`;
+}
+
 function briefHTML(it) {
   return `<details class="brief${READ.has(it.id) ? " is-read" : ""}" id="${esc(it.id)}" data-id="${esc(it.id)}">
     <summary>
@@ -1475,8 +1492,7 @@ function briefHTML(it) {
       <span class="b-meta">${esc(it.source.split("—")[0].trim())} · ${fmtCardDate(it.published)}${discoveryNote(it)}</span>
     </summary>
     <div class="brief-body">
-      <p class="summary">${esc(it.summary)}</p>
-      <p class="sowhat"><span class="lbl">→ So what:</span> ${esc(it.so_what)}</p>
+      ${unenrichedOrSummaryHTML(it)}
       <a href="${esc(it.url)}" target="_blank" rel="noopener">Read at the source <span class="ext" aria-hidden="true">↗</span></a>
       · <button class="copycite" type="button" data-cite="${esc(it.id)}">Copy cite</button>
       <div>${verifyDetails(it.verification, it)}</div>
@@ -1499,11 +1515,31 @@ const PRIORITY_MAX_AGE_DAYS = 7;
 function renderPriority(items) {
   const slot = document.getElementById("priority-slot");
   // A month-old story is not a priority whatever its rating -- the strip only
-  // admits items published in the last 7 days (older ones stay in the feed).
+  // admits items first seen (or published) in the last 7 days (older ones
+  // stay in the feed). first_seen||published matches rangeItems/
+  // discoveryNote's own fallback, so a delayed-publication item visible in
+  // Today's feed can't be silently excluded here by a field mismatch.
   const genMs = new Date(DIGEST.generated_at).getTime();
-  const fresh = it => genMs - new Date(it.published).getTime() <= PRIORITY_MAX_AGE_DAYS * 86400000;
+  const fresh = it => genMs - new Date(it.first_seen || it.published).getTime() <= PRIORITY_MAX_AGE_DAYS * 86400000;
   const high = items.filter(it => it.priority === "high" && fresh(it));
-  if (!high.length) { slot.innerHTML = ""; return; }
+  if (!high.length) {
+    // "Today" is an exact HKT-calendar-day match -- a much narrower pool
+    // than the rolling 7/30-day windows -- so a quiet morning legitimately
+    // has nothing here even when the same high-priority items still qualify
+    // under Last 7 days. A silently blank block reads as broken, not quiet:
+    // say so, and point at the week's items if any exist. Never fabricate or
+    // promote a non-priority item to fill the gap.
+    if (state.range === "today" && state.juris === "ALL" && state.bucket === "ALL") {
+      const weekHigh = rangeItems("7").filter(it => it.priority === "high" && fresh(it)).length;
+      slot.innerHTML = `<div class="section-head"><h2>Priority</h2><span class="rule"></span></div>
+        <p class="priority-quiet">No high-priority items so far today.${weekHigh
+          ? ` ${weekHigh} from the last 7 days ${weekHigh > 1 ? "are" : "is"} still open — <button type="button" class="linklike" data-set-range="7">show Last 7 days</button>.`
+          : " The wire is quiet."}</p>`;
+    } else {
+      slot.innerHTML = "";
+    }
+    return;
+  }
   // Round-robin across jurisdictions (HK/CN first per the reader's lens,
   // newest first within each) -- a single busy regulator must not evict
   // every other jurisdiction's high-priority items from the capped strip.
@@ -1539,7 +1575,6 @@ function renderPriority(items) {
 // "Today" and the old collapsed "Last 7 days" disclosure are ONE feed now,
 // scoped by the range chips (see RANGE_ORDER/rangeItems) -- no separate
 // expand-to-see-older-items step.
-const RANGE_WIRE = { today: "today's", "7": "the last 7 days'", "30": "the last 30 days'", all: "the full history's" };
 const RANGE_QUIET_LABEL = {
   today: "Quiet day — no new items", "7": "No items in the last 7 days",
   "30": "No items in the last 30 days", all: "No items yet",
@@ -1579,12 +1614,10 @@ function renderFeed(items) {
       </div>` : ""}
     </section>`;
   });
-  // Finite-briefing sign-off: the completion contract of a daily ritual.
-  const filtered = state.juris !== "ALL" || state.bucket !== "ALL";
-  const nSources = DIGEST.source_health.filter(s => s.name !== "Claude summarisation").length;
-  html += `<p class="signoff">${filtered
-    ? `— End of matching items · ${items.length} shown · <button type="button" class="linklike" data-clear="all">clear filters</button> to see all ${rangeScope.length} —`
-    : `— End of ${RANGE_WIRE[state.range]} wire · ${items.length} item${items.length > 1 ? "s" : ""} from ${nSources} monitored sources · updated each weekday morning, Hong Kong time —`}</p>`;
+  // No end-of-feed sign-off: it was a leftover completion flourish from
+  // before Today/7/30-day were merged into one continuous filterable feed,
+  // and its "N shown, clear filters" content is now covered live by the
+  // filter toolbar's own applied-filters strip (see renderAppliedStrip).
   feed.innerHTML = html;
 }
 
@@ -1602,7 +1635,7 @@ function renderSearchResults() {
   const feed = document.getElementById("feed");
   const q = state.search.trim().toLowerCase();
   const matches = rangeItems(state.range).filter(matchesFilters)
-    .filter(it => `${it.title} ${it.summary} ${it.so_what} ${it.source}`.toLowerCase().includes(q))
+    .filter(it => matchesSearch(it, q))
     .sort((a, b) => new Date(b.published) - new Date(a.published));
   const scopeNote = (state.juris !== "ALL" || state.bucket !== "ALL" || state.range !== "today")
     ? ` within ${esc(RANGE_LABEL[state.range])}${state.juris !== "ALL" ? ` · ${esc(JURIS_FULL[state.juris])}` : ""}${state.bucket !== "ALL" ? ` · ${esc(BUCKETS[state.bucket].label)}` : ""}`
@@ -1702,8 +1735,10 @@ function renderJumpnav(items) {
     .map(j => [j, items.filter(it => it.jurisdiction === j).length])
     .filter(([, n]) => n > 0)
     .map(([j, n]) => `<a href="#jsec-${esc(j)}">${esc(JURIS_FULL[j])}</a> <span class="jn-count">${n}</span>`);
+  // The feed's own section header directly below already names the active
+  // range ("Last 7 days · by jurisdiction"), so this doesn't repeat it.
   slot.innerHTML = parts.length > 1
-    ? `<p class="jumpnav">On ${RANGE_WIRE[state.range]} wire: ${parts.join(" · ")}</p>` : "";
+    ? `<p class="jumpnav">In this view: ${parts.join(" · ")}</p>` : "";
 }
 
 /* ---------- on the radar: forward-looking deadlines ---------- */
@@ -1860,11 +1895,19 @@ function briefingStrings() {
       // A per-item date matters here specifically because the range selector
       // can make this a multi-day briefing -- without it, a week-old item is
       // textually indistinguishable from one published this morning once
-      // pasted into an email.
+      // pasted into an email. An unenriched item's "summary" is just its
+      // title again (see isUnenriched) -- say so once instead of pasting the
+      // same sentence twice into the briefing.
+      const body = isUnenriched(it)
+        ? ["  No AI summary yet — see the source link."]
+        : [`  ${it.summary}`, `  So what: ${it.so_what}`];
+      const hbody = isUnenriched(it)
+        ? `<em>No AI summary yet — see the source link.</em>`
+        : `${esc(it.summary)}<br><em>So what:</em> ${esc(it.so_what)}`;
       lines.push(`• ${it.title} — ${fmtCardDate(it.published)}${it.priority === "high" ? " [HIGH PRIORITY]" : ""}`,
-                 `  ${it.summary}`, `  So what: ${it.so_what}`,
+                 ...body,
                  `  ${(it.verification.level || "").replace("_", " ")} · ${it.url}`);
-      hparts.push(`<li><strong>${esc(it.title)}</strong> — ${esc(fmtCardDate(it.published))}${it.priority === "high" ? " <em>[high priority]</em>" : ""}<br>${esc(it.summary)}<br><em>So what:</em> ${esc(it.so_what)}<br><a href="${esc(it.url)}">${esc(it.url)}</a></li>`);
+      hparts.push(`<li><strong>${esc(it.title)}</strong> — ${esc(fmtCardDate(it.published))}${it.priority === "high" ? " <em>[high priority]</em>" : ""}<br>${hbody}<br><a href="${esc(it.url)}">${esc(it.url)}</a></li>`);
     });
     hparts.push(`</ul>`);
   });
@@ -1896,10 +1939,9 @@ function render() {
   renderChips();
   renderFreshness();
   renderScope();
-  updateSidebarCollapse();
   // Top of mind is a "what matters overall" summary -- irrelevant once the
-  // reader has narrowed to a specific query, so it (and the filters sidebar,
-  // via updateSidebarCollapse above) steps out of the way during search.
+  // reader has narrowed to a specific query, so it steps out of the way
+  // during search (the filter toolbar itself always stays visible now).
   if (state.search.trim()) {
     document.getElementById("topmind-slot").innerHTML = "";
     renderSearchResults();
@@ -2058,20 +2100,9 @@ let fontStepIdx = FONT_STEPS.indexOf(100);
 const fontDecBtn = document.getElementById("fontDec");
 const fontIncBtn = document.getElementById("fontInc");
 const fontResetBtn = document.getElementById("fontReset");
-function updateZoomSafeViewportWidth() {
-  // window.innerWidth reports the real, unzoomed device viewport regardless
-  // of document.documentElement.style.zoom -- dividing by the zoom fraction
-  // converts it into the zoomed context's own local CSS-px viewport width,
-  // which is what a breakout element measured from inside that context
-  // actually needs (see #tab-health's `100vw` overflow-at-zoom comment).
-  const pct = FONT_STEPS[fontStepIdx];
-  document.documentElement.style.setProperty("--zoom-vw", (window.innerWidth / (pct / 100)) + "px");
-}
-window.addEventListener("resize", updateZoomSafeViewportWidth, { passive: true });
 function applyFontScale() {
   const pct = FONT_STEPS[fontStepIdx];
   document.documentElement.style.zoom = pct + "%";
-  updateZoomSafeViewportWidth();
   const atMin = fontStepIdx === 0, atMax = fontStepIdx === FONT_STEPS.length - 1;
   // Disabling a focused button silently drops focus to <body> with no
   // visible indication of where it went -- move it to Reset first (always
@@ -2142,48 +2173,14 @@ searchInput.addEventListener("keydown", e => { if (e.key === "Escape") closeSear
 document.addEventListener("click", e => {
   if (isSearchOpen() && !e.target.closest(".search-wrap") && !searchInput.value.trim()) closeSearch();
 });
-
-/* ============================================================
-   FILTERS SIDEBAR -- collapses to a slim icon rail once the reader
-   scrolls past it, or as soon as a search is active (desktop only; the
-   CSS gates .collapsed to the wide-screen sidebar layout, so this is a
-   harmless no-op on mobile). `sidebarOverride` lets a manual click hold
-   the opposite of whatever this would otherwise auto-pick -- e.g. to
-   change a filter mid-search without closing search first -- but only
-   until the reader scrolls back near the top, so a stale "I reopened it
-   once" choice doesn't outlive the reason it was made.
-   ============================================================ */
-const filtersSidebar = document.getElementById("filtersSidebar");
-const sidebarToggle = document.getElementById("sidebarToggle");
-const SIDEBAR_COLLAPSE_SCROLL_Y = 120;
-let sidebarOverride = null; // null = auto (scroll/search-driven); true/false = forced open/closed
-function updateSidebarCollapse() {
-  // Collapsing sets .filters to display:none, which yanks focus out from
-  // under a keyboard user mid-Tab if it's currently on a chip inside the
-  // sidebar (the browser drops it to <body> with no way back in) -- a
-  // scroll caused by the browser's own focus-follow auto-scroll must never
-  // trigger the auto-collapse it would otherwise apply. This only guards
-  // the automatic scroll-driven path; an explicit sidebarToggle click
-  // still collapses on request even with focus inside.
-  if (document.activeElement && filtersSidebar.contains(document.activeElement)) return;
-  const autoCollapse = window.scrollY > SIDEBAR_COLLAPSE_SCROLL_Y || !!state.search.trim();
-  const collapsed = sidebarOverride !== null ? !sidebarOverride : autoCollapse;
-  filtersSidebar.classList.toggle("collapsed", collapsed);
-  sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
-}
-window.addEventListener("scroll", () => {
-  if (window.scrollY < 40) sidebarOverride = null;
-  requestAnimationFrame(updateSidebarCollapse);
-}, { passive: true });
-// Once focus leaves the sidebar (Tab/Shift+Tab out, or a click elsewhere),
-// re-evaluate immediately so a since-passed scroll threshold still collapses
-// it -- the guard above only defers the decision, it doesn't cancel it.
-filtersSidebar.addEventListener("focusout", () => requestAnimationFrame(updateSidebarCollapse));
-sidebarToggle.onclick = () => {
-  sidebarOverride = filtersSidebar.classList.contains("collapsed");
-  updateSidebarCollapse();
-};
-updateSidebarCollapse();
+// "/" focuses search from anywhere on the page, as long as the reader isn't
+// already typing into some other field.
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && !isSearchOpen() && !e.target.closest("input, textarea")) {
+    e.preventDefault();
+    openSearch();
+  }
+});
 
 /* ---------- print: a closed <details> won't expand via CSS alone ---------- */
 let printOpened = [];
@@ -2201,11 +2198,30 @@ window.addEventListener("afterprint", () => {
 
 /* ---------- delegated interactions ---------- */
 document.addEventListener("click", e => {
-  // Clear filters (per-group buttons, empty-state button, sign-off link)
+  // Clear filters -- applied-strip's "Clear filters (N)", the zero-results
+  // empty-state button. Also closes an active search, since the applied
+  // strip counts search as one of the cleared dimensions.
   const clr = e.target.closest("[data-clear]");
   if (clr) {
-    if (clr.dataset.clear !== "bucket") state.juris = "ALL";
-    if (clr.dataset.clear !== "juris") state.bucket = "ALL";
+    state.juris = "ALL"; state.bucket = "ALL";
+    saveFilters();
+    if (isSearchOpen()) closeSearch(); else render();
+    return;
+  }
+  // Remove one applied-strip chip at a time (jurisdiction, category, or
+  // search) -- pendingFocus lands the keyboard user on the matching "All"
+  // chip since the removed strip chip no longer exists after the rebuild.
+  const unset = e.target.closest("[data-unset]");
+  if (unset) {
+    if (unset.dataset.unset === "juris") { state.juris = "ALL"; pendingFocus = ["data-juris", "ALL"]; saveFilters(); render(); }
+    else if (unset.dataset.unset === "bucket") { state.bucket = "ALL"; pendingFocus = ["data-bucket", "ALL"]; saveFilters(); render(); }
+    else if (unset.dataset.unset === "search") { closeSearch(); }
+    return;
+  }
+  // Range shortcut (e.g. the quiet-Priority "show Last 7 days" link)
+  const rangeBtn = e.target.closest("[data-set-range]");
+  if (rangeBtn) {
+    state.range = rangeBtn.dataset.setRange;
     saveFilters(); render();
     return;
   }
