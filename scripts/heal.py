@@ -64,13 +64,14 @@ def _validate_candidate(source, candidate):
     items, error, _ = fetch_source(synthetic, require_relevant=False)
     if error is not None or not items:
         return False
-    # A no-selector "page" candidate scrapes every bare <a> on the page, so
-    # almost ANY homepage would "validate" -- and a wrong heal is permanent
-    # and invisible. Demand at least one topically relevant item in that mode:
-    # a fair bar for a replacement of a digital-asset source.
-    if synthetic["kind"] == "page" and not synthetic.get("selector"):
-        return any(is_relevant(it["title"], it.get("summary", "")) for it in items)
-    return True
+    # Liveness (a fetch that returns SOME items) is not enough for any
+    # non-register kind -- a live-but-wrong feed or a selector that happens to
+    # match a different, unrelated section of a page would "validate" under a
+    # liveness-only check, and a wrong heal is permanent and invisible. Demand
+    # at least one topically relevant item, the same bar the no-selector
+    # "page" case already applied -- a fair floor for a replacement of a
+    # digital-asset source regardless of kind or selector presence.
+    return any(is_relevant(it["title"], it.get("summary", "")) for it in items)
 
 
 def _find_replacement(source):
