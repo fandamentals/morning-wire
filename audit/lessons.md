@@ -165,37 +165,45 @@ to work from rather than needing to re-run the same audit from scratch.
   (`sanitize_crashed`), printed as an explicit FAILED line saying the output
   is not proof of anything, and forces a non-zero exit. Verified: the normal
   (non-crashing) path still prints "zero unexpected item loss" and exits 0.
-- **Still open:** `verify.py`'s corroboration prompt embeds attacker-
-  influenceable `title`/`summary` text verbatim into a Claude prompt with
-  web-search access; a crafted feed item could attempt to induce a false
-  "confirmed" corroboration. The same-publisher domain check was hardened
-  this session (subdomain relationships now correctly detected, closing the
-  most likely FALSE-corroboration vector), but the underlying
-  "attacker-influenced content reaches a prompt that can mint a public trust
-  badge" shape remains and deserves a closer look (e.g. requiring the
-  confirming source to be independently web-searched for, never merely
-  accepted from the same response that read the original item).
-- **Still open:** `scripts/heal.py` validates a candidate replacement source
-  on liveness alone (an actual fetch succeeds) for feed-kind sources; only
-  page-kind sources with a selector get a relevance check. A live-but-wrong
-  feed could self-heal in undetected.
+- **Fixed (2026-07-08, formally closed out 2026-07-09):** `verify.py`'s
+  corroboration prompt embedded attacker-influenceable `title`/`summary` text
+  verbatim into a Claude prompt with web-search access; a crafted feed item
+  could attempt to induce a false "confirmed" corroboration. Commit `8f92cf5`
+  delimited the untrusted fields explicitly in the prompt (instructing the
+  model to treat embedded text as inert data, never instructions) and, more
+  importantly, made the model's claimed confirming URL count for nothing on
+  its own — it must now match one of the actual `web_search_tool_result`
+  blocks the API returned for that same call, which a prompt injection in the
+  original item cannot forge. That commit shipped without a red fixture, so
+  per this file's own STATUS convention it was never actually closed out
+  until now: `scripts/audit_checks/fixtures/test_l3_still_open_items.py`
+  proves a claimed-but-not-actually-searched URL is rejected (red) and a
+  claimed URL backed by a real search result is accepted (green).
+- **Fixed (2026-07-09):** `scripts/heal.py`'s `_validate_candidate` validated
+  a candidate replacement source on liveness alone (an actual fetch
+  succeeds) for feed-kind sources, and for page-kind sources WITH a selector
+  — only no-selector page candidates got a relevance check. A live-but-wrong
+  feed, or a selector matching the wrong section of a page, could self-heal
+  in undetected. Now every non-register kind requires at least one topically
+  relevant item, closing both gaps with one change. Red/green proof in
+  `scripts/audit_checks/fixtures/test_l3_still_open_items.py`.
 - **Still open, low priority:** `.github/workflows/*.yml` pin third-party
   actions (`actions/checkout`, `actions/setup-python`, etc.) to mutable
   major-version tags, not commit SHAs — standard supply-chain hardening
   advice, low urgency here since these are all first-party GitHub actions,
   but worth doing eventually.
 
-**CHECK:** none of the still-open items have a red-fixture-backed check yet.
+**CHECK:** `scripts/audit_checks/fixtures/test_l3_still_open_items.py` covers
+both newly-fixed items with red/green assertions. The workflow-SHA-pinning
+item remains untouched with no check.
 
-**RULE:** none yet for the still-open items — these remain findings to
-triage, not absorbed rules. A future session (this or the next weekly audit)
-should pick one, build the red-fixture check, and move it into its own
-lesson with STATUS `absorbed`.
+**RULE:** none yet for the still-open workflow-SHA-pinning item — a future
+session should pick it up, on a branch + PR as usual.
 
-**STATUS:** partially absorbed — 2 of 5 items fixed and verified (no
-detection-logic red fixture needed for either, per the reasoning above); the
-remaining 3 (verify.py prompt-injection design, heal.py relevance validation,
-workflow SHA pinning) are still open.
+**STATUS:** partially absorbed — 4 of 5 items fixed and verified (the first
+2 needed no detection-logic red fixture per the reasoning above; the
+verify.py and heal.py items now have one in `test_l3_still_open_items.py`);
+only workflow SHA pinning remains open, and it is low priority.
 
 ---
 
