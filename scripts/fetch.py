@@ -354,6 +354,96 @@ def _extract_page_items(html, base_url, selector=None, href_pattern=None):
     return items
 
 
+_LOC_RE = re.compile(r"<loc>([^<]+)</loc>")
+_ARTICLE_DATE_RE = re.compile(
+    r"\d{1,2}\s+\w+\s+\d{4}|\w+\s+\d{1,2},\s+\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4}"
+)
+
+
+def _extract_sitemap_urls(xml_text, href_pattern, cap=60):
+    """Pull candidate article URLs straight out of a sitemap.xml -- for a
+    listing page whose article links only ever appear after client-side JS
+    runs (e.g. MAS's "News" page), the sitemap is the only place a plain
+    HTTP fetch can see them. A plain regex is enough (and avoids pulling in
+    an XML parser for one flat <loc> list) and href_pattern reuses the same
+    filter _extract_page_items applies, so only the listing this source
+    actually cares about (e.g. this year's media releases) is kept.
+    """
+    urls = []
+    seen = set()
+    for loc in _LOC_RE.findall(xml_text):
+        loc = loc.strip()
+        if loc in seen or not re.search(href_pattern, loc):
+            continue
+        seen.add(loc)
+        urls.append(loc)
+        if len(urls) >= cap:
+            break
+    return urls
+
+
+def _extract_article_title_date(html):
+    """Title + publish date for one article page, for sources fetched via
+    _extract_sitemap_urls. Regulator press releases bury unrelated dates deep
+    in the body (enforcement-case tables, appointment-term tables), so the
+    date search window starts at the first non-empty <h1> (the real headline,
+    as opposed to nav/menu junk earlier in the DOM) and only looks at the text
+    immediately following it -- which is where a press release's own dateline
+    ("Singapore, 1 July 2026...") lives.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    h1 = next((h for h in soup.find_all("h1") if h.get_text(strip=True)), None)
+    if h1 is None:
+        return None, None
+    title = _clean_title(h1.get_text(" ", strip=True))
+    window_parts = []
+    window_len = 0
+    for node in h1.find_all_next(string=True):
+        text = str(node).strip()
+        if not text:
+            continue
+        window_parts.append(text)
+        window_len += len(text)
+        if window_len > 2000:
+            break
+    match = _ARTICLE_DATE_RE.search(" ".join(window_parts))
+    published = _guess_date(match.group(0)) if match else None
+    return title, published
+
+
+def _fetch_sitemap_items(sitemap_url, href_pattern):
+    """Fallback for a "page" source whose primary listing URL returns zero
+    structural items -- fetch each candidate article directly instead. This
+    is deliberately only a fallback (see fetch_source): most page sources
+    scrape fine from the listing itself, and hitting every article URL on
+    every run is real extra load that's only worth it when the listing page
+    has nothing to scrape.
+    """
+    resp = _get(sitemap_url)
+    urls = _extract_sitemap_urls(resp.text, href_pattern)
+    items = []
+    for url in urls:
+        try:
+            article = _get(url)
+        except requests.RequestException:
+            continue
+        title, published = _extract_article_title_date(article.text)
+        if not title:
+            continue
+        date_source = "page"
+        if published is None:
+            published = datetime.now(timezone.utc)
+            date_source = "fetch_time"
+        items.append({
+            "title": title,
+            "url": url,
+            "published": published.isoformat(),
+            "date_source": date_source,
+            "summary": "",
+        })
+    return items
+
+
 def _is_recent(item):
     """True when the item's published date is within MAX_ITEM_AGE_DAYS.
     Unparseable dates pass -- both parsers fall back to now() anyway, and a
@@ -393,6 +483,13 @@ def fetch_source(source, require_relevant=True):
             items = _extract_page_items(
                 resp.text, resolve_url(source["url"]), source.get("selector"), href_pattern
             )
+            # A listing page that renders its article list via client-side JS
+            # (nothing in the raw HTML for BeautifulSoup to see) structurally
+            # returns zero items every single run -- sitemap_url is only
+            # configured for sources known to need this, so this never fires
+            # for an ordinary page source that's just having a quiet news day.
+            if not items and source.get("sitemap_url") and href_pattern:
+                items = _fetch_sitemap_items(source["sitemap_url"], href_pattern)
     except Exception as exc:  # a parsing bug in one source must not kill the run
         return [], f"parse failed: {exc}", 0
 

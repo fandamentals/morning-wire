@@ -1753,231 +1753,264 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217830+00:00"
+      "checked_at": "2026-07-11T13:34:13.585889+00:00",
+      "jurisdiction": "HK"
     },
     {
       "name": "Hong Kong Monetary Authority — Circulars & guidance",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217841+00:00"
+      "checked_at": "2026-07-11T13:34:13.585898+00:00",
+      "jurisdiction": "HK"
     },
     {
       "name": "Securities and Futures Commission — News",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217847+00:00"
+      "checked_at": "2026-07-11T13:34:13.585902+00:00",
+      "jurisdiction": "HK"
     },
     {
       "name": "Securities and Futures Commission — Circulars",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217851+00:00"
+      "checked_at": "2026-07-11T13:34:13.585905+00:00",
+      "jurisdiction": "HK"
     },
     {
       "name": "Financial Services and the Treasury Bureau — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217855+00:00"
+      "checked_at": "2026-07-11T13:34:13.585910+00:00",
+      "jurisdiction": "HK"
     },
     {
       "name": "Securities and Futures Commission — Licensed virtual asset trading platforms register",
       "status": "ok",
       "note": "No change",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217859+00:00"
+      "checked_at": "2026-07-11T13:34:13.585913+00:00",
+      "jurisdiction": "HK"
     },
     {
       "name": "People's Bank of China — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217862+00:00"
+      "checked_at": "2026-07-11T13:34:13.585917+00:00",
+      "jurisdiction": "CN"
     },
     {
       "name": "CoinDesk — China policy",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.217864+00:00"
+      "checked_at": "2026-07-11T13:34:13.585926+00:00",
+      "jurisdiction": "CN"
     },
     {
       "name": "The Block — China policy",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.217868+00:00"
+      "checked_at": "2026-07-11T13:34:13.585930+00:00",
+      "jurisdiction": "CN"
     },
     {
       "name": "Financial Crimes Enforcement Network (FinCEN) — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217871+00:00"
+      "checked_at": "2026-07-11T13:34:13.585934+00:00",
+      "jurisdiction": "US"
     },
     {
       "name": "Office of Foreign Assets Control (OFAC) — Recent actions",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217874+00:00"
+      "checked_at": "2026-07-11T13:34:13.585938+00:00",
+      "jurisdiction": "US"
     },
     {
       "name": "US Securities and Exchange Commission — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217879+00:00"
+      "checked_at": "2026-07-11T13:34:13.585941+00:00",
+      "jurisdiction": "US"
     },
     {
       "name": "Commodity Futures Trading Commission — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217882+00:00"
+      "checked_at": "2026-07-11T13:34:13.585944+00:00",
+      "jurisdiction": "US"
     },
     {
       "name": "Office of the Comptroller of the Currency — News releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217885+00:00"
+      "checked_at": "2026-07-11T13:34:13.585947+00:00",
+      "jurisdiction": "US"
     },
     {
       "name": "Federal Reserve — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217888+00:00"
+      "checked_at": "2026-07-11T13:34:13.585949+00:00",
+      "jurisdiction": "US"
     },
     {
       "name": "US Department of Justice — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217892+00:00"
+      "checked_at": "2026-07-11T13:34:13.585952+00:00",
+      "jurisdiction": "US"
     },
     {
       "name": "European Securities and Markets Authority — News",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217896+00:00"
+      "checked_at": "2026-07-11T13:34:13.585955+00:00",
+      "jurisdiction": "EU"
     },
     {
       "name": "European Banking Authority — News",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.217899+00:00"
+      "checked_at": "2026-07-11T13:34:13.585958+00:00",
+      "jurisdiction": "EU"
     },
     {
       "name": "Monetary Authority of Singapore — Media releases",
-      "status": "dead",
-      "note": "Reachable but returned no parseable items for 8 consecutive runs (the listing may be client-rendered or restructured) — check the source manually.",
+      "status": "ok",
+      "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.257181+00:00"
+      "checked_at": "2026-07-11T13:34:13.585961+00:00",
+      "jurisdiction": "SG"
     },
     {
       "name": "Wolfsberg Group — News & publications",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.257197+00:00"
+      "checked_at": "2026-07-11T13:34:13.585964+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "Global Digital Finance (GDF) — News",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.257201+00:00"
+      "checked_at": "2026-07-11T13:34:13.585967+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "ACAMS Today",
-      "status": "dead",
-      "note": "Blocked by the site's bot protection for 3 consecutive runs (content is unavailable to an automated fetch) — check the source manually.",
+      "status": "ok",
+      "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257208+00:00"
+      "checked_at": "2026-07-11T13:34:13.585971+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "Bank for International Settlements / Basel Committee — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.257213+00:00"
+      "checked_at": "2026-07-11T13:34:13.585974+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "Financial Stability Board — Press releases",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-09T22:15:47.257219+00:00"
+      "checked_at": "2026-07-11T13:34:13.585977+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "CoinDesk — Policy",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257224+00:00"
+      "checked_at": "2026-07-11T13:34:13.585981+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "The Block — Policy",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257229+00:00"
+      "checked_at": "2026-07-11T13:34:13.585984+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "CoinDesk — Institutional moves",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257234+00:00"
+      "checked_at": "2026-07-11T13:34:13.585987+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "The Block — Institutional moves",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257239+00:00"
+      "checked_at": "2026-07-11T13:34:13.585990+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "CoinDesk — Market news",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257244+00:00"
+      "checked_at": "2026-07-11T13:34:13.585993+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "The Block — Market news",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257248+00:00"
+      "checked_at": "2026-07-11T13:34:13.585996+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "Chainalysis — Blog",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257252+00:00"
+      "checked_at": "2026-07-11T13:34:13.585999+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "Elliptic — Blog",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257257+00:00"
+      "checked_at": "2026-07-11T13:34:13.586002+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "TRM Labs — Insights",
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-09T22:15:47.257262+00:00"
+      "checked_at": "2026-07-11T13:34:13.586005+00:00",
+      "jurisdiction": "GLOBAL"
     },
     {
       "name": "Claude summarisation",
