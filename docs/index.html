@@ -1861,16 +1861,20 @@ function renderSearchResults() {
   const matches = rangeItems(state.range).filter(matchesFilters)
     .filter(it => matchesSearch(it, q))
     .sort((a, b) => new Date(b.published) - new Date(a.published));
-  const scopeNote = (state.juris !== "ALL" || state.bucket !== "ALL" || state.range !== "today")
-    ? ` within ${esc(RANGE_LABEL[state.range])}${state.juris !== "ALL" ? ` · ${esc(JURIS_FULL[state.juris])}` : ""}${state.bucket !== "ALL" ? ` · ${esc(BUCKETS[state.bucket].label)}` : ""}`
-    : "";
+  // Unconditional -- Today (the narrowest, most surprising default scope)
+  // used to be exactly the one case where this note went silent, so a
+  // reader searching for something outside today's window got an
+  // unqualified "No matches" that reads as "the digest never covered this",
+  // the same class of truthful-looking-but-misleading absence as the
+  // original weekend freshness-banner bug.
+  const scopeNote = ` within ${esc(RANGE_LABEL[state.range])}${state.juris !== "ALL" ? ` · ${esc(JURIS_FULL[state.juris])}` : ""}${state.bucket !== "ALL" ? ` · ${esc(BUCKETS[state.bucket].label)}` : ""}`;
   if (!matches.length) {
     feed.innerHTML = `<div class="empty">
       <div class="e-mark" aria-hidden="true">🔍</div>
       <h3>No matches for "${esc(state.search.trim())}"${scopeNote}</h3>
       <p>Search covers the items currently retained in this digest (within the selected range/filters above), not the live web.</p>
     </div>`;
-    announce(`No matches for ${state.search.trim()}`);
+    announce(`No matches for ${state.search.trim()}${scopeNote}`);
     return;
   }
   const cards = matches.filter(it => !isBrief(it));
@@ -1878,7 +1882,7 @@ function renderSearchResults() {
   feed.innerHTML = `<div class="section-head"><h2>${matches.length} result${matches.length > 1 ? "s" : ""} for "${esc(state.search.trim())}"${scopeNote}</h2><span class="rule"></span></div>
     ${cards.map(cardHTML).join("")}
     ${briefBlockHTML(briefs)}`;
-  announce(`${matches.length} result${matches.length > 1 ? "s" : ""} for ${state.search.trim()}`);
+  announce(`${matches.length} result${matches.length > 1 ? "s" : ""} for ${state.search.trim()}${scopeNote}`);
 }
 
 /* ---------- source-health table (Source health tab) ----------
@@ -2503,7 +2507,13 @@ document.addEventListener("click", e => {
   // strip counts search as one of the cleared dimensions.
   const clr = e.target.closest("[data-clear]");
   if (clr) {
-    state.juris = "ALL"; state.bucket = "ALL";
+    // Also resets range to "today" -- range persists like the other filters
+    // but the applied strip never showed it, so clicking Clear and watching
+    // the strip vanish used to read as "back to the complete, unfiltered
+    // view" while a saved wide range silently kept Top of mind/Priority
+    // blank (both are Today-only). "Clear filters" now means what it reads
+    // as: back to the default view.
+    state.juris = "ALL"; state.bucket = "ALL"; state.range = "today";
     saveFilters();
     // The clicked button disappears with the strip/empty-state it lives in;
     // land keyboard focus on the "All" jurisdiction chip instead of <body>.
@@ -2622,7 +2632,15 @@ function ensureItemVisible(id) {
   state.juris = "ALL"; state.bucket = "ALL";
   if (isSearchOpen()) closeSearch(); else state.search = "";
   const diff = dayDiff(it.first_seen || it.published);
-  if (diff > 0) state.range = diff <= 6 ? "7" : "30";
+  const needed = diff <= 0 ? "today" : diff <= 6 ? "7" : "30";
+  // Only ever WIDEN, never narrow an already-wide range -- a reader on
+  // "Last 30 days" or "All" who follows a catch-up row or a shared item
+  // link must not have their view silently narrowed with no indication;
+  // that used to drop other items off-screen while they believed they were
+  // still seeing everything in the wider window they had selected.
+  if (RANGE_ORDER.indexOf(needed) > RANGE_ORDER.indexOf(state.range)) {
+    state.range = needed;
+  }
 }
 function gotoHash() {
   const id = decodeURIComponent(location.hash.slice(1));
