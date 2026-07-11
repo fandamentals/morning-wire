@@ -1936,17 +1936,34 @@ function renderCatchup() {
       </div>`).join("")}</div>`;
 }
 
-/* ---------- masthead freshness: the page's one silent failure mode ---------- */
+/* ---------- masthead freshness: the page's one silent failure mode ----------
+   The pipeline only runs Mon-Fri HKT (.github/workflows/digest.yml has no
+   Sat/Sun trigger by design), so a flat "hours since last generated_at"
+   clock can't tell a normal weekend gap from an actual stall -- every
+   Friday digest would read as "stalled" for the whole weekend. Instead,
+   compare "now" against the NEXT weekday run the schedule implies, and
+   only escalate once that expected run is itself overdue. HKT has no DST
+   (see digest.yml), so a fixed +8h offset is safe for the day-of-week check. */
+function nextExpectedGenAt(genAtMs) {
+  const HKT_MS = 8 * 3600000, DAY_MS = 24 * 3600000;
+  let next = genAtMs + DAY_MS;
+  const hktDow = new Date(next + HKT_MS).getUTCDay(); // wall-clock weekday in HKT: 0=Sun..6=Sat
+  if (hktDow === 6) next += 2 * DAY_MS;      // Sat -> Mon
+  else if (hktDow === 0) next += DAY_MS;     // Sun -> Mon
+  return next;
+}
 function renderFreshness() {
   const el = document.getElementById("mast-fresh");
-  const ageH = (Date.now() - new Date(DIGEST.generated_at).getTime()) / 3600000;
-  const cls = ageH < 26 ? "ok" : ageH < 50 ? "warn" : "stale";
+  const genAtMs = new Date(DIGEST.generated_at).getTime();
+  const ageH = (Date.now() - genAtMs) / 3600000;
+  const overdueH = (Date.now() - nextExpectedGenAt(genAtMs)) / 3600000;
+  const cls = overdueH < 2 ? "ok" : overdueH < 26 ? "warn" : "stale";
   const rel = ageH < 1 ? "just now" : ageH < 26 ? `${Math.round(ageH)}h ago` : `${Math.floor(ageH / 24)} day${ageH >= 48 ? "s" : ""} ago`;
   el.innerHTML = ` · <span class="fresh-dot ${cls}" aria-hidden="true"></span>as of ${rel}`;
   const slot = document.getElementById("banner-slot");
   const existing = slot.querySelector(".banner.freshness");
   if (existing) existing.remove();
-  if (ageH >= 26) {
+  if (overdueH >= 2) {
     slot.insertAdjacentHTML("afterbegin", `<div class="banner freshness" role="status">
       <span class="b-ico" aria-hidden="true">⚠</span>
       <div><strong>This digest has not updated since ${fmtAudit(DIGEST.generated_at)}.</strong>
