@@ -364,17 +364,88 @@ and directly verified but have no dedicated red-fixture module, matching L3's
 precedent for logging/severity-only changes; the two still-open items
 (TYPE_LABEL/BUCKETS full-mapping freeze, docs_feed_parity content-hash
 parity) remain candidates for a future audit round.
+
 ---
 
-## L6 — smaller robustness gaps found by a 2026-07-13 Fable audit round
+## L6 — a PROTECTED check's own legality threshold drifted from the rule it claimed to enforce (2026-07-13)
+
+**LESSON:** L1 and L2 hardened `deletion_diff`/`first_seen_3way` against a
+**false-negative** direction — a real deletion slipping past undetected.
+Neither considered the **false-positive** direction: because
+`deletion_diff` criticals are PROTECTED and non-suppressible by design (see
+CLAUDE.md's step 2, which relies on exactly that property so a deliberate
+vendor-marketing removal can't be quietly waved through), a check that
+fires on the pipeline's own NORMAL behaviour is just as dangerous as one
+that misses a real incident — it trains whoever reads the daily tripwire to
+expect noise, which is how a genuine incident eventually gets ignored too.
+A guard's own correctness is not "loose = safe, tight = safe" — it is a
+target that must be exactly right in both directions.
+
+**INVARIANT:** `check_deletion_diff.py`'s legality threshold must match
+`run.merge_digest_window`'s actual prune rule
+(`run.DIGEST_ITEMS_MAX_AGE_DAYS`, currently 8 days) — not a separate,
+independently-chosen constant that happens to live in the same file. A
+*visibility* window (how many days of git history this check bothers to
+walk, so a deletion commit stays checkable for a while after it lands) and
+a *legality* threshold (how old an item must be for its disappearance to be
+expected) are two different concerns and must never share one constant.
+
+**EVIDENCE:** `check_deletion_diff.py` computed its legality cutoff as
+`new_generated_at - RETENTION_SLACK_DAYS` where `RETENTION_SLACK_DAYS = 10`
+— a constant whose own comment read "the pipeline's own window (8) plus
+slack for clock skew", i.e. it was already documented as *not* being the
+8-day rule, without anyone noticing that meant every item the pipeline
+prunes at 8–9 days old (completely normal, intended behaviour) would read
+as "only 8-9 days old, inside the 10-day window" and get flagged
+**critical**. Found by inspection during the 2026-07-13 Fable audit round —
+not yet triggered live only because this repo's oldest items (44 of them,
+first_seen 2026-07-07) had not yet reached 8 days old; they would have aged
+out and produced roughly 44 simultaneous, non-suppressible critical
+findings on the very next run on-or-after 2026-07-15. Reproduced
+synthetically (a legal 8.5-day-old age-out flagged critical on the
+pre-fix code) before the live incident could occur — see CHECK below.
+
+**CHECK:** `scripts/audit_checks/fixtures/test_deletion_diff_ageout_boundary.py`
+— red case: a legal 8.5-day age-out (the pipeline's own prune) must NOT be
+flagged (fails on pre-fix code, passes on the fix). Green cases: a 2-day-old
+deletion (the L1 incident shape) and a deletion 2 hours inside the window
+must still be flagged critical (proves the fix didn't over-correct into a
+false negative); a legal age-out measured a few minutes short of the
+8-day rule against `generated_at` (same-run clock skew — `run.py` stamps
+`generated_at` before the slower verify/summarise steps run) must be
+excused by a bounded tolerance, not by loosening the rule itself.
+
+**RULE (implemented):**
+1. `check_deletion_diff.py` now reads `run.DIGEST_ITEMS_MAX_AGE_DAYS` live
+   (via the same `import run as run_mod` the file already used for
+   `_dedupe_key`) as the legality threshold, instead of a second,
+   independently-drifting constant.
+2. `RETENTION_SLACK_DAYS` (10 days) is kept, but narrowed to its one
+   legitimate job: how far back `commits_touching` walks git history looking
+   for deletion commits to check at all — a *visibility* window, documented
+   as such, never reused as a legality threshold again.
+3. A new `LEGALITY_SKEW_TOLERANCE` (1 hour) absorbs the specific, bounded
+   clock skew between `run.py` stamping `generated_at` and
+   `merge_digest_window` computing its own, slightly later prune cutoff in
+   the same run — not a general loosening of the 8-day rule.
+4. Any future change to `DIGEST_ITEMS_MAX_AGE_DAYS` in `run.py` now
+   automatically keeps this PROTECTED check's legality threshold in sync,
+   closing off this exact class of silent re-drift.
+
+**STATUS:** absorbed (`test_deletion_diff_ageout_boundary.py` proves both
+the false-positive fix and that real-deletion detection is unweakened;
+`test_against_incident.py` and `test_l2_mutable_key_evasion.py` still pass
+with no regression; the live repo's finding set is unchanged — the same 7
+already-known, already-explained vendor-removal criticals, byte-identical
+before and after).
+
+---
+
+## L7 — smaller robustness gaps found by the same 2026-07-13 Fable audit round
 
 **LESSON:** Same shape as L3 and L5: several smaller gaps surfaced from the
-same audit round, none tied to a known live incident, recorded so they
-aren't silently rediscovered. (The same round also found a false-positive
-threshold bug in the PROTECTED `check_deletion_diff.py` — that fix is held
-for separate explicit human review per `audit/PLAYBOOK.md`'s rule on
-PROTECTED checks, rather than committed in the same pass as these items,
-and is not yet in this file.)
+same audit round that found L6, none tied to a known live incident,
+recorded so they aren't silently rediscovered.
 
 **EVIDENCE / STATUS per item:**
 - **Fixed:** `summarise.py`'s `_fallback_result` (used both in fully keyless
