@@ -1681,7 +1681,7 @@
           }
         ],
         "checked": {
-          "at": "2026-07-23T22:47:15Z",
+          "at": "2026-07-23T22:47:15+00:00",
           "against": "FinCEN — press release (item's own primary source)",
           "url": "https://www.fincen.gov/news/news-releases/fincen-extends-comment-period-proposed-rule-amend-definition-huione-group",
           "note": "Read directly from FinCEN's own release: comment deadline extended to 2 August 2026, rule would broaden the Huione Group definition."
@@ -2031,7 +2031,7 @@
           }
         ],
         "checked": {
-          "at": "2026-07-23T22:47:15Z",
+          "at": "2026-07-23T22:47:15+00:00",
           "against": "US Department of Justice, US Attorney's Office for the District of Columbia — press release",
           "url": "https://www.justice.gov/usao-dc/pr/investigations-cryptocurrency-scams-result-seizure-more-25-million",
           "note": "Confirmed: five civil forfeiture complaints, over $25M total (largest $12,086,914 from the romance-scam case), part of the Scam Center Strike Force which has recovered over $800M."
@@ -2169,7 +2169,7 @@
           }
         ],
         "checked": {
-          "at": "2026-07-23T22:47:15Z",
+          "at": "2026-07-23T22:47:15+00:00",
           "against": "US Department of Justice, US Attorney's Office for the District of Columbia — press release",
           "url": "https://www.justice.gov/usao-dc/pr/investigations-cryptocurrency-scams-result-seizure-more-25-million",
           "note": "Confirmed: five civil forfeiture complaints, over $25M total, part of the Scam Center Strike Force which has recovered over $800M."
@@ -2795,7 +2795,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807019+00:00",
+      "checked_at": "2026-07-24T22:16:43.293511+00:00",
       "jurisdiction": "HK"
     },
     {
@@ -2803,7 +2803,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807031+00:00",
+      "checked_at": "2026-07-24T22:16:43.293535+00:00",
       "jurisdiction": "HK"
     },
     {
@@ -2811,7 +2811,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807036+00:00",
+      "checked_at": "2026-07-24T22:16:43.293544+00:00",
       "jurisdiction": "HK"
     },
     {
@@ -2819,7 +2819,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807041+00:00",
+      "checked_at": "2026-07-24T22:16:43.293548+00:00",
       "jurisdiction": "HK"
     },
     {
@@ -2827,7 +2827,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807045+00:00",
+      "checked_at": "2026-07-24T22:16:43.293554+00:00",
       "jurisdiction": "HK"
     },
     {
@@ -2835,7 +2835,7 @@
       "status": "ok",
       "note": "No change",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807049+00:00",
+      "checked_at": "2026-07-24T22:16:43.293560+00:00",
       "jurisdiction": "HK"
     },
     {
@@ -2843,7 +2843,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807052+00:00",
+      "checked_at": "2026-07-24T22:16:43.293571+00:00",
       "jurisdiction": "CN"
     },
     {
@@ -2851,7 +2851,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807055+00:00",
+      "checked_at": "2026-07-24T22:16:43.293586+00:00",
       "jurisdiction": "CN"
     },
     {
@@ -2859,7 +2859,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807058+00:00",
+      "checked_at": "2026-07-24T22:16:43.293593+00:00",
       "jurisdiction": "CN"
     },
     {
@@ -2867,7 +2867,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807061+00:00",
+      "checked_at": "2026-07-24T22:16:43.293600+00:00",
       "jurisdiction": "US"
     },
     {
@@ -2875,7 +2875,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807064+00:00",
+      "checked_at": "2026-07-24T22:16:43.293607+00:00",
       "jurisdiction": "US"
     },
     {
@@ -2883,7 +2883,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807067+00:00",
+      "checked_at": "2026-07-24T22:16:43.293614+00:00",
       "jurisdiction": "US"
     },
     {
@@ -2891,7 +2891,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807070+00:00",
+      "checked_at": "2026-07-24T22:16:43.293619+00:00",
       "jurisdiction": "US"
     },
     {
@@ -2899,7 +2899,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807073+00:00",
+      "checked_at": "2026-07-24T22:16:43.293625+00:00",
       "jurisdiction": "US"
     },
     {
@@ -2907,7 +2907,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807076+00:00",
+      "checked_at": "2026-07-24T22:16:43.293631+00:00",
       "jurisdiction": "US"
     },
     {
@@ -2915,7 +2915,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807079+00:00",
+      "checked_at": "2026-07-24T22:16:43.293636+00:00",
       "jurisdiction": "US"
     },
     {
@@ -2923,7 +2923,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807082+00:00",
+      "checked_at": "2026-07-24T22:16:43.293640+00:00",
       "jurisdiction": "EU"
     },
     {
@@ -2931,7 +2931,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807085+00:00",
+      "checked_at": "2026-07-24T22:16:43.293643+00:00",
       "jurisdiction": "EU"
     },
     {
@@ -2939,15 +2939,15 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807109+00:00",
+      "checked_at": "2026-07-24T22:16:43.293649+00:00",
       "jurisdiction": "SG"
     },
     {
       "name": "Wolfsberg Group — News & publications",
       "status": "ok",
-      "note": "Feed responding normally",
+      "note": "Fetch failed this run (fetch failed: HTTPSConnectionPool(host='wolfsberg-group.org', port=443): Read timed out. (read timeout=15)); 1 consecutive failure — self-heal at 3.",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807112+00:00",
+      "checked_at": "2026-07-24T22:16:43.293661+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -2955,15 +2955,15 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807115+00:00",
+      "checked_at": "2026-07-24T22:16:43.293668+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
       "name": "ACAMS Today",
       "status": "ok",
-      "note": "Feed responding normally",
+      "note": "Fetch failed this run (fetch failed: 403 Client Error: Forbidden for url: https://www.acams.org/en/acamstoday); 1 consecutive failure — self-heal at 3.",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807119+00:00",
+      "checked_at": "2026-07-24T22:16:43.293677+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -2971,7 +2971,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807122+00:00",
+      "checked_at": "2026-07-24T22:16:43.293683+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -2979,7 +2979,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "official",
-      "checked_at": "2026-07-23T21:59:35.807125+00:00",
+      "checked_at": "2026-07-24T22:16:43.293688+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -2987,7 +2987,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807128+00:00",
+      "checked_at": "2026-07-24T22:16:43.293696+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -2995,7 +2995,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807131+00:00",
+      "checked_at": "2026-07-24T22:16:43.293778+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -3003,7 +3003,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807135+00:00",
+      "checked_at": "2026-07-24T22:16:43.293794+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -3011,7 +3011,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807138+00:00",
+      "checked_at": "2026-07-24T22:16:43.293801+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -3019,7 +3019,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807141+00:00",
+      "checked_at": "2026-07-24T22:16:43.293808+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -3027,7 +3027,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807144+00:00",
+      "checked_at": "2026-07-24T22:16:43.293815+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -3035,7 +3035,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807147+00:00",
+      "checked_at": "2026-07-24T22:16:43.293821+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -3043,7 +3043,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807150+00:00",
+      "checked_at": "2026-07-24T22:16:43.293829+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
@@ -3051,7 +3051,7 @@
       "status": "ok",
       "note": "Feed responding normally",
       "tier": "industry",
-      "checked_at": "2026-07-23T21:59:35.807153+00:00",
+      "checked_at": "2026-07-24T22:16:43.293835+00:00",
       "jurisdiction": "GLOBAL"
     },
     {
