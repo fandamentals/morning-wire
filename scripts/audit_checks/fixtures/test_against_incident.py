@@ -4,12 +4,22 @@ the 2026-07-07 incident (cd206e3), and are CLEAN against the current,
 repaired HEAD. This is the "red fixture / green fixture" the design calls
 for, built from the real incident rather than a synthetic approximation.
 
+Both checks' commit-pair walks (commits_touching's `since_days`) are anchored
+to the actual wall-clock moment they run (git `--since` always is) -- correct
+for production, but this test validates against a FIXED historical commit
+whose distance from "now" only ever grows. Per audit/lessons.md L8, this test
+computes how far cd206e3 actually is from today and passes a since_days
+override wide enough to always reach it, however much time has passed --
+never a hardcoded guess that could itself age out the same way the original
+bug did.
+
 Run manually: python3 scripts/audit_checks/fixtures/test_against_incident.py
 Exits non-zero if either assertion fails.
 """
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -20,8 +30,21 @@ def _git(args, cwd):
     return subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True, text=True, check=True, timeout=60).stdout
 
 
+def _since_days_for_incident(repo_root):
+    """Days between now and INCIDENT_SHA's own commit date, plus a generous
+    buffer -- see module docstring and audit/lessons.md L8. Computed fresh
+    every run so this test can never itself silently age out the way
+    check_deletion_diff's fixed RETENTION_SLACK_DAYS+2 window did."""
+    date_str = _git(["log", "-1", "--format=%aI", INCIDENT_SHA], repo_root).strip()
+    incident_dt = datetime.fromisoformat(date_str)
+    days_elapsed = (datetime.now(timezone.utc) - incident_dt).days
+    return days_elapsed + 5  # buffer for clock skew / partial-day rounding
+
+
 def main():
     failures = []
+    since_days = _since_days_for_incident(REPO_ROOT)
+    print(f"(incident is {since_days - 5} day(s) old; using since_days_override={since_days} for the red fixture)")
 
     with tempfile.TemporaryDirectory() as tmp:
         worktree = Path(tmp) / "incident-worktree"
@@ -35,13 +58,16 @@ def main():
             # against the INCIDENT'S OWN historical context, not today's live
             # production cutoff (which postdates the incident commit itself
             # and would otherwise exclude it entirely -- see base.BOOTSTRAP_CUTOFF).
-            findings_3way = c1.run(worktree, bootstrap_cutoff=None)
+            # since_days_override: see module docstring and L8 -- without this,
+            # both calls below silently stop reaching INCIDENT_SHA at all once
+            # enough real time passes, and "0 findings" stops meaning "clean".
+            findings_3way = c1.run(worktree, bootstrap_cutoff=None, since_days_override=since_days)
             criticals_3way = [f for f in findings_3way if f["severity"] == "critical"]
             print(f"check_first_seen_3way @ {INCIDENT_SHA}: {len(criticals_3way)} critical finding(s)")
             if not criticals_3way:
                 failures.append(f"RED FIXTURE FAILED: check_first_seen_3way found nothing at the known-bad commit {INCIDENT_SHA}")
 
-            findings_del = c2.run(worktree, bootstrap_cutoff=None)
+            findings_del = c2.run(worktree, bootstrap_cutoff=None, since_days_override=since_days)
             criticals_del = [f for f in findings_del if f["severity"] == "critical"]
             print(f"check_deletion_diff @ {INCIDENT_SHA}: {len(criticals_del)} critical finding(s)")
             if not criticals_del:
@@ -107,7 +133,9 @@ def main():
     incident_hits_del_full = [f for f in findings_del_full if f["severity"] == "critical"
                               and f.get("evidence", {}).get("key") in INCIDENT_KEYS]
     print(f"check_deletion_diff @ HEAD (full history): {len(findings_del_full)} total finding(s) "
-          f"(expected: nonzero, from this repo's same-day dev-iteration history -- see docstring), "
+          f"(nonzero is expected and fine here -- e.g. this repo's own same-day dev-iteration history, "
+          f"or a legitimate, already-explained editorial removal like a vendor-marketing drop; what "
+          f"matters is that NONE of them match the specific resolved incident, asserted below), "
           f"{len(incident_hits_del_full)} matching the resolved incident")
     if incident_hits_del_full:
         failures.append(f"REGRESSION (full history): the resolved incident items are flagged again: {incident_hits_del_full}")

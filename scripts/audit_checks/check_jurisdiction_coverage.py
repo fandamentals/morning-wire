@@ -6,6 +6,18 @@ judges LIVENESS (source_health status), never item volume, so it can't be
 fooled by a quiet news day into crying wolf, and can't be silenced by a
 source quietly having nothing to report.
 
+A jurisdiction with zero official sources CONFIGURED AT ALL (as opposed to
+configured-then-gone-dead) is a related but distinct hole: a one-time data-
+completeness gap rather than a liveness regression, so it is reported at
+`info` (not `warn`) and won't recur once a human adds a source -- unlike the
+all-dead case, which can recur every run until the underlying sources are
+fixed. Found live on this project 2026-07-24 (weekly audit deep-dive): UK
+had been a first-class jurisdiction in the enum since 15b283d but had zero
+sources of any kind configured, so this branch never fired for it -- only
+manual review caught it. This is that manual finding turned into a standing
+check, so the next such gap (for any jurisdiction) doesn't need a human to
+rediscover it from scratch.
+
 Guardrail: official-tier and register sources, and any source that is its
 jurisdiction's ONLY official source, may never appear in
 audit/baseline.json's human-maintained accepted_dead list. That list exists
@@ -36,7 +48,16 @@ def run(repo_root):
     for j in JURISDICTIONS:
         official = [s for s in sources if s["jurisdiction"] == j and s.get("tier") == "official"]
         if not official:
-            continue  # no official source configured for this jurisdiction at all -- a design gap, not this check's job
+            findings.append(finding(
+                CHECK_ID, "info",
+                f"{j}: no official source configured at all",
+                f"{j} is a first-class jurisdiction (see JURISDICTIONS) but data/sources.json has "
+                f"zero official-tier sources for it -- a data-completeness gap, not a liveness "
+                f"regression. Propose one on a branch + PR per the audit playbook's Phase 5, "
+                f"source-coverage deep-dive.",
+                {"jurisdiction": j},
+            ))
+            continue  # nothing alive to check liveness of
         alive = [s for s in official
                  if health_by_name.get(s["name"], {}).get("status") not in ("dead",)]
         if not alive:

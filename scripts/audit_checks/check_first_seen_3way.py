@@ -56,10 +56,20 @@ def _parse(value):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
-def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
+def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF, since_days_override=None):
     """bootstrap_cutoff is overridable so tests can validate detection logic
     against a historical worktree on its own terms; production callers (the
-    harness) always use the default -- see base.BOOTSTRAP_CUTOFF."""
+    harness) always use the default -- see base.BOOTSTRAP_CUTOFF.
+
+    since_days_override is overridable for the same reason and by the same
+    principle, see audit/lessons.md L8: commits_touching's walk-back window
+    is anchored to the actual wall-clock moment this function runs (git
+    `--since` always is), which is correct for production but WRONG for
+    validating detection logic against a FIXED historical incident commit,
+    which silently ages out of any fixed-size rolling window as real time
+    passes, with no error or signal that the test has stopped testing
+    anything. Production callers never pass this; only
+    fixtures/test_against_incident.py does."""
     try:
         import sys
         sys.path.insert(0, str(repo_root / "scripts"))
@@ -67,8 +77,9 @@ def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
     except Exception as exc:
         return [could_not_run(CHECK_ID, f"could not import scripts/run.py: {exc}")]
 
+    since_days = since_days_override if since_days_override is not None else 30
     try:
-        commits = commits_touching(repo_root, "data/digest.json", since_days=30, after=bootstrap_cutoff)
+        commits = commits_touching(repo_root, "data/digest.json", since_days=since_days, after=bootstrap_cutoff)
     except Exception as exc:
         return [could_not_run(CHECK_ID, f"git history unavailable: {exc}")]
     if len(commits) < 1:
@@ -90,7 +101,7 @@ def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
             if key and key not in anchor:
                 anchor[key] = it.get("first_seen")
 
-    anchor_by_id = earliest_first_seen_by_id(repo_root, since_days=90, after=bootstrap_cutoff)
+    anchor_by_id = earliest_first_seen_by_id(repo_root, since_days=max(90, since_days), after=bootstrap_cutoff)
 
     try:
         current = json.loads((repo_root / "data" / "digest.json").read_text(encoding="utf-8"))

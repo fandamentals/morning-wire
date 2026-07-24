@@ -520,3 +520,84 @@ needing a standing check.
 **STATUS:** absorbed — all fixed items are directly verified (see CHECK);
 the two documented-not-fixed items remain open, low-priority candidates for
 a future audit round, same convention as L3's and L5's own still-open items.
+
+---
+
+## L8 — a PROTECTED check's own red-fixture proof silently expires as real time passes (2026-07-24)
+
+**LESSON:** L1/L2/L6 all hardened the PROTECTED checks' *detection logic*.
+None considered that the *test proving that logic works* — validated against
+a single, real, fixed historical incident commit — has its own, entirely
+separate failure mode: the commit-pair walk both checks use
+(`base.commits_touching`, via git's `--since="N days ago"`) is anchored to
+the actual wall-clock moment the check runs, not to any property of the
+commit being tested. As real time advances past the incident, the fixed
+window inevitably stops reaching that commit at all — and a check that
+never even looks at a commit pair reports 0 findings, indistinguishable from
+a check that looked and correctly found nothing. A regression test can go
+quietly, permanently green for a reason that has nothing to do with the code
+being correct. This is the same *shape* of risk L6 named for the check
+itself ("a guard's own correctness is not loose=safe, tight=safe") one level
+up: the harness verifying the guard needs the identical scrutiny.
+
+**INVARIANT:** A test that validates detection logic against a FIXED
+historical commit must compute its own time window relative to THAT
+commit's age, never reuse the fixed, production-sized rolling window the
+check-under-test uses for its normal (wall-clock-relative) job. The two
+concerns — "how far should production look back for a recent problem" and
+"how far back does this test need to reach to find its known fixture" — are
+as distinct as L6's *visibility* vs *legality* windows, and conflating them
+regresses the same way: silently, with the check reporting clean.
+
+**EVIDENCE:** Found live during this run's Phase 1 detect step: routine
+execution of `scripts/audit_checks/fixtures/test_against_incident.py`
+printed `check_deletion_diff @ cd206e3: 0 critical finding(s)` and failed
+its own `RED FIXTURE FAILED` assertion — 17 days after the 2026-07-07
+incident, `check_deletion_diff.run()`'s internal
+`commits_touching(..., since_days=RETENTION_SLACK_DAYS + 2)` (12 days) no
+longer reached back far enough to see `cd206e3` or its neighbouring commits
+at all, `bootstrap_cutoff=None` notwithstanding (that parameter only affects
+the *floor*, not the *ceiling*, of the walk). `check_first_seen_3way`
+happened to still pass (its `since_days=30`/`90` windows still reached 17
+days back) — same latent bug, just with more headroom before it too would
+have started silently reporting a clean bill of health on the identical
+red-fixture case, on or around 2026-08-06 for the 30-day window. Confirmed
+this was pre-existing and unrelated to this run's own changes by stashing
+them and reproducing the identical failure against unmodified `main`.
+Independently reproduced synthetically (not relying on any real commit's
+age): a 60-day-old, deliberately backdated illegal-deletion commit pair in
+an isolated throwaway repo is invisible to the check's default window and
+correctly caught once the window is widened — see CHECK below.
+
+**CHECK:**
+`scripts/audit_checks/fixtures/test_l8_since_days_time_bomb.py` — builds a
+synthetic git repo with an illegal-deletion commit pair backdated 60 days,
+proving directly (not inferred from today's date) that the default,
+production-sized window misses it while a widened one catches it.
+`scripts/audit_checks/fixtures/test_against_incident.py` now computes
+`since_days` from `cd206e3`'s actual commit date every run (never a
+hardcoded guess that could itself go stale) and passes it through to both
+checks, so this specific regression test can never again silently stop
+testing anything regardless of how far in the future it runs.
+
+**RULE (implemented):**
+1. `check_deletion_diff.run()` and `check_first_seen_3way.run()` both gained
+   an optional `since_days_override` parameter (mirroring the existing
+   `bootstrap_cutoff` override, same rationale, same docstring pattern).
+   Production callers (the harness) never pass it, preserving today's
+   exact rolling-window behaviour; only `test_against_incident.py` does.
+2. `test_against_incident.py` computes `since_days_override` fresh each run
+   from `cd206e3`'s own commit date plus a fixed buffer — it is now
+   structurally incapable of the same "silently stops reaching the
+   fixture" failure, because it never hardcodes a window sized for
+   "today."
+3. Any FUTURE fixture built from a real historical commit (following this
+   file's own established pattern) must compute its window the same way,
+   not copy a production default and assume it will always be wide enough.
+
+**STATUS:** absorbed (`test_l8_since_days_time_bomb.py` proves the
+mechanism synthetically; `test_against_incident.py` now passes again against
+the real `cd206e3` incident — 55 critical `deletion_diff` findings and 28
+critical `first_seen_3way` findings at the incident commit, both previously
+masked to 0 for `deletion_diff`; the full existing fixture suite — L2
+through L7 — re-verified with no regression after this change).
