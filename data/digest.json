@@ -3104,6 +3104,10 @@
     {
       "at": "2026-07-23T22:47:15Z",
       "note": "Enrichment: 65 items summarised and classified via Claude Code session (Opus-drafted, Sonnet-reviewed; backlog from several unenriched days). Ten high-priority items were corroborated against a second independent or official source, and one summary was corrected after a cross-source fact-check."
+    },
+    {
+      "at": "2026-07-24T22:34:39Z",
+      "note": "Weekly integrity audit: added a new permanent safeguard and closed a news-source coverage gap; opened PR #75 for review. No live data-integrity issues were found this week."
     }
   ],
   "radar": [
