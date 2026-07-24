@@ -76,10 +76,22 @@ def _parse_iso(value):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
-def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
+def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF, since_days_override=None):
     """bootstrap_cutoff is overridable so tests can validate detection logic
     against a historical worktree on its own terms; production callers (the
-    harness) always use the default -- see base.BOOTSTRAP_CUTOFF."""
+    harness) always use the default -- see base.BOOTSTRAP_CUTOFF.
+
+    since_days_override is overridable for the same reason and by the same
+    principle, see audit/lessons.md L8: commits_touching's walk-back window
+    is anchored to the actual wall-clock moment this function runs (git
+    `--since` always is), which is correct for production -- a rolling
+    "did anything vanish in roughly the last couple of weeks" check -- but
+    WRONG for validating detection logic against a FIXED historical incident
+    commit, which silently ages out of any fixed-size rolling window as real
+    time passes, with no error or signal that the test has stopped testing
+    anything. Production callers never pass this; only
+    fixtures/test_against_incident.py does, computing a window wide enough
+    to always reach the incident commit regardless of today's date."""
     try:
         import sys
         sys.path.insert(0, str(repo_root / "scripts"))
@@ -87,8 +99,9 @@ def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
     except Exception as exc:
         return [could_not_run(CHECK_ID, f"could not import scripts/run.py: {exc}")]
 
+    since_days = since_days_override if since_days_override is not None else RETENTION_SLACK_DAYS + 2
     try:
-        commits = commits_touching(repo_root, "data/digest.json", since_days=RETENTION_SLACK_DAYS + 2,
+        commits = commits_touching(repo_root, "data/digest.json", since_days=since_days,
                                     after=bootstrap_cutoff, keep_one_baseline_before=True)
     except Exception as exc:
         return [could_not_run(CHECK_ID, f"git history unavailable: {exc}")]
@@ -111,7 +124,7 @@ def run(repo_root, bootstrap_cutoff=BOOTSTRAP_CUTOFF):
     # earliest-ever-recorded first_seen for each id, immune to a nearer-term
     # backdate of the SAME item that a narrower commit-pair walk could
     # otherwise be fooled by.
-    id_anchor = earliest_first_seen_by_id(repo_root, since_days=90, after=bootstrap_cutoff)
+    id_anchor = earliest_first_seen_by_id(repo_root, since_days=max(90, since_days), after=bootstrap_cutoff)
 
     findings = []
     for (old_sha, _od), (new_sha, _nd) in zip(commits, commits[1:]):

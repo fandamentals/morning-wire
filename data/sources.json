@@ -140,6 +140,20 @@
     "tier": "official"
   },
   {
+    "name": "Financial Conduct Authority — News",
+    "jurisdiction": "UK",
+    "kind": "feed",
+    "url": "https://www.fca.org.uk/news/rss.xml",
+    "tier": "official"
+  },
+  {
+    "name": "Bank of England — News",
+    "jurisdiction": "UK",
+    "kind": "feed",
+    "url": "https://www.bankofengland.co.uk/rss/news",
+    "tier": "official"
+  },
+  {
     "name": "European Securities and Markets Authority — News",
     "jurisdiction": "EU",
     "kind": "page",
